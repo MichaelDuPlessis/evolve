@@ -15,7 +15,7 @@ pub trait GeneticOperator<G, F, Fe, R>
 where
     Fe: FitnessEvaluation<G, F>,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &Context<Fe, R>) -> Population<G, F>;
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F>;
 }
 
 // Base case: single operator
@@ -25,7 +25,7 @@ where
     Fe: FitnessEvaluation<G, F>,
     R: Rng,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &Context<Fe, R>) -> Population<G, F> {
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F> {
         // Apply operator and get the new individuals
         let offspring = self.0.apply(state, ctx);
         offspring
@@ -40,7 +40,7 @@ where
     Fe: FitnessEvaluation<G, F>,
     R: Rng,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &Context<Fe, R>) -> Population<G, F> {
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F> {
         // Generate offspring from the first operator
         let mut new_individuals = self.0.apply(state, ctx);
 

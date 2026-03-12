@@ -16,6 +16,11 @@ impl<'a, Fe, R> Context<'a, Fe, R> {
     pub fn fitness(&self) -> &Fe {
         self.fitness
     }
+
+    /// Get the `Rng` object.
+    pub fn rng(&mut self) -> &mut R {
+        self.rng
+    }
 }
 
 /// Contains the current state of the algorithm. This includes the current generation and the current population.

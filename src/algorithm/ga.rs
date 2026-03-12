@@ -1,5 +1,3 @@
-use rand::Rng;
-
 use crate::{
     core::{
         context::{Context, State},
@@ -62,12 +60,12 @@ where
         let genomes = self.initialization.initialize(self.population_size);
         let population = Population::from(genomes);
 
-        let ctx = Context::new(&self.fitness, &mut self.rng);
+        let mut ctx = Context::new(&self.fitness, &mut self.rng);
         let mut state = State::new(population, 0);
 
         while !self.termination.should_terminate(&state) {
             // Apply pipeline — ownership flows through
-            state.population = self.operators.apply(&state, &ctx);
+            state.population = self.operators.apply(&state, &mut ctx);
             state.generation += 1;
         }
 
