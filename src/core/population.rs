@@ -31,6 +31,11 @@ impl<G, F> Population<G, F> {
         Self::from_individuals(individuals)
     }
 
+    /// Extend a `Population` with another `Populatin` or a list of `Individuals`.
+    pub fn extend(&mut self, individuals: impl IntoIterator<Item = Individual<G, F>>) {
+        self.individuals.extend(individuals);
+    }
+
     /// Number of individuals in the population.
     pub fn len(&self) -> usize {
         self.individuals.len()

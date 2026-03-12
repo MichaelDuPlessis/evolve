@@ -1,5 +1,5 @@
 use crate::{
-    core::{individual::Individual, population::Population},
+    core::{context::Context, individual::Individual, population::Population},
     fitness::FitnessEvaluation,
     initialization::Initialization,
     pipeline::OperatorPipeline,
@@ -14,7 +14,7 @@ where
     I: Initialization<G>,
     T: TerminationCondition,
     Fe: FitnessEvaluation<G, F>,
-    Ops: OperatorPipeline<G, F>,
+    Ops: OperatorPipeline<G, F, Fe>,
 {
     initialization: I,
     termination: T,
@@ -30,7 +30,7 @@ where
     I: Initialization<G>,
     T: TerminationCondition,
     Fe: FitnessEvaluation<G, F>,
-    Ops: OperatorPipeline<G, F>,
+    Ops: OperatorPipeline<G, F, Fe>,
 {
     pub fn new(
         initialization: I,
@@ -56,7 +56,8 @@ where
         let mut generation = 0;
         while !self.termination.should_terminate(generation) {
             // Apply pipeline — ownership flows through
-            population = self.operators.apply_operators(population, &self.fitness);
+            let ctx = Context::new(&population, &self.fitness, generation);
+            population = self.operators.apply_operators(&ctx);
             generation += 1;
         }
 
