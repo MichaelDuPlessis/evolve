@@ -65,10 +65,10 @@ where
 
         while !self.termination.should_terminate(&state) {
             // Apply pipeline — ownership flows through
-            state.population = self.operators.apply(&state, &mut ctx);
-            state.generation += 1;
+            state.apply_operators(&mut ctx, &mut self.operators);
+            state.inc_generation();
         }
 
-        state.population.best()
+        state.into_population().best()
     }
 }

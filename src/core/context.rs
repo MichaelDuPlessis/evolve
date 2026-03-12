@@ -1,4 +1,4 @@
-use crate::core::population::Population;
+use crate::{core::population::Population, fitness::FitnessEvaluation, operators::GeneticOperator};
 
 /// All the context needed for the genetic operators.
 pub struct Context<'a, Fe, R> {
@@ -25,8 +25,8 @@ impl<'a, Fe, R> Context<'a, Fe, R> {
 
 /// Contains the current state of the algorithm. This includes the current generation and the current population.
 pub struct State<G, F> {
-    pub population: Population<G, F>,
-    pub generation: usize,
+    population: Population<G, F>,
+    generation: usize,
 }
 
 impl<G, F> State<G, F> {
@@ -37,6 +37,7 @@ impl<G, F> State<G, F> {
             generation,
         }
     }
+
     /// Get the `Population`.
     pub fn population(&self) -> &Population<G, F> {
         &self.population
@@ -45,5 +46,26 @@ impl<G, F> State<G, F> {
     /// Get the current generation.
     pub fn generation(&self) -> usize {
         self.generation
+    }
+
+    /// Increase the generation that the `State` is on.
+    pub(crate) fn inc_generation(&mut self) {
+        self.generation += 1;
+    }
+
+    /// Applies the operators to the `State` and updates the population.
+    pub(crate) fn apply_operators<Fe, R>(
+        &mut self,
+        ctx: &mut Context<Fe, R>,
+        ops: &mut impl GeneticOperator<G, F, Fe, R>,
+    ) where
+        Fe: FitnessEvaluation<G, F>,
+    {
+        self.population = ops.apply(self, ctx);
+    }
+
+    /// Transforms the `State` into a `Population`.
+    pub(crate) fn into_population(self) -> Population<G, F> {
+        self.population
     }
 }

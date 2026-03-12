@@ -27,9 +27,9 @@ where
     Fe: FitnessEvaluation<[T; N], F>,
 {
     fn apply(&self, state: &State<[T; N], F>, ctx: &mut Context<Fe, R>) -> Population<[T; N], F> {
-        let mut population = Population::with_capacity(state.population.len());
+        let mut population = Population::with_capacity(state.population().len());
 
-        for chunk in state.population.chunks_exact(2) {
+        for chunk in state.population().chunks_exact(2) {
             let p1 = unsafe { chunk.get_unchecked(0) };
             let p2 = unsafe { chunk.get_unchecked(1) };
 
