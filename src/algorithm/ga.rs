@@ -1,36 +1,43 @@
+use rand::Rng;
+
 use crate::{
-    core::{context::Context, individual::Individual, population::Population},
+    core::{
+        context::{Context, State},
+        individual::Individual,
+        population::Population,
+    },
     fitness::FitnessEvaluation,
     initialization::Initialization,
-    pipeline::OperatorPipeline,
+    operators::GeneticOperator,
     termination::TerminationCondition,
 };
 use std::{marker::PhantomData, num::NonZero};
 
 /// Genetic Algorithm runner
-pub struct GeneticAlgorithm<G, F, I, T, Fe, Ops>
+pub struct GeneticAlgorithm<G, F, I, T, Fe, Ops, R>
 where
     F: PartialOrd,
     I: Initialization<G>,
-    T: TerminationCondition,
+    T: TerminationCondition<G, F>,
     Fe: FitnessEvaluation<G, F>,
-    Ops: OperatorPipeline<G, F, Fe>,
+    Ops: GeneticOperator<G, F, Fe, R>,
 {
     initialization: I,
     termination: T,
     fitness: Fe,
     operators: Ops,
     population_size: NonZero<usize>,
+    rng: R,
     _marker: PhantomData<(G, F)>,
 }
 
-impl<G, F, I, T, Fe, Ops> GeneticAlgorithm<G, F, I, T, Fe, Ops>
+impl<G, F, I, T, Fe, Ops, R> GeneticAlgorithm<G, F, I, T, Fe, Ops, R>
 where
     F: PartialOrd,
     I: Initialization<G>,
-    T: TerminationCondition,
+    T: TerminationCondition<G, F>,
     Fe: FitnessEvaluation<G, F>,
-    Ops: OperatorPipeline<G, F, Fe>,
+    Ops: GeneticOperator<G, F, Fe, R>,
 {
     pub fn new(
         initialization: I,
@@ -38,6 +45,7 @@ where
         fitness: Fe,
         operators: Ops,
         population_size: NonZero<usize>,
+        rng: R,
     ) -> Self {
         Self {
             initialization,
@@ -45,22 +53,24 @@ where
             fitness,
             operators,
             population_size,
+            rng,
             _marker: PhantomData,
         }
     }
 
-    pub fn run(&self) -> Individual<G, F> {
+    pub fn run(&mut self) -> Individual<G, F> {
         let genomes = self.initialization.initialize(self.population_size);
-        let mut population = Population::from(genomes);
+        let population = Population::from(genomes);
 
-        let mut generation = 0;
-        while !self.termination.should_terminate(generation) {
+        let ctx = Context::new(&self.fitness, &mut self.rng);
+        let mut state = State::new(population, 0);
+
+        while !self.termination.should_terminate(&state) {
             // Apply pipeline — ownership flows through
-            let ctx = Context::new(&population, &self.fitness, generation);
-            population = self.operators.apply_operators(&ctx);
-            generation += 1;
+            state.population = self.operators.apply(&state, &ctx);
+            state.generation += 1;
         }
 
-        population.best()
+        state.population.best()
     }
 }
