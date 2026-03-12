@@ -19,4 +19,9 @@ impl<G, F> Individual<G, F> {
     pub fn calculate_fitness(&mut self, fitness_evaluation: &impl FitnessEvaluation<G, F>) {
         self.fitness = Some(fitness_evaluation.evaluate(&self.genome))
     }
+
+    /// Sets the fitness value of an individual to None.
+    pub fn invalidate_fitness(&mut self) {
+        self.fitness = None;
+    }
 }

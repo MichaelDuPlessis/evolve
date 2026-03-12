@@ -2,7 +2,7 @@ use crate::{
     core::{individual::Individual, population::Population},
     fitness::FitnessEvaluation,
     initialization::Initialization,
-    pipeline::ApplyOperators,
+    pipeline::OperatorPipeline,
     termination::TerminationCondition,
 };
 use std::{marker::PhantomData, num::NonZero};
@@ -14,7 +14,7 @@ where
     I: Initialization<G>,
     T: TerminationCondition,
     Fe: FitnessEvaluation<G, F>,
-    Ops: ApplyOperators<G, F>,
+    Ops: OperatorPipeline<G, F>,
 {
     initialization: I,
     termination: T,
@@ -30,7 +30,7 @@ where
     I: Initialization<G>,
     T: TerminationCondition,
     Fe: FitnessEvaluation<G, F>,
-    Ops: ApplyOperators<G, F>,
+    Ops: OperatorPipeline<G, F>,
 {
     pub fn new(
         initialization: I,

@@ -6,6 +6,20 @@ pub struct Population<G, F> {
 }
 
 impl<G, F> Population<G, F> {
+    /// Create a new empty population.
+    pub fn new() -> Self {
+        Self {
+            individuals: Vec::new(),
+        }
+    }
+
+    /// Create an empty population with a certain capacity.
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            individuals: Vec::with_capacity(capacity),
+        }
+    }
+
     /// Create a new population from a `Vec` of `Individuals`.
     pub fn from_individuals(individuals: Vec<Individual<G, F>>) -> Self {
         Self { individuals }
@@ -17,20 +31,39 @@ impl<G, F> Population<G, F> {
         Self::from_individuals(individuals)
     }
 
-    pub fn individuals(&self) -> &[Individual<G, F>] {
+    /// Number of individuals in the population.
+    pub fn len(&self) -> usize {
+        self.individuals.len()
+    }
+
+    /// Returns true if the population is empty.
+    pub fn is_empty(&self) -> bool {
+        self.individuals.is_empty()
+    }
+
+    /// Immutable iterator over individuals.
+    pub fn iter(&self) -> std::slice::Iter<'_, Individual<G, F>> {
+        self.individuals.iter()
+    }
+
+    /// Mutable iterator over individuals.
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, Individual<G, F>> {
+        self.individuals.iter_mut()
+    }
+
+    /// Returns the population as a slice.
+    pub fn as_slice(&self) -> &[Individual<G, F>] {
         &self.individuals
     }
 
-    pub fn individuals_mut(&mut self) -> &mut [Individual<G, F>] {
+    /// Returns the population as a mutable slice.
+    pub fn as_mut_slice(&mut self) -> &mut [Individual<G, F>] {
         &mut self.individuals
     }
 
+    /// Consumes the population and returns the inner Vec.
     pub fn into_vec(self) -> Vec<Individual<G, F>> {
         self.individuals
-    }
-
-    pub fn len(&self) -> usize {
-        self.individuals.len()
     }
 
     /// Get the best individual in the Population
@@ -49,6 +82,11 @@ impl<G, F> Population<G, F> {
             })
             .expect("population cannot be empty")
     }
+
+    /// Add a new individual into the population
+    pub fn add(&mut self, individual: Individual<G, F>) {
+        self.individuals.push(individual);
+    }
 }
 
 impl<G, F> From<Vec<Individual<G, F>>> for Population<G, F> {
@@ -60,5 +98,32 @@ impl<G, F> From<Vec<Individual<G, F>>> for Population<G, F> {
 impl<G, F> From<Vec<G>> for Population<G, F> {
     fn from(value: Vec<G>) -> Self {
         Self::from_genomes(value)
+    }
+}
+
+impl<G, F> IntoIterator for Population<G, F> {
+    type Item = Individual<G, F>;
+    type IntoIter = std::vec::IntoIter<Individual<G, F>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.individuals.into_iter()
+    }
+}
+
+impl<'a, G, F> IntoIterator for &'a Population<G, F> {
+    type Item = &'a Individual<G, F>;
+    type IntoIter = std::slice::Iter<'a, Individual<G, F>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.individuals.iter()
+    }
+}
+
+impl<'a, G, F> IntoIterator for &'a mut Population<G, F> {
+    type Item = &'a mut Individual<G, F>;
+    type IntoIter = std::slice::IterMut<'a, Individual<G, F>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.individuals.iter_mut()
     }
 }

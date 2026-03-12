@@ -1,7 +1,7 @@
 use crate::{core::population::Population, fitness::FitnessEvaluation, operators::GeneticOperator};
 
 /// Trait to apply a pipeline of operators
-pub trait ApplyOperators<G, F> {
+pub trait OperatorPipeline<G, F> {
     fn apply_operators(
         &self,
         population: Population<G, F>,
@@ -10,7 +10,7 @@ pub trait ApplyOperators<G, F> {
 }
 
 /// Base case: single operator
-impl<G, F, O> ApplyOperators<G, F> for (O,)
+impl<G, F, O> OperatorPipeline<G, F> for (O,)
 where
     O: GeneticOperator<G, F>,
 {
@@ -24,10 +24,10 @@ where
 }
 
 /// Recursive case: operator + rest
-impl<G, F, O, Rest> ApplyOperators<G, F> for (O, Rest)
+impl<G, F, O, Rest> OperatorPipeline<G, F> for (O, Rest)
 where
     O: GeneticOperator<G, F>,
-    Rest: ApplyOperators<G, F>,
+    Rest: OperatorPipeline<G, F>,
 {
     fn apply_operators(
         &self,
