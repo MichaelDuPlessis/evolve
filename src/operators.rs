@@ -1,3 +1,4 @@
+pub mod crossover;
 pub mod mutation;
 
 use rand::Rng;

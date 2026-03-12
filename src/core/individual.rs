@@ -1,6 +1,7 @@
 use crate::fitness::FitnessEvaluation;
 
 /// Individual with cached fitness
+#[derive(Debug, Clone)]
 pub struct Individual<G, F> {
     pub genome: G,
     pub fitness: Option<F>,

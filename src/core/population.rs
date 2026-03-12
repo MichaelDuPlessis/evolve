@@ -1,3 +1,5 @@
+use std::slice::ChunksExact;
+
 use crate::core::individual::Individual;
 
 /// The population in the algorithm. It is a list of Individuals.
@@ -54,6 +56,11 @@ impl<G, F> Population<G, F> {
     /// Mutable iterator over individuals.
     pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, Individual<G, F>> {
         self.individuals.iter_mut()
+    }
+
+    /// Create chunks of exactly the size specified.
+    pub fn chunks_exact(&self, chunk_size: usize) -> ChunksExact<'_, Individual<G, F>> {
+        self.individuals.chunks_exact(chunk_size)
     }
 
     /// Returns the population as a slice.
