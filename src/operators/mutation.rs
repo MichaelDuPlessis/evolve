@@ -21,7 +21,7 @@ impl<T> RandomReset<T> {
     }
 }
 
-impl<G, F, R, Fe, T> GeneticOperator<G, F, Fe, R> for RandomReset<T>
+impl<G, F, R, Fe, T, C> GeneticOperator<G, F, Fe, R, C> for RandomReset<T>
 where
     G: Clone + AsMut<[T]>,
     T: Randomizable<R>,
@@ -29,7 +29,7 @@ where
     R: Rng,
     Fe: FitnessEvaluator<G, F>,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F> {
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Population<G, F> {
         let mut offspring = Population::with_capacity(state.population().len());
 
         for individual in state.population() {

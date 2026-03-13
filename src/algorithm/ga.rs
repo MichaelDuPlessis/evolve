@@ -1,10 +1,9 @@
 use crate::{
     core::{
         context::{Context, State},
-        goal::Goal,
         individual::Individual,
     },
-    fitness::FitnessEvaluator,
+    fitness::{FitnessComparator, FitnessEvaluator, Maximize},
     initialization::Initializer,
     operators::GeneticOperator,
     termination::TerminationCondition,
@@ -12,13 +11,13 @@ use crate::{
 use std::{marker::PhantomData, num::NonZero};
 
 /// Genetic Algorithm runner
-pub struct GeneticAlgorithm<G, F, I, T, Fe, Ops, R>
+pub struct GeneticAlgorithm<G, F, I, T, Fe, Ops, R, C = Maximize>
 where
     F: PartialOrd,
-    I: Initializer<G, F, Fe, R>,
+    I: Initializer<G, F, Fe, R, C>,
     T: TerminationCondition<G, F>,
     Fe: FitnessEvaluator<G, F>,
-    Ops: GeneticOperator<G, F, Fe, R>,
+    Ops: GeneticOperator<G, F, Fe, R, C>,
 {
     initializer: I,
     termination: T,
@@ -26,17 +25,21 @@ where
     operators: Ops,
     population_size: NonZero<usize>,
     rng: R,
-    goal: Goal,
+    goal: C,
     _marker: PhantomData<(G, F)>,
 }
 
-impl<G, F, I, T, Fe, Ops, R> GeneticAlgorithm<G, F, I, T, Fe, Ops, R>
+impl<G, F, I, T, Fe, Ops, R, C> GeneticAlgorithm<G, F, I, T, Fe, Ops, R, C>
 where
     F: PartialOrd,
-    I: Initializer<G, F, Fe, R>,
+    I: Initializer<G, F, Fe, R, C>,
     T: TerminationCondition<G, F>,
     Fe: FitnessEvaluator<G, F>,
-    Ops: GeneticOperator<G, F, Fe, R>,
+    Ops: GeneticOperator<G, F, Fe, R, C>,
+    C: FitnessComparator<F>,
+    // hmm I don't know if I like this
+    G: Clone,
+    F: Clone,
 {
     pub fn new(
         initialization: I,
@@ -45,7 +48,7 @@ where
         operators: Ops,
         population_size: NonZero<usize>,
         rng: R,
-        goal: Goal,
+        goal: C,
     ) -> Self {
         Self {
             initializer: initialization,
@@ -60,7 +63,7 @@ where
     }
 
     pub fn run(&mut self) -> Individual<G, F> {
-        let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng, self.goal);
+        let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng, &self.goal);
 
         let population = self.initializer.initialize(self.population_size, &mut ctx);
 
@@ -72,6 +75,6 @@ where
             state.inc_generation();
         }
 
-        todo!()
+        state.into_population().best(&self.goal).clone()
     }
 }

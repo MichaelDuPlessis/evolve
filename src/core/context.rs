@@ -1,20 +1,16 @@
-use crate::{
-    core::{goal::Goal, population::Population},
-    fitness::FitnessEvaluator,
-    operators::GeneticOperator,
-};
+use crate::{core::population::Population, fitness::FitnessEvaluator, operators::GeneticOperator};
 
 /// All the context needed for the genetic operators.
 #[derive(Debug)]
-pub struct Context<'a, Fe, R> {
+pub struct Context<'a, Fe, R, C> {
     fitness: &'a Fe,
     rng: &'a mut R,
-    goal: Goal,
+    goal: &'a C,
 }
 
-impl<'a, Fe, R> Context<'a, Fe, R> {
+impl<'a, Fe, R, C> Context<'a, Fe, R, C> {
     /// Create a new `Context`.
-    pub fn new(fitness: &'a Fe, rng: &'a mut R, goal: Goal) -> Self {
+    pub fn new(fitness: &'a Fe, rng: &'a mut R, goal: &'a C) -> Self {
         Self { fitness, rng, goal }
     }
 
@@ -28,9 +24,9 @@ impl<'a, Fe, R> Context<'a, Fe, R> {
         self.rng
     }
 
-    /// Get the `Goal` for the problem.
-    pub fn goal(&self) -> Goal {
-        self.goal
+    /// Get the goal for the problem.
+    pub fn goal(&self) -> &C {
+        &self.goal
     }
 }
 
@@ -65,10 +61,10 @@ impl<G, F> State<G, F> {
     }
 
     /// Applies the operators to the `State` and updates the population.
-    pub(crate) fn apply_operators<Fe, R>(
+    pub(crate) fn apply_operators<Fe, R, C>(
         &mut self,
-        ctx: &mut Context<Fe, R>,
-        ops: &mut impl GeneticOperator<G, F, Fe, R>,
+        ctx: &mut Context<Fe, R, C>,
+        ops: &mut impl GeneticOperator<G, F, Fe, R, C>,
     ) where
         Fe: FitnessEvaluator<G, F>,
     {

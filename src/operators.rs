@@ -12,21 +12,21 @@ use crate::{
 };
 
 /// Genetic operator trait — owns input population, returns a new population
-pub trait GeneticOperator<G, F, Fe, R>
+pub trait GeneticOperator<G, F, Fe, R, C>
 where
     Fe: FitnessEvaluator<G, F>,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F>;
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Population<G, F>;
 }
 
 // Base case: single operator
-impl<G, F, Fe, R, O> GeneticOperator<G, F, Fe, R> for (O,)
+impl<G, F, Fe, R, O, C> GeneticOperator<G, F, Fe, R, C> for (O,)
 where
-    O: GeneticOperator<G, F, Fe, R>,
+    O: GeneticOperator<G, F, Fe, R, C>,
     Fe: FitnessEvaluator<G, F>,
     R: Rng,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F> {
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Population<G, F> {
         // Apply operator and get the new individuals
         let offspring = self.0.apply(state, ctx);
         offspring
@@ -34,14 +34,14 @@ where
 }
 
 // Recursive case: operator + rest
-impl<G, F, Fe, R, O, Rest> GeneticOperator<G, F, Fe, R> for (O, Rest)
+impl<G, F, Fe, R, C, O, Rest> GeneticOperator<G, F, Fe, R, C> for (O, Rest)
 where
-    O: GeneticOperator<G, F, Fe, R>,
-    Rest: GeneticOperator<G, F, Fe, R>,
+    O: GeneticOperator<G, F, Fe, R, C>,
+    Rest: GeneticOperator<G, F, Fe, R, C>,
     Fe: FitnessEvaluator<G, F>,
     R: Rng,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F> {
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Population<G, F> {
         // Generate offspring from the first operator
         let mut new_individuals = self.0.apply(state, ctx);
 

@@ -7,14 +7,14 @@ use rand::Rng;
 use std::num::NonZero;
 
 /// Trait to initialize the population
-pub trait Initializer<G, F, Fe, R>
+pub trait Initializer<G, F, Fe, R, C>
 where
     Fe: FitnessEvaluator<G, F>,
 {
     fn initialize(
         &self,
         population_size: NonZero<usize>,
-        ctx: &mut Context<Fe, R>,
+        ctx: &mut Context<Fe, R, C>,
     ) -> Population<G, F>;
 }
 
@@ -28,7 +28,7 @@ impl Random {
     }
 }
 
-impl<G, F, Fe, R> Initializer<G, F, Fe, R> for Random
+impl<G, F, Fe, R, C> Initializer<G, F, Fe, R, C> for Random
 where
     Fe: FitnessEvaluator<G, F>,
     G: Randomizable<R>,
@@ -37,7 +37,7 @@ where
     fn initialize(
         &self,
         population_size: NonZero<usize>,
-        ctx: &mut Context<Fe, R>,
+        ctx: &mut Context<Fe, R, C>,
     ) -> Population<G, F> {
         (0..population_size.get())
             .map(|_| Individual::new(G::random(ctx.rng()), ctx.fitness_evaluator()))

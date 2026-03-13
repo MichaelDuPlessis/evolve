@@ -1,4 +1,4 @@
-use crate::core::{goal::Goal, individual::Individual};
+use crate::{core::individual::Individual, fitness::FitnessComparator};
 use std::slice::ChunksExact;
 
 /// The population in the algorithm. It is a list of Individuals.
@@ -73,11 +73,21 @@ impl<G, F> Population<G, F> {
     }
 
     /// Get the best individual in the Population
-    pub fn best(&self, goal: Goal) -> &Individual<G, F>
+    pub fn best<C>(&self, comparator: &C) -> &Individual<G, F>
     where
         F: PartialOrd,
+        C: FitnessComparator<F>,
     {
-        goal.best(&self.individuals)
+        self.individuals
+            .iter()
+            .reduce(|a, b| {
+                if comparator.is_better(a.fitness(), b.fitness()) {
+                    a
+                } else {
+                    b
+                }
+            })
+            .expect("population cannot be empty")
     }
 
     /// Add a new individual into the population
