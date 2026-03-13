@@ -2,10 +2,9 @@ use crate::{
     core::{
         context::{Context, State},
         individual::Individual,
-        population::Population,
     },
-    fitness::FitnessEvaluation,
-    initialization::Initialization,
+    fitness::FitnessEvaluator,
+    initialization::Initializer,
     operators::GeneticOperator,
     termination::TerminationCondition,
 };
@@ -15,14 +14,14 @@ use std::{marker::PhantomData, num::NonZero};
 pub struct GeneticAlgorithm<G, F, I, T, Fe, Ops, R>
 where
     F: PartialOrd,
-    I: Initialization<G>,
+    I: Initializer<G, F, Fe, R>,
     T: TerminationCondition<G, F>,
-    Fe: FitnessEvaluation<G, F>,
+    Fe: FitnessEvaluator<G, F>,
     Ops: GeneticOperator<G, F, Fe, R>,
 {
-    initialization: I,
+    initializer: I,
     termination: T,
-    fitness: Fe,
+    fitness_evaluator: Fe,
     operators: Ops,
     population_size: NonZero<usize>,
     rng: R,
@@ -32,9 +31,9 @@ where
 impl<G, F, I, T, Fe, Ops, R> GeneticAlgorithm<G, F, I, T, Fe, Ops, R>
 where
     F: PartialOrd,
-    I: Initialization<G>,
+    I: Initializer<G, F, Fe, R>,
     T: TerminationCondition<G, F>,
-    Fe: FitnessEvaluation<G, F>,
+    Fe: FitnessEvaluator<G, F>,
     Ops: GeneticOperator<G, F, Fe, R>,
 {
     pub fn new(
@@ -46,9 +45,9 @@ where
         rng: R,
     ) -> Self {
         Self {
-            initialization,
+            initializer: initialization,
             termination,
-            fitness,
+            fitness_evaluator: fitness,
             operators,
             population_size,
             rng,
@@ -57,10 +56,10 @@ where
     }
 
     pub fn run(&mut self) -> Individual<G, F> {
-        let genomes = self.initialization.initialize(self.population_size);
-        let population = Population::from(genomes);
+        let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng);
 
-        let mut ctx = Context::new(&self.fitness, &mut self.rng);
+        let population = self.initializer.initialize(self.population_size, &mut ctx);
+
         let mut state = State::new(population, 0);
 
         while !self.termination.should_terminate(&state) {

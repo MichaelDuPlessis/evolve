@@ -1,6 +1,5 @@
-use std::slice::ChunksExact;
-
 use crate::core::individual::Individual;
+use std::slice::ChunksExact;
 
 /// The population in the algorithm. It is a list of Individuals.
 pub struct Population<G, F> {
@@ -25,12 +24,6 @@ impl<G, F> Population<G, F> {
     /// Create a new population from a `Vec` of `Individuals`.
     pub fn from_individuals(individuals: Vec<Individual<G, F>>) -> Self {
         Self { individuals }
-    }
-
-    /// Create a new population from a `Vec` of genomes.
-    pub fn from_genomes(genomes: Vec<G>) -> Self {
-        let individuals: Vec<Individual<G, F>> = genomes.into_iter().map(Individual::new).collect();
-        Self::from_individuals(individuals)
     }
 
     /// Extend a `Population` with another `Populatin` or a list of `Individuals`.
@@ -85,13 +78,7 @@ impl<G, F> Population<G, F> {
     {
         self.individuals
             .into_iter()
-            .max_by(|a, b| {
-                a.fitness
-                    .as_ref()
-                    .unwrap()
-                    .partial_cmp(b.fitness.as_ref().unwrap())
-                    .unwrap()
-            })
+            .max_by(|a, b| a.fitness().partial_cmp(b.fitness()).unwrap())
             .expect("population cannot be empty")
     }
 
@@ -104,12 +91,6 @@ impl<G, F> Population<G, F> {
 impl<G, F> From<Vec<Individual<G, F>>> for Population<G, F> {
     fn from(value: Vec<Individual<G, F>>) -> Self {
         Self::from_individuals(value)
-    }
-}
-
-impl<G, F> From<Vec<G>> for Population<G, F> {
-    fn from(value: Vec<G>) -> Self {
-        Self::from_genomes(value)
     }
 }
 

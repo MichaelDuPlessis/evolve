@@ -1,4 +1,4 @@
-use crate::{core::population::Population, fitness::FitnessEvaluation, operators::GeneticOperator};
+use crate::{core::population::Population, fitness::FitnessEvaluator, operators::GeneticOperator};
 
 /// All the context needed for the genetic operators.
 pub struct Context<'a, Fe, R> {
@@ -12,8 +12,8 @@ impl<'a, Fe, R> Context<'a, Fe, R> {
         Self { fitness, rng }
     }
 
-    /// Get the `FitnessEvaluation`.
-    pub fn fitness(&self) -> &Fe {
+    /// Get the `FitnessEvaluator`.
+    pub fn fitness_evaluator(&self) -> &Fe {
         self.fitness
     }
 
@@ -59,7 +59,7 @@ impl<G, F> State<G, F> {
         ctx: &mut Context<Fe, R>,
         ops: &mut impl GeneticOperator<G, F, Fe, R>,
     ) where
-        Fe: FitnessEvaluation<G, F>,
+        Fe: FitnessEvaluator<G, F>,
     {
         self.population = ops.apply(self, ctx);
     }

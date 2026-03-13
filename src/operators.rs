@@ -8,13 +8,13 @@ use crate::{
         context::{Context, State},
         population::Population,
     },
-    fitness::FitnessEvaluation,
+    fitness::FitnessEvaluator,
 };
 
 /// Genetic operator trait — owns input population, returns a new population
 pub trait GeneticOperator<G, F, Fe, R>
 where
-    Fe: FitnessEvaluation<G, F>,
+    Fe: FitnessEvaluator<G, F>,
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F>;
 }
@@ -23,7 +23,7 @@ where
 impl<G, F, Fe, R, O> GeneticOperator<G, F, Fe, R> for (O,)
 where
     O: GeneticOperator<G, F, Fe, R>,
-    Fe: FitnessEvaluation<G, F>,
+    Fe: FitnessEvaluator<G, F>,
     R: Rng,
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F> {
@@ -38,7 +38,7 @@ impl<G, F, Fe, R, O, Rest> GeneticOperator<G, F, Fe, R> for (O, Rest)
 where
     O: GeneticOperator<G, F, Fe, R>,
     Rest: GeneticOperator<G, F, Fe, R>,
-    Fe: FitnessEvaluation<G, F>,
+    Fe: FitnessEvaluator<G, F>,
     R: Rng,
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F> {

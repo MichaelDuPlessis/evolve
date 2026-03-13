@@ -4,7 +4,7 @@ use crate::{
         individual::Individual,
         population::Population,
     },
-    fitness::FitnessEvaluation,
+    fitness::FitnessEvaluator,
     operators::GeneticOperator,
     random::Randomizable,
 };
@@ -27,13 +27,13 @@ where
     T: Randomizable<R>,
     F: PartialOrd,
     R: Rng,
-    Fe: FitnessEvaluation<G, F>,
+    Fe: FitnessEvaluator<G, F>,
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R>) -> Population<G, F> {
         let mut offspring = Population::with_capacity(state.population().len());
 
         for individual in state.population() {
-            let mut new_genome = individual.genome.clone();
+            let mut new_genome = individual.genome().clone();
 
             // Convert genome to a mutable slice of genes
             let genes = new_genome.as_mut();
@@ -44,7 +44,7 @@ where
             // Replace it with a new random value
             genes[gene_index] = T::random(ctx.rng());
 
-            let new_ind = Individual::new(new_genome);
+            let new_ind = Individual::new(new_genome, ctx.fitness_evaluator());
             offspring.add(new_ind);
         }
 
