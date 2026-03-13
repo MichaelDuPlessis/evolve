@@ -120,3 +120,11 @@ impl<'a, G, F> IntoIterator for &'a mut Population<G, F> {
         self.individuals.iter_mut()
     }
 }
+
+impl<G, F> FromIterator<Individual<G, F>> for Population<G, F> {
+    fn from_iter<T: IntoIterator<Item = Individual<G, F>>>(iter: T) -> Self {
+        Self {
+            individuals: iter.into_iter().collect(),
+        }
+    }
+}

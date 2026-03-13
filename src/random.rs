@@ -1,4 +1,5 @@
 use rand::{Rng, RngExt};
+use std::array;
 
 /// Implementing this trait means that a object can be created using a random number generator.
 pub trait Randomizable<R>
@@ -21,6 +22,17 @@ macro_rules! impl_randomizable_for_numbers {
             }
         )*
     };
+}
+
+// Be able to create random arrays with random elements
+impl<R, T, const N: usize> Randomizable<R> for [T; N]
+where
+    R: Rng,
+    T: Randomizable<R>,
+{
+    fn random(rng: &mut R) -> Self {
+        array::from_fn(|_| T::random(rng))
+    }
 }
 
 // Apply macro to common numeric types
