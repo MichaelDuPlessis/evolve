@@ -1,7 +1,8 @@
-use crate::core::individual::Individual;
+use crate::core::{goal::Goal, individual::Individual};
 use std::slice::ChunksExact;
 
 /// The population in the algorithm. It is a list of Individuals.
+#[derive(Debug)]
 pub struct Population<G, F> {
     individuals: Vec<Individual<G, F>>,
 }
@@ -72,14 +73,11 @@ impl<G, F> Population<G, F> {
     }
 
     /// Get the best individual in the Population
-    pub fn best(self) -> Individual<G, F>
+    pub fn best(&self, goal: Goal) -> &Individual<G, F>
     where
         F: PartialOrd,
     {
-        self.individuals
-            .into_iter()
-            .max_by(|a, b| a.fitness().partial_cmp(b.fitness()).unwrap())
-            .expect("population cannot be empty")
+        goal.best(&self.individuals)
     }
 
     /// Add a new individual into the population

@@ -1,6 +1,7 @@
 use crate::{
     core::{
         context::{Context, State},
+        goal::Goal,
         individual::Individual,
     },
     fitness::FitnessEvaluator,
@@ -25,6 +26,7 @@ where
     operators: Ops,
     population_size: NonZero<usize>,
     rng: R,
+    goal: Goal,
     _marker: PhantomData<(G, F)>,
 }
 
@@ -43,6 +45,7 @@ where
         operators: Ops,
         population_size: NonZero<usize>,
         rng: R,
+        goal: Goal,
     ) -> Self {
         Self {
             initializer: initialization,
@@ -51,12 +54,13 @@ where
             operators,
             population_size,
             rng,
+            goal,
             _marker: PhantomData,
         }
     }
 
     pub fn run(&mut self) -> Individual<G, F> {
-        let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng);
+        let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng, self.goal);
 
         let population = self.initializer.initialize(self.population_size, &mut ctx);
 
@@ -68,6 +72,6 @@ where
             state.inc_generation();
         }
 
-        state.into_population().best()
+        todo!()
     }
 }
