@@ -24,8 +24,4 @@ where
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Population<G, F> {
         todo!()
     }
-
-    fn output_size(&self, input_size: usize) -> Option<usize> {
-        todo!()
-    }
 }

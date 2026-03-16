@@ -56,8 +56,4 @@ where
 
         population
     }
-
-    fn output_size(&self, input_size: usize) -> Option<usize> {
-        Some(2 * (input_size / 2))
-    }
 }
