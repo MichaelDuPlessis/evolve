@@ -5,13 +5,17 @@ use crate::{core::population::Population, fitness::FitnessEvaluator, operators::
 pub struct Context<'a, Fe, R, C> {
     fitness: &'a Fe,
     rng: &'a mut R,
-    goal: &'a C,
+    comparator: &'a C,
 }
 
 impl<'a, Fe, R, C> Context<'a, Fe, R, C> {
     /// Create a new `Context`.
     pub fn new(fitness: &'a Fe, rng: &'a mut R, goal: &'a C) -> Self {
-        Self { fitness, rng, goal }
+        Self {
+            fitness,
+            rng,
+            comparator: goal,
+        }
     }
 
     /// Get the `FitnessEvaluator`.
@@ -25,8 +29,8 @@ impl<'a, Fe, R, C> Context<'a, Fe, R, C> {
     }
 
     /// Get the goal for the problem.
-    pub fn goal(&self) -> &C {
-        &self.goal
+    pub fn comparator(&self) -> &C {
+        &self.comparator
     }
 }
 
@@ -43,6 +47,11 @@ impl<G, F> State<G, F> {
             population,
             generation,
         }
+    }
+
+    /// Create a new `State` while keeping the generation the same.
+    pub fn with_population(&self, population: Population<G, F>) -> Self {
+        Self::new(population, self.generation)
     }
 
     /// Get the `Population`.

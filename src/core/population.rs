@@ -1,3 +1,5 @@
+use rand::{Rng, seq::IndexedRandom};
+
 use crate::{core::individual::Individual, fitness::FitnessComparator};
 use std::slice::ChunksExact;
 
@@ -70,6 +72,11 @@ impl<G, F> Population<G, F> {
     /// Consumes the population and returns the inner Vec.
     pub fn into_vec(self) -> Vec<Individual<G, F>> {
         self.individuals
+    }
+
+    /// Choose a random individual from the population.
+    pub fn choose<R: Rng>(&self, rng: &mut R) -> &Individual<G, F> {
+        unsafe { self.individuals.choose(rng).unwrap_unchecked() }
     }
 
     /// Get the best individual in the Population
