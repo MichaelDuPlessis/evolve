@@ -5,7 +5,7 @@ pub mod selection;
 use crate::{
     core::{
         context::{Context, State},
-        population::Population,
+        offspring::Offpring,
     },
     fitness::FitnessEvaluator,
 };
@@ -15,7 +15,7 @@ pub trait GeneticOperator<G, F, Fe, R, C>
 where
     Fe: FitnessEvaluator<G, F>,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Population<G, F>;
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F>;
 }
 
 // // Base case: single operator

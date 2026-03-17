@@ -1,6 +1,9 @@
 use rand::{Rng, seq::IndexedRandom};
 
-use crate::{core::individual::Individual, fitness::FitnessComparator};
+use crate::{
+    core::{individual::Individual, offspring::Offpring},
+    fitness::FitnessComparator,
+};
 use std::slice::ChunksExact;
 
 /// The population in the algorithm. It is a list of Individuals.
@@ -106,6 +109,12 @@ impl<G, F> Population<G, F> {
 impl<G, F> From<Vec<Individual<G, F>>> for Population<G, F> {
     fn from(value: Vec<Individual<G, F>>) -> Self {
         Self::from_individuals(value)
+    }
+}
+
+impl<G, F> From<Offpring<G, F>> for Population<G, F> {
+    fn from(value: Offpring<G, F>) -> Self {
+        value.into_population()
     }
 }
 

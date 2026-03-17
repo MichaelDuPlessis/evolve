@@ -77,7 +77,7 @@ impl<G, F> State<G, F> {
     ) where
         Fe: FitnessEvaluator<G, F>,
     {
-        self.population = ops.apply(self, ctx);
+        self.population = ops.apply(self, ctx).into();
     }
 
     /// Transforms the `State` into a `Population`.
