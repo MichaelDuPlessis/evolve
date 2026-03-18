@@ -100,9 +100,22 @@ impl<G, F> Population<G, F> {
             .expect("population cannot be empty")
     }
 
-    /// Add a new individual into the population
+    /// Add a new `Individual` to the population
     pub fn add(&mut self, individual: Individual<G, F>) {
         self.individuals.push(individual);
+    }
+
+    /// Merges another `Population` into one this one.
+    pub fn merge(&mut self, population: Population<G, F>) {
+        self.individuals.extend(population.individuals);
+    }
+
+    /// Add an `Offspring` to the population.
+    pub fn add_offspring(&mut self, offspring: Offpring<G, F>) {
+        match offspring {
+            Offpring::Single(individual) => self.add(individual),
+            Offpring::Multiple(population) => self.merge(population),
+        }
     }
 }
 
