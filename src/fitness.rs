@@ -3,11 +3,26 @@ pub trait FitnessEvaluator<G, F> {
     fn evaluate(&self, genome: &G) -> F;
 }
 
-pub trait FitnessComparator<F>
+impl<G, F, E> FitnessEvaluator<G, F> for E
 where
-    F: PartialOrd,
+    E: Fn(&G) -> F,
 {
+    fn evaluate(&self, genome: &G) -> F {
+        self(genome)
+    }
+}
+
+pub trait FitnessComparator<F> {
     fn is_better(&self, f1: &F, f2: &F) -> bool;
+}
+
+impl<F, C> FitnessComparator<F> for C
+where
+    C: Fn(&F, &F) -> bool,
+{
+    fn is_better(&self, f1: &F, f2: &F) -> bool {
+        self(f1, f2)
+    }
 }
 
 pub struct Maximize;
