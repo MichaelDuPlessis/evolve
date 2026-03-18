@@ -3,19 +3,13 @@ pub mod crossover;
 pub mod mutation;
 pub mod selection;
 
-use crate::{
-    core::{
-        context::{Context, State},
-        offspring::Offpring,
-    },
-    fitness::FitnessEvaluator,
+use crate::core::{
+    context::{Context, State},
+    offspring::Offpring,
 };
 
 /// Genetic operator trait — owns input population, returns a new population
-pub trait GeneticOperator<G, F, Fe, R, C>
-where
-    Fe: FitnessEvaluator<G, F>,
-{
+pub trait GeneticOperator<G, F, Fe, R, C> {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F>;
 }
 

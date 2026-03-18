@@ -4,10 +4,8 @@ use crate::{
         offspring::Offpring,
         population::Population,
     },
-    fitness::FitnessEvaluator,
     operators::GeneticOperator,
 };
-use rand::Rng;
 
 /// Combines multiple `GeneticOperators` and merges their ouputs.
 pub struct Combine<O>(O);
@@ -26,8 +24,6 @@ macro_rules! impl_genetic_combine {
         impl<G, F, Fe, R, C, $first> GeneticOperator<G, F, Fe, R, C> for Combine<($first,)>
         where
             $first: GeneticOperator<G, F, Fe, R, C>,
-            Fe: FitnessEvaluator<G, F>,
-            R: Rng,
         {
             fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
                 self.0.0.apply(state, ctx)
@@ -40,8 +36,6 @@ macro_rules! impl_genetic_combine {
         where
             $first: GeneticOperator<G, F, Fe, R, C>,
             $($rest: GeneticOperator<G, F, Fe, R, C>),*,
-            Fe: FitnessEvaluator<G, F>,
-            R: Rng,
         {
             fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
                 #[allow(non_snake_case)]
@@ -72,14 +66,38 @@ impl_genetic_combine!(
 impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Combine<&[O]>
 where
     O: GeneticOperator<G, F, Fe, R, C>,
-    Fe: FitnessEvaluator<G, F>,
-    R: Rng,
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
         let mut population = Population::new();
 
         for operator in self.0 {
             population.add_offspring(operator.apply(state, ctx));
+        }
+
+        Offpring::Multiple(population)
+    }
+}
+
+/// Repeat the `GeneticOperator` provided n times.
+pub struct Repeat<O> {
+    operator: O,
+    n: usize,
+}
+
+impl<O> Repeat<O> {
+    pub fn new(operator: O, n: usize) -> Self {
+        Self { operator, n }
+    }
+}
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Repeat<O>
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
+        let mut population = Population::new();
+        for _ in 0..self.n {
+            population.add_offspring(self.operator.apply(state, ctx));
         }
 
         Offpring::Multiple(population)
