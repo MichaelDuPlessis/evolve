@@ -78,8 +78,8 @@ impl<G, F> Population<G, F> {
     }
 
     /// Choose a random individual from the population.
-    pub fn choose<R: Rng>(&self, rng: &mut R) -> &Individual<G, F> {
-        unsafe { self.individuals.choose(rng).unwrap_unchecked() }
+    pub fn choose<R: Rng>(&self, rng: &mut R) -> Option<&Individual<G, F>> {
+        self.individuals.choose(rng)
     }
 
     /// Get the best individual in the Population
