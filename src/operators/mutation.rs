@@ -2,7 +2,7 @@ use crate::{
     core::{
         context::{Context, State},
         individual::Individual,
-        offspring::Offpring,
+        offspring::Offspring,
         population::Population,
     },
     fitness::FitnessEvaluator,
@@ -30,12 +30,12 @@ where
     R: Rng,
     Fe: FitnessEvaluator<G, F>,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         // if there is only one no need to allocate a whole Vec
         if state.population().len() == 1 {
             // this is fine, we know there is exactly one element
             let individual = unsafe { state.population().as_slice().get_unchecked(0) };
-            Offpring::Single(random_reset_mutate(individual, ctx))
+            Offspring::Single(random_reset_mutate(individual, ctx))
         } else {
             let mut population = Population::with_capacity(state.population().len());
 
@@ -44,7 +44,7 @@ where
                 population.add(new_ind);
             }
 
-            Offpring::Multiple(population)
+            Offspring::Multiple(population)
         }
     }
 }

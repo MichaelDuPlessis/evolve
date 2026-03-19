@@ -2,7 +2,7 @@ use crate::{
     core::{
         context::{Context, State},
         individual::Individual,
-        offspring::Offpring,
+        offspring::Offspring,
         population::Population,
     },
     fitness::FitnessEvaluator,
@@ -27,7 +27,7 @@ where
     R: Rng,
     Fe: FitnessEvaluator<[T; N], F>,
 {
-    fn apply(&self, state: &State<[T; N], F>, ctx: &mut Context<Fe, R, C>) -> Offpring<[T; N], F> {
+    fn apply(&self, state: &State<[T; N], F>, ctx: &mut Context<Fe, R, C>) -> Offspring<[T; N], F> {
         let mut population = Population::with_capacity(state.population().len());
 
         for chunk in state.population().chunks_exact(2) {
@@ -51,6 +51,6 @@ where
             population.add(c2);
         }
 
-        Offpring::Multiple(population)
+        Offspring::Multiple(population)
     }
 }

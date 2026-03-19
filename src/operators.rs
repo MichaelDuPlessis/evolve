@@ -5,12 +5,12 @@ pub mod selection;
 
 use crate::core::{
     context::{Context, State},
-    offspring::Offpring,
+    offspring::Offspring,
 };
 
 /// Genetic operator trait — owns input population, returns a new population
 pub trait GeneticOperator<G, F, Fe, R, C> {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F>;
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F>;
 }
 
 // // Base case: single operator

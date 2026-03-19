@@ -1,7 +1,7 @@
 use crate::{
     core::{
         context::{Context, State},
-        offspring::Offpring,
+        offspring::Offspring,
     },
     fitness::{FitnessComparator, FitnessEvaluator},
     operators::GeneticOperator,
@@ -30,7 +30,7 @@ where
     Fe: FitnessEvaluator<G, F>,
     C: FitnessComparator<F>,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         let population = state.population();
 
         assert!(population.len() > 0);
@@ -51,6 +51,6 @@ where
         // Clone the selected individual
         let selected = best.clone();
 
-        Offpring::Single(selected)
+        Offspring::Single(selected)
     }
 }

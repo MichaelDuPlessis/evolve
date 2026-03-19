@@ -1,7 +1,7 @@
 use crate::{
     core::{
         context::{Context, State},
-        offspring::Offpring,
+        offspring::Offspring,
         population::Population,
     },
     operators::GeneticOperator,
@@ -27,7 +27,7 @@ macro_rules! impl_genetic_combine {
         where
             $first: GeneticOperator<G, F, Fe, R, C>,
         {
-            fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
+            fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
                 self.0.0.apply(state, ctx)
             }
         }
@@ -39,7 +39,7 @@ macro_rules! impl_genetic_combine {
             $first: GeneticOperator<G, F, Fe, R, C>,
             $($rest: GeneticOperator<G, F, Fe, R, C>),*,
         {
-            fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
+            fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
                 #[allow(non_snake_case)]
                 let ($first, $($rest,)*) = &self.0;
 
@@ -53,7 +53,7 @@ macro_rules! impl_genetic_combine {
                     population.add_offspring($rest.apply(state, ctx));
                 )*
 
-                Offpring::Multiple(population)
+                Offspring::Multiple(population)
             }
         }
 
@@ -69,14 +69,14 @@ impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Combine<&[O]>
 where
     O: GeneticOperator<G, F, Fe, R, C>,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         let mut population = Population::new();
 
         for operator in self.0 {
             population.add_offspring(operator.apply(state, ctx));
         }
 
-        Offpring::Multiple(population)
+        Offspring::Multiple(population)
     }
 }
 
@@ -96,13 +96,13 @@ impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Repeat<O>
 where
     O: GeneticOperator<G, F, Fe, R, C>,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         let mut population = Population::new();
         for _ in 0..self.n {
             population.add_offspring(self.operator.apply(state, ctx));
         }
 
-        Offpring::Multiple(population)
+        Offspring::Multiple(population)
     }
 }
 
@@ -126,7 +126,7 @@ macro_rules! impl_weighted_genetic {
             R: Rng,
         {
             #[allow(unused_assignments)]
-            fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
+            fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
                 #[allow(non_snake_case)]
                 let ( $( ($Op, $W), )* ) = &self.0;
 
@@ -169,7 +169,7 @@ where
     O: GeneticOperator<G, F, Fe, R, C>,
     R: Rng,
 {
-    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offpring<G, F> {
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         let total_weight: u16 = self.0.iter().map(|(_, w)| w.get()).sum();
 
         let mut roll = ctx.rng().random_range(0..total_weight);
@@ -183,5 +183,96 @@ where
         }
 
         unreachable!("Weighted selection failed")
+    }
+}
+
+/// Helper trait for the `Fill` operator.
+pub trait GetSize<G, F> {
+    fn get_size(&self, state: &State<G, F>) -> usize;
+}
+
+impl<G, F, T> GetSize<G, F> for T
+where
+    T: Fn(&State<G, F>) -> usize,
+{
+    fn get_size(&self, state: &State<G, F>) -> usize {
+        (self)(state)
+    }
+}
+
+struct FixedSize(usize);
+
+impl<G, F> GetSize<G, F> for FixedSize {
+    fn get_size(&self, _: &State<G, F>) -> usize {
+        self.0
+    }
+}
+
+struct PopSize;
+
+impl<G, F> GetSize<G, F> for PopSize {
+    fn get_size(&self, state: &State<G, F>) -> usize {
+        state.population().len()
+    }
+}
+
+pub struct Fill<O, S> {
+    operator: O,
+    size: S,
+}
+
+impl<O, S> Fill<O, S> {
+    pub fn new(operator: O, size: S) -> Self {
+        Self { operator, size }
+    }
+}
+
+impl<O> Fill<O, PopSize> {
+    /// Creates a new `Fill` that maintains the input population size.
+    pub fn from_population_size(operator: O) -> Self {
+        Self {
+            operator,
+            size: PopSize,
+        }
+    }
+}
+
+impl<O> Fill<O, FixedSize> {
+    /// Creates a new `Fill` that applies the underlying operator until a fixed size is met.
+    pub fn from_fixed_size(operator: O, size: usize) -> Self {
+        Self {
+            operator,
+            size: FixedSize(size),
+        }
+    }
+}
+
+impl<G, F, Fe, R, C, O, S> GeneticOperator<G, F, Fe, R, C> for Fill<O, S>
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+    S: GetSize<G, F>, // TODO: see if this can instead impl FnOnce
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        let target_size = self.size.get_size(state);
+
+        let mut population = Population::with_capacity(target_size);
+
+        while population.len() < target_size {
+            let offspring = self.operator.apply(state, ctx);
+
+            match offspring {
+                Offspring::Single(ind) => population.add(ind),
+                Offspring::Multiple(mut p) => {
+                    // this is just to ensure no more than what is needed is added
+                    let space_left = target_size - population.len();
+                    if p.len() > space_left {
+                        p.cull(space_left);
+                    }
+                    population.extend(p);
+                }
+            }
+        }
+
+        Offspring::Multiple(population)
     }
 }

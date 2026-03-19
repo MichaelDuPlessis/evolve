@@ -1,7 +1,7 @@
 use rand::{Rng, seq::IndexedRandom};
 
 use crate::{
-    core::{individual::Individual, offspring::Offpring},
+    core::{individual::Individual, offspring::Offspring},
     fitness::FitnessComparator,
 };
 use std::slice::ChunksExact;
@@ -111,11 +111,16 @@ impl<G, F> Population<G, F> {
     }
 
     /// Add an `Offspring` to the population.
-    pub fn add_offspring(&mut self, offspring: Offpring<G, F>) {
+    pub fn add_offspring(&mut self, offspring: Offspring<G, F>) {
         match offspring {
-            Offpring::Single(individual) => self.add(individual),
-            Offpring::Multiple(population) => self.merge(population),
+            Offspring::Single(individual) => self.add(individual),
+            Offspring::Multiple(population) => self.merge(population),
         }
+    }
+
+    /// Remove `Individuals` until the target size is met.
+    pub fn cull(&mut self, target_size: usize) {
+        self.individuals.truncate(target_size);
     }
 }
 
@@ -125,8 +130,8 @@ impl<G, F> From<Vec<Individual<G, F>>> for Population<G, F> {
     }
 }
 
-impl<G, F> From<Offpring<G, F>> for Population<G, F> {
-    fn from(value: Offpring<G, F>) -> Self {
+impl<G, F> From<Offspring<G, F>> for Population<G, F> {
+    fn from(value: Offspring<G, F>) -> Self {
         value.into_population()
     }
 }
