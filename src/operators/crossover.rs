@@ -9,12 +9,24 @@ use crate::{
 use rand::{Rng, RngExt};
 use std::marker::PhantomData;
 
-/// Single point crossover operator
+/// Single-point crossover operator.
+///
+/// Pairs individuals from the population, picks a random crossover point, and
+/// swaps the genes after that point between each pair to produce two children.
+/// If the population has an odd number of individuals, the last one is dropped.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::operators::crossover::SinglePoint;
+///
+/// let crossover = SinglePoint::<u8>::new();
+/// ```
 #[derive(Debug)]
 pub struct SinglePoint<T>(PhantomData<T>);
 
 impl<T> SinglePoint<T> {
-    /// Creates a new `SinglePoint` mutation.
+    /// Creates a new `SinglePoint` crossover operator.
     pub fn new() -> Self {
         Self(PhantomData)
     }

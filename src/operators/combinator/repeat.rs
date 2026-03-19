@@ -3,7 +3,17 @@ use crate::{
     operators::GeneticOperator,
 };
 
-/// Repeat the `GeneticOperator` provided n times.
+/// Applies an operator `n` times and collects all results into one population.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::operators::combinator::Repeat;
+/// use evolve::operators::mutation::RandomReset;
+///
+/// // Run mutation 5 times and merge the results
+/// let op = Repeat::new(RandomReset::<u8>::new(), 5);
+/// ```
 #[derive(Debug)]
 pub struct Repeat<O> {
     operator: O,
@@ -11,6 +21,7 @@ pub struct Repeat<O> {
 }
 
 impl<O> Repeat<O> {
+    /// Creates a new `Repeat` that applies the operator `n` times.
     pub fn new(operator: O, n: usize) -> Self {
         Self { operator, n }
     }

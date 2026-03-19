@@ -3,11 +3,24 @@ use crate::{
     operators::GeneticOperator,
 };
 
-/// Combines multiple `GeneticOperators` and merges their ouputs.
+/// Runs multiple operators on the same input and merges their outputs into one population.
+///
+/// Accepts a tuple of up to 16 operators.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::operators::combinator::Combine;
+/// use evolve::operators::mutation::RandomReset;
+///
+/// // Two mutation operators whose results are merged
+/// let op = Combine::new((RandomReset::<u8>::new(), RandomReset::<u8>::new()));
+/// ```
 #[derive(Debug)]
 pub struct Combine<O: ?Sized>(O);
 
 impl<O> Combine<O> {
+    /// Creates a new `Combine` from a tuple of operators.
     pub fn new(operators: O) -> Self {
         Self(operators)
     }

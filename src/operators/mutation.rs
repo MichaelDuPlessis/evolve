@@ -18,7 +18,18 @@ impl<T> GeneCollection for Box<[T]> {}
 impl<T> GeneCollection for [T] {}
 impl<T, const N: usize> GeneCollection for [T; N] {}
 
-/// This mutation operator selects a random gene and assigns a new random value to it
+/// Mutation operator that selects a random gene and replaces it with a new random value.
+///
+/// When applied to a population with a single individual, returns [`Offspring::Single`].
+/// Otherwise returns [`Offspring::Multiple`] with the entire mutated population.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::operators::mutation::RandomReset;
+///
+/// let mutation = RandomReset::<u8>::new();
+/// ```
 #[derive(Debug)]
 pub struct RandomReset<T>(PhantomData<T>);
 

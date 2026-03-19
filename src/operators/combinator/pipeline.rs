@@ -3,10 +3,31 @@ use crate::{
     operators::GeneticOperator,
 };
 
-/// Execute `GeneticOperators` one after another passing the output from the previous one to the next one.
+/// Chains operators sequentially, feeding each operator's output as input to the next.
+///
+/// Accepts a tuple of up to 16 operators. The first operator receives the current
+/// state's population; each subsequent operator receives the output of the previous one.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::operators::combinator::Pipeline;
+/// use evolve::operators::crossover::SinglePoint;
+/// use evolve::operators::mutation::RandomReset;
+/// use evolve::operators::selection::TournamentSelection;
+/// use std::num::NonZero;
+///
+/// // Select → Crossover → Mutate
+/// let op = Pipeline::new((
+///     TournamentSelection::new(NonZero::new(3).unwrap()),
+///     SinglePoint::<u8>::new(),
+///     RandomReset::<u8>::new(),
+/// ));
+/// ```
 pub struct Pipeline<O: ?Sized>(O);
 
 impl<O> Pipeline<O> {
+    /// Creates a new `Pipeline` from a tuple of operators.
     pub fn new(operators: O) -> Self {
         Self(operators)
     }

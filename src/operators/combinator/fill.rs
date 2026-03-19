@@ -3,8 +3,9 @@ use crate::{
     operators::GeneticOperator,
 };
 
-/// Helper trait for the `Fill` operator.
+/// Determines the target size for a [`Fill`] operator.
 pub trait GetSize<G, F> {
+    /// Returns the target population size.
     fn get_size(&self, state: &State<G, F>) -> usize;
 }
 
@@ -35,6 +36,24 @@ impl<G, F> GetSize<G, F> for PopSize {
     }
 }
 
+/// Repeats an operator until the output reaches a target population size.
+///
+/// Useful for ensuring the next generation has the right number of individuals,
+/// regardless of how many each operator invocation produces. If the last batch
+/// would overshoot the target, it is truncated.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::operators::combinator::Fill;
+/// use evolve::operators::mutation::RandomReset;
+///
+/// // Maintain the same population size each generation
+/// let op = Fill::from_population_size(RandomReset::<u8>::new());
+///
+/// // Or fill to a specific size
+/// let op = Fill::from_fixed_size(RandomReset::<u8>::new(), 200);
+/// ```
 #[derive(Debug)]
 pub struct Fill<O, S> {
     operator: O,
@@ -42,6 +61,7 @@ pub struct Fill<O, S> {
 }
 
 impl<O, S> Fill<O, S> {
+    /// Creates a new `Fill` with a custom size strategy.
     pub fn new(operator: O, size: S) -> Self {
         Self { operator, size }
     }

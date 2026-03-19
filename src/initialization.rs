@@ -6,11 +6,28 @@ use crate::{
 use rand::Rng;
 use std::num::NonZero;
 
-/// Trait to initialize the population
+/// Creates the initial population for the algorithm.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::core::context::Context;
+/// use evolve::fitness::Maximize;
+/// use evolve::initialization::{Initializer, Random};
+/// use std::num::NonZero;
+///
+/// let mut rng = rand::rng();
+/// let fitness_fn = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
+/// let mut ctx = Context::new(&fitness_fn, &mut rng, &Maximize);
+///
+/// let pop = Random::new().initialize(NonZero::new(100).unwrap(), &mut ctx);
+/// assert_eq!(pop.len(), 100);
+/// ```
 pub trait Initializer<G, F, Fe, R, C>
 where
     Fe: FitnessEvaluator<G, F>,
 {
+    /// Creates the initial population of the given size.
     fn initialize(
         &self,
         population_size: NonZero<usize>,
@@ -18,12 +35,14 @@ where
     ) -> Population<G, F>;
 }
 
-/// Create a population by randomly creating their genomes.
+/// An [`Initializer`] that creates a population of random genomes.
+///
+/// Requires the genome type to implement [`Randomizable`].
 #[derive(Debug)]
 pub struct Random;
 
 impl Random {
-    /// Create a new `Random` intializer.
+    /// Creates a new `Random` initializer.
     pub fn new() -> Self {
         Self
     }

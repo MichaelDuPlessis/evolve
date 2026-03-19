@@ -7,7 +7,36 @@ use crate::{
 };
 use std::{marker::PhantomData, num::NonZero};
 
-/// Genetic Algorithm runner
+/// The main genetic algorithm runner.
+///
+/// Wires together an initializer, termination condition, fitness evaluator,
+/// genetic operators, and fitness comparator into a runnable algorithm.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::{
+///     algorithm::ga::GeneticAlgorithm,
+///     fitness::Maximize,
+///     initialization::Random,
+///     operators::combinator::Fill,
+///     operators::mutation::RandomReset,
+///     termination::MaxGenerations,
+/// };
+/// use std::num::NonZero;
+///
+/// let mut ga = GeneticAlgorithm::new(
+///     Random::new(),
+///     MaxGenerations::new(100),
+///     |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+///     Fill::from_population_size(RandomReset::new()),
+///     NonZero::new(500).unwrap(),
+///     rand::rng(),
+///     Maximize,
+/// );
+///
+/// let best = ga.run();
+/// ```
 #[derive(Debug)]
 pub struct GeneticAlgorithm<G, F, I, T, Fe, Ops, R, C = Maximize>
 where
@@ -39,6 +68,7 @@ where
     G: Clone,
     F: Clone,
 {
+    /// Creates a new `GeneticAlgorithm` with the given components.
     pub fn new(
         initialization: I,
         termination: T,
@@ -60,6 +90,7 @@ where
         }
     }
 
+    /// Runs the algorithm until the termination condition is met and returns the best individual.
     pub fn run(&mut self) -> Individual<G, F> {
         let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng, &self.goal);
 

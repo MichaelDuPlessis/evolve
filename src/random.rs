@@ -1,11 +1,24 @@
 use rand::{Rng, RngExt};
 use std::array;
 
-/// Implementing this trait means that a object can be created using a random number generator.
+/// A type that can be created from a random number generator.
+///
+/// Used by operators and initializers to generate random genomes and gene values.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::random::Randomizable;
+///
+/// let mut rng = rand::rng();
+/// let value: u32 = Randomizable::random(&mut rng);
+/// let array: [u8; 4] = Randomizable::random(&mut rng);
+/// ```
 pub trait Randomizable<R>
 where
     R: Rng,
 {
+    /// Generates a random instance of this type.
     fn random(rng: &mut R) -> Self;
 }
 

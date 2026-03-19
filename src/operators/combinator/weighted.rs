@@ -7,11 +7,31 @@ use crate::{
     operators::GeneticOperator,
 };
 
-/// Weighted operator over a tuple of (Operator, weight)
+/// Selects one operator per invocation based on assigned weights.
+///
+/// Each operator is paired with a `NonZero<u16>` weight. On each call, a random
+/// roll determines which operator runs. Higher weights mean higher probability.
+///
+/// Accepts a tuple of up to 16 `(Operator, NonZero<u16>)` pairs.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::operators::combinator::Weighted;
+/// use evolve::operators::mutation::RandomReset;
+/// use std::num::NonZero;
+///
+/// // 75% chance of first operator, 25% chance of second
+/// let op = Weighted::new((
+///     (RandomReset::<u8>::new(), NonZero::new(3u16).unwrap()),
+///     (RandomReset::<u8>::new(), NonZero::new(1u16).unwrap()),
+/// ));
+/// ```
 #[derive(Debug)]
 pub struct Weighted<O: ?Sized>(O);
 
 impl<O> Weighted<O> {
+    /// Creates a new `Weighted` from a tuple of `(operator, weight)` pairs.
     pub fn new(operators: O) -> Self {
         Self(operators)
     }

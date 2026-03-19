@@ -6,7 +6,24 @@ use crate::{
 };
 use std::slice::ChunksExact;
 
-/// The population in the algorithm. It is a list of Individuals.
+/// A collection of [`Individual`]s that forms a generation in the algorithm.
+///
+/// Supports iteration, merging, random selection, and finding the best individual
+/// according to a [`FitnessComparator`].
+///
+/// # Examples
+///
+/// ```
+/// use evolve::core::{individual::Individual, population::Population};
+/// use evolve::fitness::Maximize;
+///
+/// let mut pop = Population::new();
+/// pop.add(Individual::new(10, &|g: &i32| *g));
+/// pop.add(Individual::new(20, &|g: &i32| *g));
+///
+/// assert_eq!(pop.len(), 2);
+/// assert_eq!(*pop.best(&Maximize).fitness(), 20);
+/// ```
 #[derive(Debug)]
 pub struct Population<G, F> {
     individuals: Vec<Individual<G, F>>,

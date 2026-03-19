@@ -1,11 +1,26 @@
 use crate::core::state::State;
 
-/// Termination condition
+/// Determines when the algorithm should stop running.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::core::{population::Population, state::State};
+/// use evolve::termination::{MaxGenerations, TerminationCondition};
+///
+/// let tc = MaxGenerations::new(100);
+/// let state = State::<(), ()>::new(Population::new(), 99);
+/// assert!(!tc.should_terminate(&state));
+///
+/// let state = State::<(), ()>::new(Population::new(), 100);
+/// assert!(tc.should_terminate(&state));
+/// ```
 pub trait TerminationCondition<G, F> {
+    /// Returns `true` if the algorithm should stop.
     fn should_terminate(&self, state: &State<G, F>) -> bool;
 }
 
-/// Terminates the algorithm after a set number of generations.
+/// Terminates the algorithm once the generation count reaches the given limit.
 #[derive(Debug)]
 pub struct MaxGenerations(usize);
 

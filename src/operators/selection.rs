@@ -6,13 +6,26 @@ use crate::{
 use rand::{Rng, seq::IndexedRandom};
 use std::num::NonZero;
 
-/// Performs tournament selection with replacement and returns a single `Individual`.
+/// Tournament selection with replacement.
+///
+/// Randomly samples `tournament_size` individuals from the population and returns
+/// the one with the best fitness. Produces a single [`Offspring::Single`].
+///
+/// # Examples
+///
+/// ```
+/// use evolve::operators::selection::TournamentSelection;
+/// use std::num::NonZero;
+///
+/// let selection = TournamentSelection::new(NonZero::new(3).unwrap());
+/// ```
 #[derive(Debug)]
 pub struct TournamentSelection {
     tournament_size: usize,
 }
 
 impl TournamentSelection {
+    /// Creates a new `TournamentSelection` with the given tournament size.
     pub fn new(tournament_size: NonZero<usize>) -> Self {
         Self {
             tournament_size: tournament_size.get(),

@@ -4,7 +4,10 @@ use crate::{
     operators::GeneticOperator,
 };
 
-/// Contains the current state of the algorithm. This includes the current generation and the current population.
+/// The current state of the algorithm, holding the population and generation counter.
+///
+/// Passed to [`GeneticOperator::apply`](crate::operators::GeneticOperator::apply) so
+/// operators can read the current population and generation number.
 #[derive(Debug)]
 pub struct State<G, F> {
     population: Population<G, F>,
