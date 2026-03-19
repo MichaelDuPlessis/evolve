@@ -9,3 +9,6 @@ use crate::core::{context::Context, offspring::Offspring, state::State};
 pub trait GeneticOperator<G, F, Fe, R, C> {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F>;
 }
+
+#[cfg(test)]
+mod test;
