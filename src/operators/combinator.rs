@@ -10,6 +10,7 @@ use rand::{Rng, RngExt};
 use std::num::NonZero;
 
 /// Combines multiple `GeneticOperators` and merges their ouputs.
+#[derive(Debug)]
 pub struct Combine<O>(O);
 
 impl<O> Combine<O> {
@@ -81,6 +82,7 @@ where
 }
 
 /// Repeat the `GeneticOperator` provided n times.
+#[derive(Debug)]
 pub struct Repeat<O> {
     operator: O,
     n: usize,
@@ -107,6 +109,7 @@ where
 }
 
 /// Weighted operator over a tuple of (Operator, weight)
+#[derive(Debug)]
 pub struct Weighted<O>(O);
 
 impl<O> Weighted<O> {
@@ -200,7 +203,8 @@ where
     }
 }
 
-struct FixedSize(usize);
+#[derive(Debug)]
+pub struct FixedSize(usize);
 
 impl<G, F> GetSize<G, F> for FixedSize {
     fn get_size(&self, _: &State<G, F>) -> usize {
@@ -208,7 +212,8 @@ impl<G, F> GetSize<G, F> for FixedSize {
     }
 }
 
-struct PopSize;
+#[derive(Debug)]
+pub struct PopSize(());
 
 impl<G, F> GetSize<G, F> for PopSize {
     fn get_size(&self, state: &State<G, F>) -> usize {
@@ -216,6 +221,7 @@ impl<G, F> GetSize<G, F> for PopSize {
     }
 }
 
+#[derive(Debug)]
 pub struct Fill<O, S> {
     operator: O,
     size: S,
@@ -232,7 +238,7 @@ impl<O> Fill<O, PopSize> {
     pub fn from_population_size(operator: O) -> Self {
         Self {
             operator,
-            size: PopSize,
+            size: PopSize(()),
         }
     }
 }

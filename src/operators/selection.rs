@@ -10,6 +10,7 @@ use rand::{Rng, seq::IndexedRandom};
 use std::num::NonZero;
 
 /// Performs tournament selection with replacement and returns a single `Individual`.
+#[derive(Debug)]
 pub struct TournamentSelection {
     tournament_size: usize,
 }

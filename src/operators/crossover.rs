@@ -12,6 +12,7 @@ use rand::{Rng, RngExt};
 use std::marker::PhantomData;
 
 /// Single point crossover operator
+#[derive(Debug)]
 pub struct SinglePoint<T>(PhantomData<T>);
 
 impl<T> SinglePoint<T> {

@@ -25,6 +25,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct Maximize;
 
 impl<F> FitnessComparator<F> for Maximize
@@ -36,6 +37,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct Minimize;
 
 impl<F> FitnessComparator<F> for Minimize

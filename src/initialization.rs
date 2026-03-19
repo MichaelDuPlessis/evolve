@@ -19,6 +19,7 @@ where
 }
 
 /// Create a population by randomly creating their genomes.
+#[derive(Debug)]
 pub struct Random;
 
 impl Random {

@@ -6,6 +6,7 @@ pub trait TerminationCondition<G, F> {
 }
 
 /// Terminates the algorithm after a set number of generations.
+#[derive(Debug)]
 pub struct MaxGenerations(usize);
 
 impl MaxGenerations {

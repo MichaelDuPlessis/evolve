@@ -11,6 +11,7 @@ use crate::{
 use std::{marker::PhantomData, num::NonZero};
 
 /// Genetic Algorithm runner
+#[derive(Debug)]
 pub struct GeneticAlgorithm<G, F, I, T, Fe, Ops, R, C = Maximize>
 where
     F: PartialOrd,

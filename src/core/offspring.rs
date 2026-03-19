@@ -1,5 +1,6 @@
 use crate::core::{individual::Individual, population::Population};
 
+#[derive(Debug)]
 pub enum Offspring<G, F> {
     Single(Individual<G, F>),
     Multiple(Population<G, F>),

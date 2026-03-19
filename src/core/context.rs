@@ -35,6 +35,7 @@ impl<'a, Fe, R, C> Context<'a, Fe, R, C> {
 }
 
 /// Contains the current state of the algorithm. This includes the current generation and the current population.
+#[derive(Debug)]
 pub struct State<G, F> {
     population: Population<G, F>,
     generation: usize,
