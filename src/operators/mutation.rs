@@ -84,13 +84,38 @@ where
     }
 }
 
-impl<F, R, Fe, C> GeneticOperator<u32, F, Fe, R, C> for RandomReset<u32>
-where
-    F: PartialOrd,
-    R: Rng,
-    Fe: FitnessEvaluator<u32, F>,
-{
-    fn apply(&self, state: &State<u32, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<u32, F> {
-        todo!()
-    }
+macro_rules! impl_random_reset_for_numbers {
+    ($($t:ty),*) => {
+        $(
+            impl<F, R, Fe, C> GeneticOperator<$t, F, Fe, R, C> for RandomReset<$t>
+            where
+                F: PartialOrd,
+                R: Rng,
+                Fe: FitnessEvaluator<$t, F>,
+            {
+                fn apply(&self, state: &State<$t, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<$t, F> {
+                    if state.population().len() == 1 {
+                        // this is fine, we know there is exactly one element
+                        Offspring::Single(Individual::new(
+                            <$t>::random(ctx.rng()),
+                            ctx.fitness_evaluator(),
+                        ))
+                    } else {
+                        let mut population = Population::with_capacity(state.population().len());
+
+                        for _ in state.population() {
+                            let new_ind = Individual::new(<$t>::random(ctx.rng()), ctx.fitness_evaluator());
+                            population.add(new_ind);
+                        }
+
+                        Offspring::Multiple(population)
+                    }
+                }
+            }
+        )*
+    };
 }
+
+impl_random_reset_for_numbers!(
+    u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, f32, f64, char
+);

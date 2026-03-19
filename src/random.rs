@@ -24,6 +24,10 @@ macro_rules! impl_randomizable_for_numbers {
     };
 }
 
+impl_randomizable_for_numbers!(
+    u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, f32, f64, char
+);
+
 // Be able to create random arrays with random elements
 impl<R, T, const N: usize> Randomizable<R> for [T; N]
 where
@@ -34,8 +38,3 @@ where
         array::from_fn(|_| T::random(rng))
     }
 }
-
-// Apply macro to common numeric types
-impl_randomizable_for_numbers!(
-    u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, f32, f64, char
-);
