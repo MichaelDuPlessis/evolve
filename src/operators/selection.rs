@@ -1,8 +1,5 @@
 use crate::{
-    core::{
-        context::{Context, State},
-        offspring::Offspring,
-    },
+    core::{context::Context, offspring::Offspring, state::State},
     fitness::{FitnessComparator, FitnessEvaluator},
     operators::GeneticOperator,
 };

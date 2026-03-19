@@ -1,8 +1,5 @@
 use crate::{
-    core::{
-        context::{Context, State},
-        individual::Individual,
-    },
+    core::{context::Context, individual::Individual, state::State},
     fitness::{FitnessComparator, FitnessEvaluator, Maximize},
     initialization::Initializer,
     operators::GeneticOperator,

@@ -1,9 +1,7 @@
 use crate::{
     core::{
-        context::{Context, State},
-        individual::Individual,
-        offspring::Offspring,
-        population::Population,
+        context::Context, individual::Individual, offspring::Offspring, population::Population,
+        state::State,
     },
     fitness::FitnessEvaluator,
     operators::GeneticOperator,

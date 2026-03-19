@@ -1,4 +1,4 @@
-use crate::core::context::State;
+use crate::core::state::State;
 
 /// Termination condition
 pub trait TerminationCondition<G, F> {
