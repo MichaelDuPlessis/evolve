@@ -7,7 +7,7 @@ use std::num::NonZero;
 
 /// Combines multiple `GeneticOperators` and merges their ouputs.
 #[derive(Debug)]
-pub struct Combine<O>(O);
+pub struct Combine<O: ?Sized>(O);
 
 impl<O> Combine<O> {
     pub fn new(operators: O) -> Self {
@@ -62,14 +62,14 @@ impl_genetic_combine!(
     T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16
 );
 
-impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Combine<&[O]>
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Combine<[O]>
 where
     O: GeneticOperator<G, F, Fe, R, C>,
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         let mut population = Population::new();
 
-        for operator in self.0 {
+        for operator in &self.0 {
             population.add_offspring(operator.apply(state, ctx));
         }
 
@@ -106,7 +106,7 @@ where
 
 /// Weighted operator over a tuple of (Operator, weight)
 #[derive(Debug)]
-pub struct Weighted<O>(O);
+pub struct Weighted<O: ?Sized>(O);
 
 impl<O> Weighted<O> {
     pub fn new(operators: O) -> Self {
@@ -114,7 +114,7 @@ impl<O> Weighted<O> {
     }
 }
 
-macro_rules! impl_weighted_genetic {
+macro_rules! impl_genetic_weighted {
     // Base case
     () => {};
     // Recursive case
@@ -147,23 +147,23 @@ macro_rules! impl_weighted_genetic {
         }
 
         // Helper to peel off the last pair for recursion
-        impl_weighted_genetic_recurse!($($Op, $W),+);
+        impl_genetic_weighted_recurse!($($Op, $W),+);
     };
 }
 
-macro_rules! impl_weighted_genetic_recurse {
+macro_rules! impl_genetic_weighted_recurse {
     ($OpHead:ident, $WHead:ident, $($OpRest:ident, $WRest:ident),+) => {
-        impl_weighted_genetic!($($OpRest, $WRest),+);
+        impl_genetic_weighted !($($OpRest, $WRest),+);
     };
     ($OpHead:ident, $WHead:ident) => {};
 }
 
-impl_weighted_genetic!(
+impl_genetic_weighted!(
     O1, W1, O2, W2, O3, W3, O4, W4, O5, W5, O6, W6, O7, W7, O8, W8, O9, W9, O10, W10, O11, W11,
     O12, W12, O13, W13, O14, W14, O15, W15, O16, W16
 );
 
-impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Weighted<&[(O, NonZero<u16>)]>
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Weighted<[(O, NonZero<u16>)]>
 where
     O: GeneticOperator<G, F, Fe, R, C>,
     R: Rng,
@@ -173,7 +173,7 @@ where
 
         let mut roll = ctx.rng().random_range(0..total_weight);
 
-        for (operator, weight) in self.0 {
+        for (operator, weight) in &self.0 {
             let weight = weight.get();
             if roll < weight {
                 return operator.apply(state, ctx);
@@ -276,5 +276,96 @@ where
         }
 
         Offspring::Multiple(population)
+    }
+}
+
+/// Execute `GeneticOperators` one after another passing the output from the previous one to the next one.
+pub struct Pipeline<O: ?Sized>(O);
+
+macro_rules! impl_genetic_pipeline {
+    () => {};
+    // Single operator (no chaining needed)
+    ($first:ident) => {
+        impl<G, F, Fe, R, C, $first> GeneticOperator<G, F, Fe, R, C>
+            for Pipeline<($first,)>
+        where
+            $first: GeneticOperator<G, F, Fe, R, C>,
+        {
+            fn apply(
+                &self,
+                state: &State<G, F>,
+                ctx: &mut Context<Fe, R, C>,
+            ) -> Offspring<G, F> {
+                self.0.0.apply(state, ctx)
+            }
+        }
+    };
+    // 2+ operators
+    ($first:ident, $($rest:ident),+) => {
+        impl<G, F, Fe, R, C, $first, $($rest),*> GeneticOperator<G, F, Fe, R, C>
+            for Pipeline<($first, $($rest,)*)>
+        where
+            $first: GeneticOperator<G, F, Fe, R, C>,
+            $($rest: GeneticOperator<G, F, Fe, R, C>),*,
+        {
+            fn apply(
+                &self,
+                state: &State<G, F>,
+                ctx: &mut Context<Fe, R, C>,
+            ) -> Offspring<G, F> {
+                #[allow(non_snake_case)]
+                let ($first, $($rest,)*) = &self.0;
+
+                // Step 1: apply first operator
+                let mut current_population = match $first.apply(state, ctx) {
+                    Offspring::Single(ind) => {
+                        let mut p = Population::new();
+                        p.add(ind);
+                        p
+                    }
+                    Offspring::Multiple(p) => p,
+                };
+
+                // Step 2: apply remaining operators
+                $(
+                    let next_state = state.with_population(current_population);
+
+                    current_population = match $rest.apply(&next_state, ctx) {
+                        Offspring::Single(ind) => {
+                            let mut p = Population::new();
+                            p.add(ind);
+                            p
+                        }
+                        Offspring::Multiple(p) => p,
+                    };
+                )*
+
+                Offspring::Multiple(current_population)
+            }
+        }
+
+        impl_genetic_pipeline!($($rest),*);
+    };
+}
+
+impl_genetic_pipeline!(
+    T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16
+);
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Pipeline<[O]>
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        // this is bad, assuming its safe to just index
+        let mut offspring = self.0[0].apply(state, ctx);
+
+        for operator in &self.0[1..] {
+            let population = offspring.into_population();
+            let state = state.with_population(population);
+            offspring = operator.apply(&state, ctx);
+        }
+
+        offspring
     }
 }
