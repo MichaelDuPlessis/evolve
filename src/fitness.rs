@@ -1,3 +1,10 @@
+//! Fitness evaluation and comparison.
+//!
+//! Defines [`FitnessEvaluator`] for computing fitness and [`FitnessComparator`]
+//! for determining which fitness value is better. Both traits have blanket
+//! implementations for closures, and the module provides [`Maximize`] and
+//! [`Minimize`] comparators out of the box.
+
 /// Evaluates the fitness of a genome.
 ///
 /// Implemented automatically for any closure `Fn(&G) -> F`, so you can pass

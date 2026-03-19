@@ -1,3 +1,8 @@
+//! Random value generation for genomes and genes.
+//!
+//! Defines the [`Randomizable`] trait, which allows types to be created from
+//! a random number generator. Used by initializers and mutation operators.
+
 use rand::{Rng, RngExt};
 use std::array;
 

@@ -1,3 +1,8 @@
+//! Population initialization strategies.
+//!
+//! Defines the [`Initializer`] trait and provides [`Random`], which generates
+//! a population of random genomes.
+
 use crate::{
     core::{context::Context, individual::Individual, population::Population},
     fitness::FitnessEvaluator,

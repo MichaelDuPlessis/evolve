@@ -1,3 +1,8 @@
+//! Termination conditions for the algorithm.
+//!
+//! Defines the [`TerminationCondition`] trait and provides [`MaxGenerations`],
+//! which stops the algorithm after a set number of generations.
+
 use crate::core::state::State;
 
 /// Determines when the algorithm should stop running.
