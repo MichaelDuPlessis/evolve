@@ -6,6 +6,12 @@ use crate::{
 /// Execute `GeneticOperators` one after another passing the output from the previous one to the next one.
 pub struct Pipeline<O: ?Sized>(O);
 
+impl<O> Pipeline<O> {
+    pub fn new(operators: O) -> Self {
+        Self(operators)
+    }
+}
+
 macro_rules! impl_genetic_pipeline {
     () => {};
     // Single operator (no chaining needed)
