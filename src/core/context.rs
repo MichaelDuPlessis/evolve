@@ -23,11 +23,11 @@ pub struct Context<'a, Fe, R, C> {
 
 impl<'a, Fe, R, C> Context<'a, Fe, R, C> {
     /// Create a new `Context`.
-    pub fn new(fitness: &'a Fe, rng: &'a mut R, goal: &'a C) -> Self {
+    pub fn new(fitness: &'a Fe, rng: &'a mut R, comparator: &'a C) -> Self {
         Self {
             fitness,
             rng,
-            comparator: goal,
+            comparator,
         }
     }
 

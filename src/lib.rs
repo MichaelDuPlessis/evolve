@@ -43,7 +43,8 @@
 //!     Maximize,
 //! );
 //!
-//! let best = ga.run();
+//! let result = ga.run();
+//! let best = result.population.best(&Maximize);
 //! println!("Best genome: {:?}, fitness: {:?}", best.genome(), best.fitness());
 //! ```
 //!
@@ -86,7 +87,7 @@
 //!     Maximize,
 //! );
 //!
-//! let best = ga.run();
+//! let result = ga.run();
 //! ```
 //!
 //! ## Weighted Operator Selection
@@ -133,7 +134,7 @@
 //!     |a: &i32, b: &i32| a < b, // lower distance is better
 //! );
 //!
-//! let best = ga.run();
+//! let result = ga.run();
 //! ```
 //!
 //! ## Custom Operators

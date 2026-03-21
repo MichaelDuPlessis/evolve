@@ -181,8 +181,8 @@ fn maximize_improves_over_generations() {
         Maximize,
     );
 
-    let short_best = *ga_short.run().fitness();
-    let long_best = *ga_long.run().fitness();
+    let short_best = *ga_short.run().population.best(&Maximize).fitness();
+    let long_best = *ga_long.run().population.best(&Maximize).fitness();
 
     assert!(
         long_best >= short_best,
@@ -203,8 +203,9 @@ fn minimize_finds_low_fitness() {
     );
 
     let best = ga.run();
+    let best_ind = best.population.best(&Minimize);
     // With 200 generations and minimize, should find something reasonably low
-    assert!(*best.fitness() < 100, "expected low fitness, got {}", best.fitness());
+    assert!(*best_ind.fitness() < 100, "expected low fitness, got {}", best_ind.fitness());
 }
 
 // ── Full pipeline: select → crossover → mutate ──
@@ -229,7 +230,7 @@ fn full_pipeline_runs_to_completion() {
     );
 
     let best = ga.run();
-    assert!(*best.fitness() > 0);
+    assert!(*best.population.best(&Maximize).fitness() > 0);
 }
 
 // ── Zero generations returns best of initial population ──
@@ -248,7 +249,7 @@ fn zero_generations_returns_initial_best() {
 
     // Should not panic — terminates immediately and returns best from initial pop
     let best = ga.run();
-    assert!(*best.fitness() > 0);
+    assert!(*best.population.best(&Maximize).fitness() > 0);
 }
 
 // ── Weighted pipeline favours the heavier operator ──
@@ -276,5 +277,5 @@ fn weighted_pipeline_with_selection_and_mutation() {
     );
 
     let best = ga.run();
-    assert!(*best.fitness() > 0);
+    assert!(*best.population.best(&Maximize).fitness() > 0);
 }

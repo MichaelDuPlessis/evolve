@@ -1,5 +1,5 @@
 use crate::{
-    core::{context::Context, individual::Individual, state::State},
+    core::{context::Context, run_result::RunResult, state::State},
     fitness::{FitnessComparator, FitnessEvaluator, Maximize},
     initialization::Initializer,
     operators::GeneticOperator,
@@ -35,7 +35,7 @@ use std::{marker::PhantomData, num::NonZero};
 ///     Maximize,
 /// );
 ///
-/// let best = ga.run();
+/// let result = ga.run();
 /// ```
 #[derive(Debug)]
 pub struct GeneticAlgorithm<G, F, I, T, Fe, Ops, R, C = Maximize>
@@ -52,7 +52,7 @@ where
     operators: Ops,
     population_size: NonZero<usize>,
     rng: R,
-    goal: C,
+    comparator: C,
     _marker: PhantomData<(G, F)>,
 }
 
@@ -64,9 +64,6 @@ where
     Fe: FitnessEvaluator<G, F>,
     Ops: GeneticOperator<G, F, Fe, R, C>,
     C: FitnessComparator<F>,
-    // hmm I don't know if I like this
-    G: Clone,
-    F: Clone,
 {
     /// Creates a new `GeneticAlgorithm` with the given components.
     pub fn new(
@@ -85,14 +82,14 @@ where
             operators,
             population_size,
             rng,
-            goal,
+            comparator: goal,
             _marker: PhantomData,
         }
     }
 
-    /// Runs the algorithm until the termination condition is met and returns the best individual.
-    pub fn run(&mut self) -> Individual<G, F> {
-        let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng, &self.goal);
+    /// Runs the algorithm until the termination condition is met and returns a [`RunResult`].
+    pub fn run(&mut self) -> RunResult<G, F> {
+        let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng, &self.comparator);
 
         let population = self.initializer.initialize(self.population_size, &mut ctx);
 
@@ -104,6 +101,6 @@ where
             state.inc_generation();
         }
 
-        state.into_population().best(&self.goal).clone()
+        state.into()
     }
 }
