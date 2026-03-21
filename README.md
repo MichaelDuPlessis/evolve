@@ -2,6 +2,8 @@
 
 A generic, composable genetic algorithm framework for Rust.
 
+> **Note:** This library is a work in progress but is usable in its current state. The final version will include more built-in operators, grammatical evolution, and parallel execution.
+
 `evolve` provides the building blocks to assemble genetic algorithms from reusable, type-safe components. Operators are composed using combinators — chain them into pipelines, weight them probabilistically, or repeat them to fill a population — all with zero-cost abstractions.
 
 ## Features
@@ -37,7 +39,8 @@ fn main() {
         Maximize,
     );
 
-    let best = ga.run();
+    let result = ga.run();
+    let best = result.population.best(&Maximize);
     println!("Best genome: {:?}, fitness: {:?}", best.genome(), best.fitness());
 }
 ```

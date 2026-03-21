@@ -2,6 +2,12 @@
 name = "evolve"
 version = "0.1.0"
 edition = "2024"
+description = "A generic, composable genetic algorithm framework for Rust"
+license = "MIT"
+repository = "https://github.com/MichaelDuPlessis/evolve"
+readme = "README.md"
+keywords = ["genetic-algorithm", "evolutionary", "optimization", "metaheuristic"]
+categories = ["Artificial intelligence"]
 
 [dependencies]
 rand = "0.10.0"
