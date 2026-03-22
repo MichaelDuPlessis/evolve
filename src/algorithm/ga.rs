@@ -2,6 +2,7 @@ use crate::{
     core::{context::Context, run_result::RunResult, state::State},
     fitness::{FitnessComparator, FitnessEvaluator, Maximize},
     initialization::Initializer,
+    observer::{NoOp, Observer},
     operators::GeneticOperator,
     termination::TerminationCondition,
 };
@@ -89,17 +90,31 @@ where
 
     /// Runs the algorithm until the termination condition is met and returns a [`RunResult`].
     pub fn run(&mut self) -> RunResult<G, F> {
+        self.run_with(NoOp::new())
+    }
+
+    /// Runs the algorithm with an [`Observer`] that is notified at each stage of execution.
+    pub fn run_with<O>(&mut self, mut observer: O) -> RunResult<G, F>
+    where
+        O: Observer<G, F, Fe, R, C>,
+    {
         let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng, &self.comparator);
 
         let population = self.initializer.initialize(self.population_size, &mut ctx);
 
         let mut state = State::new(population, 0);
 
+        observer.on_start(&state, &mut ctx);
+
         while !self.termination.should_terminate(&state) {
             // Apply pipeline — ownership flows through
             state.apply_operators(&mut ctx, &mut self.operators);
             state.inc_generation();
+
+            observer.on_generation(&state, &mut ctx);
         }
+
+        observer.on_end(&state, &mut ctx);
 
         state.into()
     }

@@ -279,3 +279,42 @@ fn weighted_pipeline_with_selection_and_mutation() {
     let best = ga.run();
     assert!(*best.population.best(&Maximize).fitness() > 0);
 }
+
+// ── Observer via run_with ──
+
+#[test]
+fn run_with_observer() {
+    use evolve::core::{context::Context, state::State};
+    use evolve::observer::Observer;
+
+    struct Counter {
+        started: bool,
+        generations: usize,
+        ended: bool,
+    }
+
+    impl<G, F, Fe, R, C> Observer<G, F, Fe, R, C> for Counter {
+        fn on_start(&mut self, _: &State<G, F>, _: &Context<Fe, R, C>) {
+            self.started = true;
+        }
+        fn on_generation(&mut self, _: &State<G, F>, _: &Context<Fe, R, C>) {
+            self.generations += 1;
+        }
+        fn on_end(&mut self, _: &State<G, F>, _: &Context<Fe, R, C>) {
+            self.ended = true;
+        }
+    }
+
+    let mut ga = GeneticAlgorithm::new(
+        Random::new(),
+        MaxGenerations::new(5),
+        |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+        Fill::from_population_size(RandomReset::new()),
+        nz(50),
+        rand::rng(),
+        Maximize,
+    );
+
+    let result = ga.run_with(Counter { started: false, generations: 0, ended: false });
+    assert!(result.population.len() > 0);
+}
