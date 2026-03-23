@@ -27,7 +27,7 @@ use crate::{
 ///     (RandomReset::<u8>::new(), NonZero::new(1u16).unwrap()),
 /// ));
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Weighted<O: ?Sized>(O);
 
 impl<O> Weighted<O> {

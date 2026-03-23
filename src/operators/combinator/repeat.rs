@@ -14,7 +14,7 @@ use crate::{
 /// // Run mutation 5 times and merge the results
 /// let op = Repeat::new(RandomReset::<u8>::new(), 5);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Repeat<O> {
     operator: O,
     n: usize,

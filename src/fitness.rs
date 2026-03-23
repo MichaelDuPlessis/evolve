@@ -71,7 +71,7 @@ where
 /// assert!(Maximize.is_better(&10, &5));
 /// assert!(!Maximize.is_better(&5, &10));
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Maximize;
 
 impl<F> FitnessComparator<F> for Maximize
@@ -93,7 +93,7 @@ where
 /// assert!(Minimize.is_better(&5, &10));
 /// assert!(!Minimize.is_better(&10, &5));
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Minimize;
 
 impl<F> FitnessComparator<F> for Minimize

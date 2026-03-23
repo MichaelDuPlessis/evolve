@@ -22,7 +22,7 @@ use std::marker::PhantomData;
 ///
 /// let crossover = SinglePoint::<u8>::new();
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct SinglePoint<T>(PhantomData<T>);
 
 impl<T> SinglePoint<T> {

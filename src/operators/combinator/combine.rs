@@ -16,7 +16,7 @@ use crate::{
 /// // Two mutation operators whose results are merged
 /// let op = Combine::new((RandomReset::<u8>::new(), RandomReset::<u8>::new()));
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Combine<O: ?Sized>(O);
 
 impl<O> Combine<O> {

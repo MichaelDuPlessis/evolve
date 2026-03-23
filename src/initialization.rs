@@ -43,7 +43,7 @@ where
 /// An [`Initializer`] that creates a population of random genomes.
 ///
 /// Requires the genome type to implement [`Randomizable`].
-#[derive(Debug)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Random;
 
 impl Random {
@@ -94,7 +94,10 @@ mod test {
         let mut ctx = Context::new(&(id as fn(&[u8; 2]) -> u16), &mut rng, &Maximize);
         let pop = Random::new().initialize(NonZero::new(5).unwrap(), &mut ctx);
         for ind in &pop {
-            assert_eq!(*ind.fitness(), ind.genome()[0] as u16 + ind.genome()[1] as u16);
+            assert_eq!(
+                *ind.fitness(),
+                ind.genome()[0] as u16 + ind.genome()[1] as u16
+            );
         }
     }
 }

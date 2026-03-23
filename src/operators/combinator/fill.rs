@@ -18,7 +18,7 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct FixedSize(usize);
 
 impl<G, F> GetSize<G, F> for FixedSize {
@@ -27,7 +27,7 @@ impl<G, F> GetSize<G, F> for FixedSize {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct PopSize(());
 
 impl<G, F> GetSize<G, F> for PopSize {
@@ -54,7 +54,7 @@ impl<G, F> GetSize<G, F> for PopSize {
 /// // Or fill to a specific size
 /// let op = Fill::from_fixed_size(RandomReset::<u8>::new(), 200);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Fill<O, S> {
     operator: O,
     size: S,

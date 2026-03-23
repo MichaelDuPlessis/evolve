@@ -30,7 +30,7 @@ impl<T, const N: usize> GeneCollection for [T; N] {}
 ///
 /// let mutation = RandomReset::<u8>::new();
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct RandomReset<T>(PhantomData<T>);
 
 impl<T> RandomReset<T> {

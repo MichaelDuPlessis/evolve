@@ -48,7 +48,7 @@ pub trait Observer<G, F, Fe, R, C> {
 /// different interval (e.g. every 10th generation).
 ///
 /// Output format: `[gen N] best fitness: F`
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct StatsLogger {
     every: usize,
 }
@@ -87,7 +87,7 @@ where
 ///
 /// Used internally by [`GeneticAlgorithm::run`](crate::algorithm::ga::GeneticAlgorithm::run)
 /// when no observer is needed.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct NoOp;
 
 impl NoOp {

@@ -24,6 +24,7 @@ use crate::{
 ///     RandomReset::<u8>::new(),
 /// ));
 /// ```
+#[derive(Debug, Clone)]
 pub struct Pipeline<O: ?Sized>(O);
 
 impl<O> Pipeline<O> {
