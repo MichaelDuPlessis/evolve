@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/MichaelDuPlessis/evolve"
 readme = "README.md"
 keywords = ["genetic-algorithm", "evolutionary", "optimization", "metaheuristic"]
-categories = ["Artificial intelligence"]
+categories = ["Artificial intelligence", "Algorithms"]
 
 [dependencies]
 rand = "0.10.0"
