@@ -43,6 +43,6 @@ impl<'a, Fe, R, C> Context<'a, Fe, R, C> {
 
     /// Get the goal for the problem.
     pub fn comparator(&self) -> &C {
-        &self.comparator
+        self.comparator
     }
 }

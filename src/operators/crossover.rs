@@ -50,10 +50,8 @@ where
             let mut child1 = p1.genome().clone();
             let mut child2 = p2.genome().clone();
 
-            for i in point..N {
-                child1[i] = p2.genome()[i].clone();
-                child2[i] = p1.genome()[i].clone();
-            }
+            child1[point..N].clone_from_slice(&p2.genome()[point..N]);
+            child2[point..N].clone_from_slice(&p1.genome()[point..N]);
 
             let c1 = Individual::new(child1, ctx.fitness_evaluator());
             let c2 = Individual::new(child2, ctx.fitness_evaluator());

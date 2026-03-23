@@ -187,3 +187,9 @@ impl<G, F> FromIterator<Individual<G, F>> for Population<G, F> {
         }
     }
 }
+
+impl<G, F> Default for Population<G, F> {
+    fn default() -> Self {
+        Self::new()
+    }
+}

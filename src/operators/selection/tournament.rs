@@ -44,7 +44,7 @@ where
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         let population = state.population();
 
-        assert!(population.len() > 0);
+        assert!(!population.is_empty());
 
         let mut best = unsafe { population.choose(ctx.rng()).unwrap_unchecked() }; // we already checked to make sure there is at least 1 individual
 

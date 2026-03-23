@@ -72,7 +72,7 @@ where
     C: FitnessComparator<F>,
 {
     fn on_generation(&mut self, state: &State<G, F>, ctx: &Context<Fe, R, C>) {
-        if state.generation() % self.every == 0 {
+        if state.generation().is_multiple_of(self.every) {
             let best = state.population().best(ctx.comparator());
             println!(
                 "[gen {}] best fitness: {}",

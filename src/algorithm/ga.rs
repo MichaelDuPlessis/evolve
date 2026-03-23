@@ -104,17 +104,17 @@ where
 
         let mut state = State::new(population, 0);
 
-        observer.on_start(&state, &mut ctx);
+        observer.on_start(&state, &ctx);
 
         while !self.termination.should_terminate(&state) {
             // Apply pipeline — ownership flows through
             state.apply_operators(&mut ctx, &mut self.operators);
             state.inc_generation();
 
-            observer.on_generation(&state, &mut ctx);
+            observer.on_generation(&state, &ctx);
         }
 
-        observer.on_end(&state, &mut ctx);
+        observer.on_end(&state, &ctx);
 
         state.into()
     }
