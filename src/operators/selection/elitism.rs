@@ -24,6 +24,7 @@ use crate::{
 /// // Keep the top 5
 /// let elite = Elitism::new(NonZero::new(5).unwrap());
 /// ```
+#[derive(Debug, Clone, Copy)]
 pub struct Elitism {
     amount: usize,
 }

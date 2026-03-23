@@ -49,7 +49,7 @@ impl<G, F> Population<G, F> {
         Self { individuals }
     }
 
-    /// Extend a `Population` with another `Populatin` or a list of `Individuals`.
+    /// Extend a `Population` with another `Population` or a list of `Individuals`.
     pub fn extend(&mut self, individuals: impl IntoIterator<Item = Individual<G, F>>) {
         self.individuals.extend(individuals);
     }
