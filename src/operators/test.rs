@@ -10,6 +10,7 @@ use crate::operators::combinator::{Combine, Fill, Pipeline, Repeat, Weighted};
 use crate::operators::crossover::SinglePoint;
 use crate::operators::mutation::RandomReset;
 use crate::operators::selection::TournamentSelection;
+use crate::operators::selection::Elitism;
 use crate::operators::GeneticOperator;
 use std::num::NonZero;
 
@@ -215,4 +216,34 @@ fn pipeline_chains_operators() {
     let mut ctx = make_ctx(&mut rng);
     let op = Pipeline::new((SinglePoint::<i32>::new(), RandomReset::<i32>::new()));
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+// ── Elitism ──
+
+#[test]
+fn elitism_default_returns_single_best() {
+    let state = make_state(&[[1, 0, 0, 0], [2, 0, 0, 0], [3, 0, 0, 0]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let elite = Elitism::default();
+    let offspring = elite.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 1);
+    match offspring {
+        Offspring::Single(ind) => assert_eq!(*ind.fitness(), 3),
+        _ => panic!("expected Single"),
+    }
+}
+
+#[test]
+fn elitism_returns_best_n() {
+    let state = make_state(&[[1, 0, 0, 0], [5, 0, 0, 0], [3, 0, 0, 0], [4, 0, 0, 0], [2, 0, 0, 0]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let elite = Elitism::new(NonZero::new(3).unwrap());
+    let offspring = elite.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 3);
+    let pop: Population<_, _> = offspring.into();
+    let mut fitnesses: Vec<i32> = pop.iter().map(|i| *i.fitness()).collect();
+    fitnesses.sort();
+    assert_eq!(fitnesses, vec![3, 4, 5]);
 }

@@ -24,7 +24,7 @@ use std::slice::ChunksExact;
 /// assert_eq!(pop.len(), 2);
 /// assert_eq!(*pop.best(&Maximize).fitness(), 20);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Population<G, F> {
     individuals: Vec<Individual<G, F>>,
 }
