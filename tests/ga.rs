@@ -85,10 +85,7 @@ fn build_with_combine() {
         Random::new(),
         MaxGenerations::new(1),
         |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
-        Fill::from_population_size(Combine::new((
-            RandomReset::new(),
-            RandomReset::new(),
-        ))),
+        Fill::from_population_size(Combine::new((RandomReset::new(), RandomReset::new()))),
         nz(10),
         rand::rng(),
         Maximize,
@@ -205,7 +202,11 @@ fn minimize_finds_low_fitness() {
     let best = ga.run();
     let best_ind = best.population.best(&Minimize);
     // With 200 generations and minimize, should find something reasonably low
-    assert!(*best_ind.fitness() < 100, "expected low fitness, got {}", best_ind.fitness());
+    assert!(
+        *best_ind.fitness() < 100,
+        "expected low fitness, got {}",
+        best_ind.fitness()
+    );
 }
 
 // ── Full pipeline: select → crossover → mutate ──
@@ -261,14 +262,17 @@ fn weighted_pipeline_with_selection_and_mutation() {
         MaxGenerations::new(50),
         |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>(),
         Fill::from_population_size(Weighted::new((
-            (Pipeline::new((
-                Combine::new((
-                    TournamentSelection::new(nz(3)),
-                    TournamentSelection::new(nz(3)),
+            (
+                Pipeline::new((
+                    Combine::new((
+                        TournamentSelection::new(nz(3)),
+                        TournamentSelection::new(nz(3)),
+                    )),
+                    SinglePoint::new(),
+                    RandomReset::new(),
                 )),
-                SinglePoint::new(),
-                RandomReset::new(),
-            )), nz16(3)),
+                nz16(3),
+            ),
             (RandomReset::new(), nz16(1)),
         ))),
         nz(100),
@@ -315,6 +319,79 @@ fn run_with_observer() {
         Maximize,
     );
 
-    let result = ga.run_with(Counter { started: false, generations: 0, ended: false });
+    let result = ga.run_with(Counter {
+        started: false,
+        generations: 0,
+        ended: false,
+    });
+    assert!(result.population.len() > 0);
+}
+
+// ── Builder ──
+
+#[test]
+fn builder_with_all_fields() {
+    let mut ga = GeneticAlgorithm::builder(nz(50))
+        .initializer(Random::new())
+        .termination(MaxGenerations::new(10))
+        .fitness(|g: &[u8; 2]| g[0] as u16 + g[1] as u16)
+        .operators(Fill::from_population_size(RandomReset::new()))
+        .rng(rand::rng())
+        .comparator(Maximize)
+        .build();
+
+    let result = ga.run();
+    assert!(result.population.len() > 0);
+}
+
+#[test]
+fn builder_with_minimize() {
+    let mut ga = GeneticAlgorithm::builder(nz(50))
+        .initializer(Random::new())
+        .termination(MaxGenerations::new(10))
+        .fitness(|g: &[u8; 2]| g[0] as u16 + g[1] as u16)
+        .operators(Fill::from_population_size(RandomReset::new()))
+        .rng(rand::rng())
+        .comparator(Minimize)
+        .build();
+
+    let result = ga.run();
+    assert!(result.population.len() > 0);
+}
+
+#[test]
+fn builder_with_pipeline() {
+    let mut ga = GeneticAlgorithm::builder(nz(100))
+        .initializer(Random::new())
+        .termination(MaxGenerations::new(10))
+        .fitness(|g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>())
+        .operators(Fill::from_population_size(Pipeline::new((
+            Combine::new((
+                TournamentSelection::new(nz(3)),
+                TournamentSelection::new(nz(3)),
+            )),
+            SinglePoint::new(),
+            RandomReset::new(),
+        ))))
+        .rng(rand::rng())
+        .comparator(Maximize)
+        .build();
+
+    let result = ga.run();
+    assert!(result.population.len() > 0);
+}
+
+#[test]
+fn builder_fields_in_any_order() {
+    let mut ga = GeneticAlgorithm::builder(nz(50))
+        .comparator(Maximize)
+        .rng(rand::rng())
+        .operators(Fill::from_population_size(RandomReset::new()))
+        .fitness(|g: &[u8; 2]| g[0] as u16 + g[1] as u16)
+        .termination(MaxGenerations::new(5))
+        .initializer(Random::new())
+        .build();
+
+    let result = ga.run();
     assert!(result.population.len() > 0);
 }
