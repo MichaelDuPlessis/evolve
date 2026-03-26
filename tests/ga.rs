@@ -2,7 +2,7 @@ use evolve::{
     algorithm::ga::GeneticAlgorithm,
     fitness::{Maximize, Minimize},
     initialization::Random,
-    operators::{
+    operators::sequential::{
         combinator::{Combine, Fill, Pipeline, Repeat, Weighted},
         crossover::SinglePoint,
         mutation::RandomReset,

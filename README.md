@@ -22,8 +22,8 @@ use evolve::{
     algorithm::ga::GeneticAlgorithm,
     fitness::Maximize,
     initialization::Random,
-    operators::combinator::Fill,
-    operators::mutation::RandomReset,
+    operators::sequential::combinator::Fill,
+    operators::sequential::mutation::RandomReset,
     termination::MaxGenerations,
 };
 use std::num::NonZero;
@@ -56,8 +56,8 @@ use evolve::{
     algorithm::ga::GeneticAlgorithm,
     fitness::Maximize,
     initialization::Random,
-    operators::combinator::Fill,
-    operators::mutation::RandomReset,
+    operators::sequential::combinator::Fill,
+    operators::sequential::mutation::RandomReset,
     termination::MaxGenerations,
 };
 use std::num::NonZero;
@@ -85,7 +85,7 @@ Implement `GeneticOperator` to define your own:
 ```rust
 use evolve::{
     core::{context::Context, offspring::Offspring, state::State},
-    operators::GeneticOperator,
+    operators::sequential::GeneticOperator,
 };
 
 struct MyOperator;

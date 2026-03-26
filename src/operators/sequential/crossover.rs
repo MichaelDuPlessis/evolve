@@ -4,7 +4,7 @@ use crate::{
         state::State,
     },
     fitness::FitnessEvaluator,
-    operators::GeneticOperator,
+    operators::sequential::GeneticOperator,
 };
 use rand::{Rng, RngExt};
 use std::marker::PhantomData;
@@ -18,7 +18,7 @@ use std::marker::PhantomData;
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::crossover::SinglePoint;
+/// use evolve::operators::sequential::crossover::SinglePoint;
 ///
 /// let crossover = SinglePoint::<u8>::new();
 /// ```

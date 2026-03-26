@@ -1,6 +1,6 @@
 //! Composable operator combinators.
 //!
-//! Combinators wrap one or more [`GeneticOperator`](crate::operators::GeneticOperator)s
+//! Combinators wrap one or more [`GeneticOperator`](crate::operators::sequential::GeneticOperator)s
 //! to structure the flow of the algorithm:
 //!
 //! - [`Pipeline`] — chains operators sequentially

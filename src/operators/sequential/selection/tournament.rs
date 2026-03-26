@@ -1,7 +1,7 @@
 use crate::{
     core::{context::Context, offspring::Offspring, state::State},
     fitness::{FitnessComparator, FitnessEvaluator},
-    operators::GeneticOperator,
+    operators::sequential::GeneticOperator,
 };
 use rand::{Rng, seq::IndexedRandom};
 use std::num::NonZero;
@@ -14,7 +14,7 @@ use std::num::NonZero;
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::selection::TournamentSelection;
+/// use evolve::operators::sequential::selection::TournamentSelection;
 /// use std::num::NonZero;
 ///
 /// let selection = TournamentSelection::new(NonZero::new(3).unwrap());

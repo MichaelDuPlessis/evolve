@@ -3,7 +3,7 @@ use crate::{
     fitness::{FitnessEvaluator, Maximize},
     initialization::Initializer,
     observer::{NoOp, Observer},
-    operators::GeneticOperator,
+    operators::sequential::GeneticOperator,
     termination::TerminationCondition,
 };
 use std::{marker::PhantomData, num::NonZero};
@@ -23,8 +23,8 @@ use std::{marker::PhantomData, num::NonZero};
 ///     algorithm::ga::GeneticAlgorithm,
 ///     fitness::Maximize,
 ///     initialization::Random,
-///     operators::combinator::Fill,
-///     operators::mutation::RandomReset,
+///     operators::sequential::combinator::Fill,
+///     operators::sequential::mutation::RandomReset,
 ///     termination::MaxGenerations,
 /// };
 /// use std::num::NonZero;
@@ -151,8 +151,8 @@ impl GeneticAlgorithmBuilder<(), (), (), (), (), (), (), ()> {
     ///     algorithm::ga::GeneticAlgorithmBuilder,
     ///     fitness::Maximize,
     ///     initialization::Random,
-    ///     operators::combinator::Fill,
-    ///     operators::mutation::RandomReset,
+    ///     operators::sequential::combinator::Fill,
+    ///     operators::sequential::mutation::RandomReset,
     ///     termination::MaxGenerations,
     /// };
     /// use std::num::NonZero;

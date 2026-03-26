@@ -4,7 +4,7 @@ use rand::{Rng, RngExt};
 
 use crate::{
     core::{context::Context, offspring::Offspring, state::State},
-    operators::GeneticOperator,
+    operators::sequential::GeneticOperator,
 };
 
 /// Selects one operator per invocation based on assigned weights.
@@ -17,8 +17,8 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::combinator::Weighted;
-/// use evolve::operators::mutation::RandomReset;
+/// use evolve::operators::sequential::combinator::Weighted;
+/// use evolve::operators::sequential::mutation::RandomReset;
 /// use std::num::NonZero;
 ///
 /// // 75% chance of first operator, 25% chance of second

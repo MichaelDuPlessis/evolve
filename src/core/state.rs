@@ -1,7 +1,7 @@
 use crate::{
     core::{context::Context, population::Population},
     fitness::FitnessEvaluator,
-    operators::GeneticOperator,
+    operators::sequential::GeneticOperator,
 };
 
 /// The current state of the algorithm, holding the population and generation counter.

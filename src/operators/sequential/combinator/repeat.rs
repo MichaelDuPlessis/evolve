@@ -1,6 +1,6 @@
 use crate::{
     core::{context::Context, offspring::Offspring, population::Population, state::State},
-    operators::GeneticOperator,
+    operators::sequential::GeneticOperator,
 };
 
 /// Applies an operator `n` times and collects all results into one population.
@@ -8,8 +8,8 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::combinator::Repeat;
-/// use evolve::operators::mutation::RandomReset;
+/// use evolve::operators::sequential::combinator::Repeat;
+/// use evolve::operators::sequential::mutation::RandomReset;
 ///
 /// // Run mutation 5 times and merge the results
 /// let op = Repeat::new(RandomReset::<u8>::new(), 5);

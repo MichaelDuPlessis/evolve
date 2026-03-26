@@ -1,17 +1,14 @@
 use crate::core::{
-    context::Context,
-    individual::Individual,
-    offspring::Offspring,
-    population::Population,
+    context::Context, individual::Individual, offspring::Offspring, population::Population,
     state::State,
 };
 use crate::fitness::Maximize;
-use crate::operators::combinator::{Combine, Fill, Pipeline, Repeat, Weighted};
-use crate::operators::crossover::SinglePoint;
-use crate::operators::mutation::RandomReset;
-use crate::operators::selection::TournamentSelection;
-use crate::operators::selection::Elitism;
-use crate::operators::GeneticOperator;
+use crate::operators::sequential::GeneticOperator;
+use crate::operators::sequential::combinator::{Combine, Fill, Pipeline, Repeat, Weighted};
+use crate::operators::sequential::crossover::SinglePoint;
+use crate::operators::sequential::mutation::RandomReset;
+use crate::operators::sequential::selection::Elitism;
+use crate::operators::sequential::selection::TournamentSelection;
 use std::num::NonZero;
 
 fn id(g: &[i32; 4]) -> i32 {
@@ -19,8 +16,7 @@ fn id(g: &[i32; 4]) -> i32 {
 }
 
 fn make_state(genomes: &[[i32; 4]]) -> State<[i32; 4], i32> {
-    let pop: Population<[i32; 4], i32> =
-        genomes.iter().map(|g| Individual::new(*g)).collect();
+    let pop: Population<[i32; 4], i32> = genomes.iter().map(|g| Individual::new(*g)).collect();
     State::new(pop, 0)
 }
 
@@ -236,7 +232,13 @@ fn elitism_default_returns_single_best() {
 
 #[test]
 fn elitism_returns_best_n() {
-    let state = make_state(&[[1, 0, 0, 0], [5, 0, 0, 0], [3, 0, 0, 0], [4, 0, 0, 0], [2, 0, 0, 0]]);
+    let state = make_state(&[
+        [1, 0, 0, 0],
+        [5, 0, 0, 0],
+        [3, 0, 0, 0],
+        [4, 0, 0, 0],
+        [2, 0, 0, 0],
+    ]);
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
     let elite = Elitism::new(NonZero::new(3).unwrap());

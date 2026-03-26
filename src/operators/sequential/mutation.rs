@@ -4,7 +4,7 @@ use crate::{
         state::State,
     },
     fitness::FitnessEvaluator,
-    operators::GeneticOperator,
+    operators::sequential::GeneticOperator,
     random::Randomizable,
 };
 use rand::{Rng, RngExt};
@@ -26,7 +26,7 @@ impl<T, const N: usize> GeneCollection for [T; N] {}
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::mutation::RandomReset;
+/// use evolve::operators::sequential::mutation::RandomReset;
 ///
 /// let mutation = RandomReset::<u8>::new();
 /// ```

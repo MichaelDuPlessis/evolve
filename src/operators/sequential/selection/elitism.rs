@@ -3,7 +3,7 @@ use std::num::NonZero;
 use crate::{
     core::{context::Context, offspring::Offspring, population::Population, state::State},
     fitness::{FitnessComparator, FitnessEvaluator},
-    operators::GeneticOperator,
+    operators::sequential::GeneticOperator,
 };
 
 /// Preserves the best `n` individuals from the current population.
@@ -15,7 +15,7 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::selection::Elitism;
+/// use evolve::operators::sequential::selection::Elitism;
 /// use std::num::NonZero;
 ///
 /// // Keep the single best individual each generation

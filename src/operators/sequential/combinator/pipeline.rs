@@ -1,6 +1,6 @@
 use crate::{
     core::{context::Context, offspring::Offspring, population::Population, state::State},
-    operators::GeneticOperator,
+    operators::sequential::GeneticOperator,
 };
 
 /// Chains operators sequentially, feeding each operator's output as input to the next.
@@ -11,10 +11,10 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::combinator::Pipeline;
-/// use evolve::operators::crossover::SinglePoint;
-/// use evolve::operators::mutation::RandomReset;
-/// use evolve::operators::selection::TournamentSelection;
+/// use evolve::operators::sequential::combinator::Pipeline;
+/// use evolve::operators::sequential::crossover::SinglePoint;
+/// use evolve::operators::sequential::mutation::RandomReset;
+/// use evolve::operators::sequential::selection::TournamentSelection;
 /// use std::num::NonZero;
 ///
 /// // Select → Crossover → Mutate
