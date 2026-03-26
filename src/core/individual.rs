@@ -1,33 +1,46 @@
 use crate::fitness::FitnessEvaluator;
+use std::cell::OnceCell;
 
 /// A single candidate solution paired with its fitness value.
 ///
-/// An `Individual` wraps a genome of type `G` and eagerly evaluates its fitness
-/// using a [`FitnessEvaluator`] at construction time.
+/// An `Individual` wraps a genome of type `G` and lazily evaluates its fitness
+/// using a [`FitnessEvaluator`] on first access.
 ///
 /// # Examples
 ///
 /// ```
 /// use evolve::core::individual::Individual;
 ///
-/// let ind = Individual::new([1u32, 2, 3], &|g: &[u32; 3]| g.iter().sum::<u32>());
+/// let ind = Individual::<[u32; 3], u32>::new([1, 2, 3]);
 /// assert_eq!(*ind.genome(), [1, 2, 3]);
-/// assert_eq!(*ind.fitness(), 6);
+/// assert_eq!(*ind.fitness(&|g: &[u32; 3]| g.iter().sum::<u32>()), 6);
 /// ```
 #[derive(Debug, Clone)]
 pub struct Individual<G, F> {
     genome: G,
-    fitness: F,
+    fitness: OnceCell<F>,
 }
 
 impl<G, F> Individual<G, F> {
-    /// Creates a new `Individual` by evaluating the fitness of the given genome.
-    pub fn new<Fe>(genome: G, fitness_evaluator: &Fe) -> Self
-    where
-        Fe: FitnessEvaluator<G, F>,
-    {
-        let fitness = fitness_evaluator.evaluate(&genome);
-        Self { genome, fitness }
+    /// Creates a new `Individual` with the given genome and unevaluated fitness.
+    pub fn new(genome: G) -> Self {
+        Self {
+            genome,
+            fitness: OnceCell::new(),
+        }
+    }
+
+    /// Creates a new `Individual` with a pre-computed fitness value.
+    pub fn from_parts(genome: G, fitness: F) -> Self {
+        Self {
+            genome,
+            fitness: OnceCell::from(fitness),
+        }
+    }
+
+    /// Returns the fitness value if it has already been evaluated.
+    pub fn try_fitness(&self) -> Option<&F> {
+        self.fitness.get()
     }
 
     /// Returns a reference to the genome.
@@ -35,8 +48,12 @@ impl<G, F> Individual<G, F> {
         &self.genome
     }
 
-    /// Returns a reference to the fitness value.
-    pub fn fitness(&self) -> &F {
-        &self.fitness
+    /// Returns a reference to the fitness value, evaluating it on first access.
+    pub fn fitness<Fe>(&self, fitness_evaluator: &Fe) -> &F
+    where
+        Fe: FitnessEvaluator<G, F>,
+    {
+        self.fitness
+            .get_or_init(|| fitness_evaluator.evaluate(&self.genome))
     }
 }

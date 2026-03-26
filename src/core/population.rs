@@ -2,7 +2,7 @@ use rand::{Rng, seq::IndexedRandom};
 
 use crate::{
     core::{individual::Individual, offspring::Offspring},
-    fitness::FitnessComparator,
+    fitness::{FitnessComparator, FitnessEvaluator},
 };
 use std::slice::ChunksExact;
 
@@ -17,12 +17,13 @@ use std::slice::ChunksExact;
 /// use evolve::core::{individual::Individual, population::Population};
 /// use evolve::fitness::Maximize;
 ///
-/// let mut pop = Population::new();
-/// pop.add(Individual::new(10, &|g: &i32| *g));
-/// pop.add(Individual::new(20, &|g: &i32| *g));
+/// let mut pop: Population<i32, i32> = Population::new();
+/// pop.add(Individual::new(10));
+/// pop.add(Individual::new(20));
 ///
+/// let fe = |g: &i32| *g;
 /// assert_eq!(pop.len(), 2);
-/// assert_eq!(*pop.best(&Maximize).fitness(), 20);
+/// assert_eq!(*pop.best(&fe, &Maximize).fitness(&fe), 20);
 /// ```
 #[derive(Debug, Clone)]
 pub struct Population<G, F> {
@@ -100,15 +101,17 @@ impl<G, F> Population<G, F> {
     }
 
     /// Get the best individual in the Population
-    pub fn best<C>(&self, comparator: &C) -> &Individual<G, F>
+    pub fn best<Fe, C>(&self, fitness_evaluator: &Fe, comparator: &C) -> &Individual<G, F>
     where
         F: PartialOrd,
+        Fe: FitnessEvaluator<G, F>,
         C: FitnessComparator<F>,
     {
         self.individuals
             .iter()
             .reduce(|a, b| {
-                if comparator.is_better(a.fitness(), b.fitness()) {
+                if comparator.is_better(a.fitness(fitness_evaluator), b.fitness(fitness_evaluator))
+                {
                     a
                 } else {
                     b

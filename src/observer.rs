@@ -6,7 +6,7 @@
 
 use crate::{
     core::{context::Context, state::State},
-    fitness::FitnessComparator,
+    fitness::{FitnessComparator, FitnessEvaluator},
 };
 use std::num::NonZero;
 
@@ -69,15 +69,16 @@ impl Default for StatsLogger {
 impl<G, F, Fe, R, C> Observer<G, F, Fe, R, C> for StatsLogger
 where
     F: std::fmt::Display + PartialOrd,
+    Fe: FitnessEvaluator<G, F>,
     C: FitnessComparator<F>,
 {
     fn on_generation(&mut self, state: &State<G, F>, ctx: &Context<Fe, R, C>) {
         if state.generation().is_multiple_of(self.every) {
-            let best = state.population().best(ctx.comparator());
+            let best = state.population().best(ctx.fitness_evaluator(), ctx.comparator());
             println!(
                 "[gen {}] best fitness: {}",
                 state.generation(),
-                best.fitness()
+                best.fitness(ctx.fitness_evaluator())
             );
         }
     }

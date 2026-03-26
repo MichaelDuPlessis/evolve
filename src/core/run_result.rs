@@ -29,8 +29,9 @@ use crate::core::{population::Population, state::State};
 /// );
 ///
 /// let result = ga.run();
-/// let best = result.population.best(&Maximize);
-/// println!("generations: {}, best fitness: {:?}", result.generations, best.fitness());
+/// let fe = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
+/// let best = result.population.best(&fe, &Maximize);
+/// println!("generations: {}, best fitness: {:?}", result.generations, best.fitness(&fe));
 /// ```
 #[derive(Debug)]
 pub struct RunResult<G, F> {

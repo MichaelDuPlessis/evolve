@@ -20,7 +20,7 @@ fn id(g: &[i32; 4]) -> i32 {
 
 fn make_state(genomes: &[[i32; 4]]) -> State<[i32; 4], i32> {
     let pop: Population<[i32; 4], i32> =
-        genomes.iter().map(|g| Individual::new(*g, &id)).collect();
+        genomes.iter().map(|g| Individual::new(*g)).collect();
     State::new(pop, 0)
 }
 
@@ -229,7 +229,7 @@ fn elitism_default_returns_single_best() {
     let offspring = elite.apply(&state, &mut ctx);
     assert_eq!(offspring.num_offspring(), 1);
     match offspring {
-        Offspring::Single(ind) => assert_eq!(*ind.fitness(), 3),
+        Offspring::Single(ind) => assert_eq!(*ind.fitness(&id), 3),
         _ => panic!("expected Single"),
     }
 }
@@ -243,7 +243,7 @@ fn elitism_returns_best_n() {
     let offspring = elite.apply(&state, &mut ctx);
     assert_eq!(offspring.num_offspring(), 3);
     let pop: Population<_, _> = offspring.into();
-    let mut fitnesses: Vec<i32> = pop.iter().map(|i| *i.fitness()).collect();
+    let mut fitnesses: Vec<i32> = pop.iter().map(|i| *i.fitness(&id)).collect();
     fitnesses.sort();
     assert_eq!(fitnesses, vec![3, 4, 5]);
 }

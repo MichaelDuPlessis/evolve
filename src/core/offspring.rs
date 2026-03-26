@@ -11,7 +11,7 @@ use crate::core::{individual::Individual, population::Population};
 /// use evolve::core::{individual::Individual, offspring::Offspring, population::Population};
 ///
 /// // A single offspring
-/// let single = Offspring::Single(Individual::new(42, &|g: &i32| *g));
+/// let single = Offspring::<i32, i32>::Single(Individual::new(42));
 /// assert_eq!(single.num_offspring(), 1);
 ///
 /// // Convert to a population

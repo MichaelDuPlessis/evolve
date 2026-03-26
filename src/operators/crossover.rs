@@ -53,8 +53,8 @@ where
             child1[point..N].clone_from_slice(&p2.genome()[point..N]);
             child2[point..N].clone_from_slice(&p1.genome()[point..N]);
 
-            let c1 = Individual::new(child1, ctx.fitness_evaluator());
-            let c2 = Individual::new(child2, ctx.fitness_evaluator());
+            let c1 = Individual::new(child1);
+            let c2 = Individual::new(child2);
 
             population.add(c1);
             population.add(c2);

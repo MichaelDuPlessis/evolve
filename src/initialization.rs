@@ -65,7 +65,7 @@ where
         ctx: &mut Context<Fe, R, C>,
     ) -> Population<G, F> {
         (0..population_size.get())
-            .map(|_| Individual::new(G::random(ctx.rng()), ctx.fitness_evaluator()))
+            .map(|_| Individual::new(G::random(ctx.rng())))
             .collect()
     }
 }
@@ -95,7 +95,7 @@ mod test {
         let pop = Random::new().initialize(NonZero::new(5).unwrap(), &mut ctx);
         for ind in &pop {
             assert_eq!(
-                *ind.fitness(),
+                *ind.fitness(&id),
                 ind.genome()[0] as u16 + ind.genome()[1] as u16
             );
         }

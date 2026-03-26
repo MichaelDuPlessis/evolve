@@ -2,7 +2,7 @@ use std::num::NonZero;
 
 use crate::{
     core::{context::Context, offspring::Offspring, population::Population, state::State},
-    fitness::FitnessComparator,
+    fitness::{FitnessComparator, FitnessEvaluator},
     operators::GeneticOperator,
 };
 
@@ -47,16 +47,17 @@ impl Default for Elitism {
 impl<G, F, Fe, R, C> GeneticOperator<G, F, Fe, R, C> for Elitism
 where
     F: PartialOrd + Clone,
+    Fe: FitnessEvaluator<G, F>,
     C: FitnessComparator<F>,
     G: Clone,
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         if self.amount == 1 {
-            Offspring::Single(state.population().best(ctx.comparator()).clone())
+            Offspring::Single(state.population().best(ctx.fitness_evaluator(), ctx.comparator()).clone())
         } else {
             let mut refs: Vec<_> = state.population().iter().collect();
             refs.select_nth_unstable_by(self.amount - 1, |a, b| {
-                if ctx.comparator().is_better(a.fitness(), b.fitness()) {
+                if ctx.comparator().is_better(a.fitness(ctx.fitness_evaluator()), b.fitness(ctx.fitness_evaluator())) {
                     std::cmp::Ordering::Less
                 } else {
                     std::cmp::Ordering::Greater

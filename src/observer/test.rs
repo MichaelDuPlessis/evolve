@@ -7,7 +7,7 @@ fn fe(g: &[u8; 1]) -> u8 {
 }
 
 fn make_state() -> State<[u8; 1], u8> {
-    let pop = Population::from_iter(vec![Individual::new([1], &fe)]);
+    let pop = Population::from_iter(vec![Individual::new([1])]);
     State::new(pop, 0)
 }
 

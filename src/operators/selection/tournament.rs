@@ -53,7 +53,7 @@ where
 
             if ctx
                 .comparator()
-                .is_better(candidate.fitness(), best.fitness())
+                .is_better(candidate.fitness(ctx.fitness_evaluator()), best.fitness(ctx.fitness_evaluator()))
             {
                 best = candidate;
             }

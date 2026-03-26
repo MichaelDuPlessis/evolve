@@ -178,8 +178,8 @@ fn maximize_improves_over_generations() {
         Maximize,
     );
 
-    let short_best = *ga_short.run().population.best(&Maximize).fitness();
-    let long_best = *ga_long.run().population.best(&Maximize).fitness();
+    let short_best = *ga_short.run().population.best(&fitness_fn, &Maximize).fitness(&fitness_fn);
+    let long_best = *ga_long.run().population.best(&fitness_fn, &Maximize).fitness(&fitness_fn);
 
     assert!(
         long_best >= short_best,
@@ -189,10 +189,11 @@ fn maximize_improves_over_generations() {
 
 #[test]
 fn minimize_finds_low_fitness() {
+    let fitness_fn = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
     let mut ga = GeneticAlgorithm::new(
         Random::new(),
         MaxGenerations::new(200),
-        |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+        fitness_fn,
         Fill::from_population_size(RandomReset::new()),
         nz(200),
         rand::rng(),
@@ -200,12 +201,11 @@ fn minimize_finds_low_fitness() {
     );
 
     let best = ga.run();
-    let best_ind = best.population.best(&Minimize);
-    // With 200 generations and minimize, should find something reasonably low
+    let best_ind = best.population.best(&fitness_fn, &Minimize);
     assert!(
-        *best_ind.fitness() < 100,
+        *best_ind.fitness(&fitness_fn) < 100,
         "expected low fitness, got {}",
-        best_ind.fitness()
+        best_ind.fitness(&fitness_fn)
     );
 }
 
@@ -213,10 +213,11 @@ fn minimize_finds_low_fitness() {
 
 #[test]
 fn full_pipeline_runs_to_completion() {
+    let fitness_fn = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
     let mut ga = GeneticAlgorithm::new(
         Random::new(),
         MaxGenerations::new(50),
-        |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>(),
+        fitness_fn,
         Fill::from_population_size(Pipeline::new((
             Combine::new((
                 TournamentSelection::new(nz(3)),
@@ -231,36 +232,37 @@ fn full_pipeline_runs_to_completion() {
     );
 
     let best = ga.run();
-    assert!(*best.population.best(&Maximize).fitness() > 0);
+    assert!(*best.population.best(&fitness_fn, &Maximize).fitness(&fitness_fn) > 0);
 }
 
 // ── Zero generations returns best of initial population ──
 
 #[test]
 fn zero_generations_returns_initial_best() {
+    let fitness_fn = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
     let mut ga = GeneticAlgorithm::new(
         Random::new(),
         MaxGenerations::new(0),
-        |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+        fitness_fn,
         Fill::from_population_size(RandomReset::new()),
         nz(50),
         rand::rng(),
         Maximize,
     );
 
-    // Should not panic — terminates immediately and returns best from initial pop
     let best = ga.run();
-    assert!(*best.population.best(&Maximize).fitness() > 0);
+    assert!(*best.population.best(&fitness_fn, &Maximize).fitness(&fitness_fn) > 0);
 }
 
 // ── Weighted pipeline favours the heavier operator ──
 
 #[test]
 fn weighted_pipeline_with_selection_and_mutation() {
+    let fitness_fn = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
     let mut ga = GeneticAlgorithm::new(
         Random::new(),
         MaxGenerations::new(50),
-        |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>(),
+        fitness_fn,
         Fill::from_population_size(Weighted::new((
             (
                 Pipeline::new((
@@ -281,7 +283,7 @@ fn weighted_pipeline_with_selection_and_mutation() {
     );
 
     let best = ga.run();
-    assert!(*best.population.best(&Maximize).fitness() > 0);
+    assert!(*best.population.best(&fitness_fn, &Maximize).fitness(&fitness_fn) > 0);
 }
 
 // ── Observer via run_with ──

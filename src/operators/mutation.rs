@@ -63,7 +63,7 @@ where
     // Replace it with a new random value
     genes[gene_index] = T::random(ctx.rng());
 
-    Individual::new(new_genome, ctx.fitness_evaluator())
+    Individual::new(new_genome)
 }
 
 impl<G, F, R, Fe, T, C> GeneticOperator<G, F, Fe, R, C> for RandomReset<T>
@@ -107,13 +107,12 @@ macro_rules! impl_random_reset_for_numbers {
                         // this is fine, we know there is exactly one element
                         Offspring::Single(Individual::new(
                             <$t>::random(ctx.rng()),
-                            ctx.fitness_evaluator(),
                         ))
                     } else {
                         let mut population = Population::with_capacity(state.population().len());
 
                         for _ in state.population() {
-                            let new_ind = Individual::new(<$t>::random(ctx.rng()), ctx.fitness_evaluator());
+                            let new_ind = Individual::new(<$t>::random(ctx.rng()));
                             population.add(new_ind);
                         }
 
