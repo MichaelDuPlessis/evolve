@@ -1,7 +1,7 @@
 use crate::fitness::FitnessEvaluator;
 use std::cell::OnceCell;
 
-/// A single candidate solution paired with its fitness value.
+/// A single candidate solution with lazily evaluated fitness.
 ///
 /// An `Individual` wraps a genome of type `G` and lazily evaluates its fitness
 /// using a [`FitnessEvaluator`] on first access.

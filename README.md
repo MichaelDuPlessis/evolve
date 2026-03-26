@@ -29,10 +29,12 @@ use evolve::{
 use std::num::NonZero;
 
 fn main() {
+    let fitness_fn = |args: &[u32; 2]| (args[0] as usize) * (args[0] as usize) - (args[1] as usize);
+
     let mut ga = GeneticAlgorithm::new(
         Random::new(),
         MaxGenerations::new(100),
-        |args: &[u32; 2]| (args[0] as usize) * (args[0] as usize) - (args[1] as usize),
+        fitness_fn,
         Fill::from_population_size(RandomReset::new()),
         NonZero::new(500).unwrap(),
         rand::rng(),
@@ -40,8 +42,39 @@ fn main() {
     );
 
     let result = ga.run();
-    let best = result.population.best(&Maximize);
-    println!("Best genome: {:?}, fitness: {:?}", best.genome(), best.fitness());
+    let best = result.population.best(&fitness_fn, &Maximize);
+    println!("Best genome: {:?}, fitness: {:?}", best.genome(), best.fitness(&fitness_fn));
+}
+```
+
+## Builder Pattern
+
+The GA can also be constructed incrementally with a builder:
+
+```rust
+use evolve::{
+    algorithm::ga::GeneticAlgorithm,
+    fitness::Maximize,
+    initialization::Random,
+    operators::combinator::Fill,
+    operators::mutation::RandomReset,
+    termination::MaxGenerations,
+};
+use std::num::NonZero;
+
+fn main() {
+    let fitness_fn = |args: &[u32; 2]| (args[0] as usize) * (args[0] as usize) - (args[1] as usize);
+
+    let mut ga = GeneticAlgorithm::builder(NonZero::new(500).unwrap())
+        .initializer(Random::new())
+        .termination(MaxGenerations::new(100))
+        .fitness(fitness_fn)
+        .operators(Fill::from_population_size(RandomReset::new()))
+        .rng(rand::rng())
+        .comparator(Maximize)
+        .build();
+
+    let result = ga.run();
 }
 ```
 
@@ -64,6 +97,10 @@ impl<G, F, Fe, R, C> GeneticOperator<G, F, Fe, R, C> for MyOperator {
     }
 }
 ```
+
+## Contributing
+
+Contributions are welcome! Feel free to open an issue for bug reports, feature requests, or questions. Pull requests are also appreciated.
 
 ## AI Disclosure
 

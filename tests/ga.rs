@@ -178,8 +178,16 @@ fn maximize_improves_over_generations() {
         Maximize,
     );
 
-    let short_best = *ga_short.run().population.best(&fitness_fn, &Maximize).fitness(&fitness_fn);
-    let long_best = *ga_long.run().population.best(&fitness_fn, &Maximize).fitness(&fitness_fn);
+    let short_best = *ga_short
+        .run()
+        .population
+        .best(&fitness_fn, &Maximize)
+        .fitness(&fitness_fn);
+    let long_best = *ga_long
+        .run()
+        .population
+        .best(&fitness_fn, &Maximize)
+        .fitness(&fitness_fn);
 
     assert!(
         long_best >= short_best,
@@ -232,7 +240,13 @@ fn full_pipeline_runs_to_completion() {
     );
 
     let best = ga.run();
-    assert!(*best.population.best(&fitness_fn, &Maximize).fitness(&fitness_fn) > 0);
+    assert!(
+        *best
+            .population
+            .best(&fitness_fn, &Maximize)
+            .fitness(&fitness_fn)
+            > 0
+    );
 }
 
 // ── Zero generations returns best of initial population ──
@@ -251,7 +265,13 @@ fn zero_generations_returns_initial_best() {
     );
 
     let best = ga.run();
-    assert!(*best.population.best(&fitness_fn, &Maximize).fitness(&fitness_fn) > 0);
+    assert!(
+        *best
+            .population
+            .best(&fitness_fn, &Maximize)
+            .fitness(&fitness_fn)
+            > 0
+    );
 }
 
 // ── Weighted pipeline favours the heavier operator ──
@@ -283,7 +303,13 @@ fn weighted_pipeline_with_selection_and_mutation() {
     );
 
     let best = ga.run();
-    assert!(*best.population.best(&fitness_fn, &Maximize).fitness(&fitness_fn) > 0);
+    assert!(
+        *best
+            .population
+            .best(&fitness_fn, &Maximize)
+            .fitness(&fitness_fn)
+            > 0
+    );
 }
 
 // ── Observer via run_with ──
