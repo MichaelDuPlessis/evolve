@@ -1,5 +1,10 @@
 use crate::fitness::FitnessEvaluator;
-use std::cell::OnceCell;
+
+#[cfg(feature = "parallel")]
+use std::sync::OnceLock as FitnessCell;
+
+#[cfg(not(feature = "parallel"))]
+use std::cell::OnceCell as FitnessCell;
 
 /// A single candidate solution with lazily evaluated fitness.
 ///
@@ -18,7 +23,7 @@ use std::cell::OnceCell;
 #[derive(Debug, Clone)]
 pub struct Individual<G, F> {
     genome: G,
-    fitness: OnceCell<F>,
+    fitness: FitnessCell<F>,
 }
 
 impl<G, F> Individual<G, F> {
@@ -26,7 +31,7 @@ impl<G, F> Individual<G, F> {
     pub fn new(genome: G) -> Self {
         Self {
             genome,
-            fitness: OnceCell::new(),
+            fitness: FitnessCell::new(),
         }
     }
 
@@ -34,7 +39,7 @@ impl<G, F> Individual<G, F> {
     pub fn from_parts(genome: G, fitness: F) -> Self {
         Self {
             genome,
-            fitness: OnceCell::from(fitness),
+            fitness: FitnessCell::from(fitness),
         }
     }
 

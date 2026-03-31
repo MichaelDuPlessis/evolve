@@ -5,6 +5,7 @@
 use crate::core::{context::Context, offspring::Offspring, state::State};
 
 pub(crate) mod common;
+#[cfg(feature = "parallel")]
 pub mod parallel;
 pub mod sequential;
 

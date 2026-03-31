@@ -9,5 +9,8 @@ readme = "README.md"
 keywords = ["genetic-algorithm", "evolutionary", "optimization", "metaheuristic"]
 categories = ["artificial-intelligence", "algorithms"]
 
+[features]
+parallel = []
+
 [dependencies]
 rand = "0.10.0"
