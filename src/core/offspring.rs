@@ -1,6 +1,6 @@
 use crate::core::{individual::Individual, population::Population};
 
-/// The result of applying a [`GeneticOperator`](crate::operators::sequential::GeneticOperator).
+/// The result of applying a [`GeneticOperator`](crate::operators::GeneticOperator).
 ///
 /// Operators may produce a single individual or an entire population. `Offspring`
 /// captures both cases and can be converted into a [`Population`] when needed.

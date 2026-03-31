@@ -140,12 +140,12 @@
 //!
 //! ## Custom Operators
 //!
-//! Implement [`GeneticOperator`](operators::sequential::GeneticOperator) to define your own:
+//! Implement [`GeneticOperator`](operators::GeneticOperator) to define your own:
 //!
 //! ```
 //! use evolve::{
 //!     core::{context::Context, offspring::Offspring, state::State},
-//!     operators::sequential::GeneticOperator,
+//!     operators::GeneticOperator,
 //! };
 //!
 //! struct MyOperator;

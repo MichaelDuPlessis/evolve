@@ -4,6 +4,7 @@
 
 use crate::core::{context::Context, offspring::Offspring, state::State};
 
+pub(crate) mod common;
 pub mod parallel;
 pub mod sequential;
 
@@ -15,7 +16,7 @@ pub mod sequential;
 ///
 /// ```
 /// use evolve::core::{context::Context, offspring::Offspring, state::State};
-/// use evolve::operators::sequential::GeneticOperator;
+/// use evolve::operators::GeneticOperator;
 ///
 /// struct MyOperator;
 ///

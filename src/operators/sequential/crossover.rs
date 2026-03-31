@@ -4,9 +4,9 @@ use crate::{
         state::State,
     },
     fitness::FitnessEvaluator,
-    operators::GeneticOperator,
+    operators::{common::single_point_crossover, GeneticOperator},
 };
-use rand::{Rng, RngExt};
+use rand::Rng;
 use std::marker::PhantomData;
 
 /// Single-point crossover operator.
@@ -45,19 +45,10 @@ where
             let p1 = unsafe { chunk.get_unchecked(0) };
             let p2 = unsafe { chunk.get_unchecked(1) };
 
-            let point = ctx.rng().random_range(0..N);
+            let (child1, child2) = single_point_crossover(p1.genome(), p2.genome(), ctx.rng());
 
-            let mut child1 = p1.genome().clone();
-            let mut child2 = p2.genome().clone();
-
-            child1[point..N].clone_from_slice(&p2.genome()[point..N]);
-            child2[point..N].clone_from_slice(&p1.genome()[point..N]);
-
-            let c1 = Individual::new(child1);
-            let c2 = Individual::new(child2);
-
-            population.add(c1);
-            population.add(c2);
+            population.add(Individual::new(child1));
+            population.add(Individual::new(child2));
         }
 
         Offspring::Multiple(population)

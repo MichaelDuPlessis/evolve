@@ -4,10 +4,10 @@ use crate::{
         state::State,
     },
     fitness::FitnessEvaluator,
-    operators::GeneticOperator,
+    operators::{common::random_reset_mutate, GeneticOperator},
     random::Randomizable,
 };
-use rand::{Rng, RngExt};
+use rand::Rng;
 use std::marker::PhantomData;
 
 /// This is a helper trait to get the code to compile since a T may one day implement AsMut<[T]>
@@ -40,32 +40,6 @@ impl<T> RandomReset<T> {
     }
 }
 
-/// Mutates a single genome using the random reset pattern
-fn random_reset_mutate<G, F, R, Fe, T, C>(
-    individual: &Individual<G, F>,
-    ctx: &mut Context<Fe, R, C>,
-) -> Individual<G, F>
-where
-    G: Clone + AsMut<[T]>,
-    T: Randomizable<R>,
-    F: PartialOrd,
-    R: Rng,
-    Fe: FitnessEvaluator<G, F>,
-{
-    let mut new_genome = individual.genome().clone();
-
-    // Convert genome to a mutable slice of genes
-    let genes = new_genome.as_mut();
-
-    // Pick a random gene index
-    let gene_index = ctx.rng().random_range(0..genes.len());
-
-    // Replace it with a new random value
-    genes[gene_index] = T::random(ctx.rng());
-
-    Individual::new(new_genome)
-}
-
 impl<G, F, R, Fe, T, C> GeneticOperator<G, F, Fe, R, C> for RandomReset<T>
 where
     G: Clone + AsMut<[T]> + GeneCollection,
@@ -75,17 +49,14 @@ where
     Fe: FitnessEvaluator<G, F>,
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
-        // if there is only one no need to allocate a whole Vec
         if state.population().len() == 1 {
-            // this is fine, we know there is exactly one element
             let individual = unsafe { state.population().as_slice().get_unchecked(0) };
-            Offspring::Single(random_reset_mutate(individual, ctx))
+            Offspring::Single(Individual::new(random_reset_mutate(individual.genome(), ctx.rng())))
         } else {
             let mut population = Population::with_capacity(state.population().len());
 
             for individual in state.population() {
-                let new_ind = random_reset_mutate(individual, ctx);
-                population.add(new_ind);
+                population.add(Individual::new(random_reset_mutate(individual.genome(), ctx.rng())));
             }
 
             Offspring::Multiple(population)
@@ -104,7 +75,6 @@ macro_rules! impl_random_reset_for_numbers {
             {
                 fn apply(&self, state: &State<$t, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<$t, F> {
                     if state.population().len() == 1 {
-                        // this is fine, we know there is exactly one element
                         Offspring::Single(Individual::new(
                             <$t>::random(ctx.rng()),
                         ))
