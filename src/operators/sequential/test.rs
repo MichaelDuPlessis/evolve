@@ -3,7 +3,7 @@ use crate::core::{
     state::State,
 };
 use crate::fitness::Maximize;
-use crate::operators::sequential::GeneticOperator;
+use crate::operators::GeneticOperator;
 use crate::operators::sequential::combinator::{Combine, Fill, Pipeline, Repeat, Weighted};
 use crate::operators::sequential::crossover::SinglePoint;
 use crate::operators::sequential::mutation::RandomReset;

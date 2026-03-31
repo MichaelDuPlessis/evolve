@@ -1,6 +1,6 @@
 use crate::{
     core::{context::Context, offspring::Offspring, population::Population, state::State},
-    operators::sequential::GeneticOperator,
+    operators::GeneticOperator,
 };
 
 /// Runs multiple operators on the same input and merges their outputs into one population.

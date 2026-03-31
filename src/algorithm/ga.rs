@@ -3,7 +3,7 @@ use crate::{
     fitness::{FitnessEvaluator, Maximize},
     initialization::Initializer,
     observer::{NoOp, Observer},
-    operators::sequential::GeneticOperator,
+    operators::GeneticOperator,
     termination::TerminationCondition,
 };
 use std::{marker::PhantomData, num::NonZero};

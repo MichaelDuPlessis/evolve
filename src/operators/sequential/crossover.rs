@@ -4,7 +4,7 @@ use crate::{
         state::State,
     },
     fitness::FitnessEvaluator,
-    operators::sequential::GeneticOperator,
+    operators::GeneticOperator,
 };
 use rand::{Rng, RngExt};
 use std::marker::PhantomData;

@@ -1,6 +1,6 @@
 use crate::{
     core::{context::Context, offspring::Offspring, population::Population, state::State},
-    operators::sequential::GeneticOperator,
+    operators::GeneticOperator,
 };
 
 /// Determines the target size for a [`Fill`] operator.

@@ -1,7 +1,7 @@
 use crate::{
     core::{context::Context, offspring::Offspring, state::State},
     fitness::{FitnessComparator, FitnessEvaluator},
-    operators::sequential::GeneticOperator,
+    operators::GeneticOperator,
 };
 use rand::{Rng, seq::IndexedRandom};
 use std::num::NonZero;
@@ -51,10 +51,10 @@ where
         for _ in 1..self.tournament_size {
             let candidate = unsafe { population.as_slice().choose(ctx.rng()).unwrap_unchecked() };
 
-            if ctx
-                .comparator()
-                .is_better(candidate.fitness(ctx.fitness_evaluator()), best.fitness(ctx.fitness_evaluator()))
-            {
+            if ctx.comparator().is_better(
+                candidate.fitness(ctx.fitness_evaluator()),
+                best.fitness(ctx.fitness_evaluator()),
+            ) {
                 best = candidate;
             }
         }

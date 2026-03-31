@@ -4,7 +4,7 @@ use crate::{
         state::State,
     },
     fitness::FitnessEvaluator,
-    operators::sequential::GeneticOperator,
+    operators::GeneticOperator,
     random::Randomizable,
 };
 use rand::{Rng, RngExt};

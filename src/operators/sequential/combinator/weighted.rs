@@ -1,11 +1,9 @@
-use std::num::NonZero;
-
-use rand::{Rng, RngExt};
-
 use crate::{
     core::{context::Context, offspring::Offspring, state::State},
-    operators::sequential::GeneticOperator,
+    operators::GeneticOperator,
 };
+use rand::{Rng, RngExt};
+use std::num::NonZero;
 
 /// Selects one operator per invocation based on assigned weights.
 ///
