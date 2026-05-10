@@ -6,23 +6,21 @@ use crate::{
     operators::{common::single_point_crossover, GeneticOperator},
 };
 use rand::{Rng, RngExt, SeedableRng};
-use std::{marker::PhantomData, num::NonZero};
+use std::marker::PhantomData;
 
 /// Parallel version of [`SinglePoint`](crate::operators::sequential::crossover::SinglePoint).
 ///
-/// Distributes pairs of individuals across threads for crossover.
-/// Each thread gets its own RNG seeded from the main one.
+/// Distributes pairs of individuals across pool workers for crossover.
+/// Each task gets its own RNG seeded from the main one.
 #[derive(Debug, Clone, Copy)]
 pub struct SinglePoint<T> {
-    num_threads: usize,
     _marker: PhantomData<T>,
 }
 
 impl<T> SinglePoint<T> {
     /// Creates a new parallel `SinglePoint` crossover operator.
-    pub fn new(num_threads: NonZero<usize>) -> Self {
+    pub fn new() -> Self {
         Self {
-            num_threads: num_threads.get(),
             _marker: PhantomData,
         }
     }
@@ -43,42 +41,29 @@ where
         ctx: &mut Context<Fe, R, C>,
     ) -> Offspring<[T; N], F> {
         let individuals = state.population().as_slice();
-        let pair_count = individuals.len() / 2;
-        let chunk_size = (pair_count / self.num_threads).max(1) * 2;
-
-        let seeds: Vec<u64> = (0..self.num_threads)
-            .map(|_| ctx.rng().random())
+        let inputs: Vec<(u64, usize)> = individuals
+            .chunks_exact(2)
+            .enumerate()
+            .map(|(i, _)| (ctx.rng().random::<u64>(), i))
             .collect();
 
-        let mut population = Population::with_capacity(pair_count * 2);
-
-        std::thread::scope(|s| {
-            let handles: Vec<_> = individuals
-                .chunks(chunk_size)
-                .zip(seeds)
-                .map(|(chunk, seed)| {
-                    s.spawn(move || -> Population<[T; N], F> {
-                        let mut rng = R::seed_from_u64(seed);
-                        let mut pop = Population::with_capacity(chunk.len());
-                        for pair in chunk.chunks_exact(2) {
-                            let (c1, c2) = single_point_crossover(
-                                pair[0].genome(),
-                                pair[1].genome(),
-                                &mut rng,
-                            );
-                            pop.add(Individual::new(c1));
-                            pop.add(Individual::new(c2));
-                        }
-                        pop
-                    })
-                })
-                .collect();
-
-            for handle in handles {
-                population.merge(handle.join().unwrap());
-            }
+        let results = ctx.pool().map(&inputs, |(seed, idx)| {
+            let mut rng = R::seed_from_u64(*seed);
+            let base = idx * 2;
+            let (c1, c2) = single_point_crossover(
+                individuals[base].genome(),
+                individuals[base + 1].genome(),
+                &mut rng,
+            );
+            (Individual::new(c1), Individual::new(c2))
         });
 
+        let mut population = Population::with_capacity(inputs.len() * 2);
+        for r in results {
+            let (c1, c2) = r.expect("pool task panicked");
+            population.add(c1);
+            population.add(c2);
+        }
         Offspring::Multiple(population)
     }
 }

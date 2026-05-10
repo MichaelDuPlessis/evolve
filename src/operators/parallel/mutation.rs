@@ -7,23 +7,21 @@ use crate::{
     random::Randomizable,
 };
 use rand::{Rng, RngExt, SeedableRng};
-use std::{marker::PhantomData, num::NonZero};
+use std::marker::PhantomData;
 
 /// Parallel version of [`RandomReset`](crate::operators::sequential::mutation::RandomReset).
 ///
-/// Distributes individuals across threads for mutation.
-/// Each thread gets its own RNG seeded from the main one.
+/// Distributes individuals across pool workers for mutation.
+/// Each task gets its own RNG seeded from the main one.
 #[derive(Debug, Clone, Copy)]
 pub struct RandomReset<T> {
-    num_threads: usize,
     _marker: PhantomData<T>,
 }
 
 impl<T> RandomReset<T> {
     /// Creates a new parallel `RandomReset` mutation operator.
-    pub fn new(num_threads: NonZero<usize>) -> Self {
+    pub fn new() -> Self {
         Self {
-            num_threads: num_threads.get(),
             _marker: PhantomData,
         }
     }
@@ -48,35 +46,19 @@ where
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         let individuals = state.population().as_slice();
-        let chunk_size = (individuals.len() / self.num_threads).max(1);
-
-        let seeds: Vec<u64> = (0..self.num_threads)
-            .map(|_| ctx.rng().random())
+        let inputs: Vec<(u64, usize)> = (0..individuals.len())
+            .map(|i| (ctx.rng().random::<u64>(), i))
             .collect();
 
-        let mut population = Population::with_capacity(individuals.len());
-
-        std::thread::scope(|s| {
-            let handles: Vec<_> = individuals
-                .chunks(chunk_size)
-                .zip(seeds)
-                .map(|(chunk, seed)| {
-                    s.spawn(move || -> Population<G, F> {
-                        let mut rng = R::seed_from_u64(seed);
-                        let mut pop = Population::with_capacity(chunk.len());
-                        for ind in chunk {
-                            pop.add(Individual::new(random_reset_mutate(ind.genome(), &mut rng)));
-                        }
-                        pop
-                    })
-                })
-                .collect();
-
-            for handle in handles {
-                population.merge(handle.join().unwrap());
-            }
+        let results = ctx.pool().map(&inputs, |(seed, idx)| {
+            let mut rng = R::seed_from_u64(*seed);
+            Individual::new(random_reset_mutate(individuals[*idx].genome(), &mut rng))
         });
 
+        let mut population = Population::with_capacity(individuals.len());
+        for r in results {
+            population.add(r.expect("pool task panicked"));
+        }
         Offspring::Multiple(population)
     }
 }

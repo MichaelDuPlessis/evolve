@@ -28,6 +28,13 @@ fn make_ctx(
     impl rand::Rng + '_,
     impl crate::fitness::FitnessComparator<i32> + '_,
 > {
+    #[cfg(feature = "parallel")]
+    {
+        use std::sync::LazyLock;
+        static RUNTIME: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(id as fn(&[i32; 4]) -> i32), rng, &Maximize, &RUNTIME)
+    }
+    #[cfg(not(feature = "parallel"))]
     Context::new(&(id as fn(&[i32; 4]) -> i32), rng, &Maximize)
 }
 

@@ -11,6 +11,13 @@ fn make_state() -> State<[u8; 1], u8> {
     State::new(pop, 0)
 }
 
+#[cfg(feature = "parallel")]
+fn test_runtime() -> &'static pooled::Runtime {
+    use std::sync::LazyLock;
+    static RUNTIME: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+    &RUNTIME
+}
+
 #[test]
 fn custom_observer_receives_all_hooks() {
     struct Tracker {
@@ -32,7 +39,10 @@ fn custom_observer_receives_all_hooks() {
     }
 
     let mut rng = rand::rng();
+    #[cfg(not(feature = "parallel"))]
     let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize);
+    #[cfg(feature = "parallel")]
+    let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize, test_runtime());
     let state = make_state();
 
     let mut tracker = Tracker { started: false, generations: 0, ended: false };
@@ -49,7 +59,10 @@ fn custom_observer_receives_all_hooks() {
 #[test]
 fn noop_observer_compiles() {
     let mut rng = rand::rng();
+    #[cfg(not(feature = "parallel"))]
     let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize);
+    #[cfg(feature = "parallel")]
+    let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize, test_runtime());
     let state = make_state();
 
     let mut noop = NoOp::new();
@@ -64,7 +77,10 @@ fn default_methods_are_noop() {
     impl<G, F, Fe, R, C> Observer<G, F, Fe, R, C> for Empty {}
 
     let mut rng = rand::rng();
+    #[cfg(not(feature = "parallel"))]
     let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize);
+    #[cfg(feature = "parallel")]
+    let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize, test_runtime());
     let state = make_state();
 
     let mut empty = Empty;

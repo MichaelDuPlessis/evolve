@@ -10,7 +10,8 @@ keywords = ["genetic-algorithm", "evolutionary", "optimization", "metaheuristic"
 categories = ["artificial-intelligence", "algorithms"]
 
 [features]
-parallel = []
+parallel = ["dep:pooled"]
 
 [dependencies]
 rand = "0.10.0"
+pooled = { version = "0.2.0", optional = true }
