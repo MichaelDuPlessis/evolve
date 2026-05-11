@@ -168,7 +168,7 @@
 //! ```
 //!
 //! Parallel versions of mutation, crossover, and combinators are available under
-//! [`operators::parallel`].
+//! `operators::parallel` (requires the `parallel` feature).
 
 pub mod algorithm;
 pub mod core;
