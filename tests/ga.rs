@@ -1,5 +1,5 @@
 use evolve::{
-    algorithm::ga::GeneticAlgorithm,
+    algorithm::EvolutionaryAlgorithm,
     fitness::{Maximize, Minimize},
     initialization::Random,
     operators::sequential::{
@@ -25,7 +25,7 @@ fn nz16(n: u16) -> NonZero<u16> {
 
 #[test]
 fn build_with_maximize() {
-    GeneticAlgorithm::new(
+    EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(1),
         |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
@@ -38,7 +38,7 @@ fn build_with_maximize() {
 
 #[test]
 fn build_with_minimize() {
-    GeneticAlgorithm::new(
+    EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(1),
         |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
@@ -51,7 +51,7 @@ fn build_with_minimize() {
 
 #[test]
 fn build_with_closure_comparator() {
-    GeneticAlgorithm::new(
+    EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(1),
         |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
@@ -64,7 +64,7 @@ fn build_with_closure_comparator() {
 
 #[test]
 fn build_with_pipeline() {
-    GeneticAlgorithm::new(
+    EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(1),
         |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>(),
@@ -81,7 +81,7 @@ fn build_with_pipeline() {
 
 #[test]
 fn build_with_combine() {
-    GeneticAlgorithm::new(
+    EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(1),
         |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
@@ -94,7 +94,7 @@ fn build_with_combine() {
 
 #[test]
 fn build_with_repeat() {
-    GeneticAlgorithm::new(
+    EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(1),
         |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
@@ -107,7 +107,7 @@ fn build_with_repeat() {
 
 #[test]
 fn build_with_weighted() {
-    GeneticAlgorithm::new(
+    EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(1),
         |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
@@ -123,7 +123,7 @@ fn build_with_weighted() {
 
 #[test]
 fn build_with_fixed_size_fill() {
-    GeneticAlgorithm::new(
+    EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(1),
         |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
@@ -149,7 +149,7 @@ fn maximize_improves_over_generations() {
         RandomReset::new(),
     )));
 
-    let mut ga_short = GeneticAlgorithm::new(
+    let mut ga_short = EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(1),
         fitness_fn,
@@ -168,7 +168,7 @@ fn maximize_improves_over_generations() {
         RandomReset::new(),
     )));
 
-    let mut ga_long = GeneticAlgorithm::new(
+    let mut ga_long = EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(200),
         fitness_fn,
@@ -198,7 +198,7 @@ fn maximize_improves_over_generations() {
 #[test]
 fn minimize_finds_low_fitness() {
     let fitness_fn = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
-    let mut ga = GeneticAlgorithm::new(
+    let mut ga = EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(200),
         fitness_fn,
@@ -222,7 +222,7 @@ fn minimize_finds_low_fitness() {
 #[test]
 fn full_pipeline_runs_to_completion() {
     let fitness_fn = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
-    let mut ga = GeneticAlgorithm::new(
+    let mut ga = EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(50),
         fitness_fn,
@@ -254,7 +254,7 @@ fn full_pipeline_runs_to_completion() {
 #[test]
 fn zero_generations_returns_initial_best() {
     let fitness_fn = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
-    let mut ga = GeneticAlgorithm::new(
+    let mut ga = EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(0),
         fitness_fn,
@@ -279,7 +279,7 @@ fn zero_generations_returns_initial_best() {
 #[test]
 fn weighted_pipeline_with_selection_and_mutation() {
     let fitness_fn = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
-    let mut ga = GeneticAlgorithm::new(
+    let mut ga = EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(50),
         fitness_fn,
@@ -337,7 +337,7 @@ fn run_with_observer() {
         }
     }
 
-    let mut ga = GeneticAlgorithm::new(
+    let mut ga = EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(5),
         |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
@@ -359,7 +359,7 @@ fn run_with_observer() {
 
 #[test]
 fn builder_with_all_fields() {
-    let mut ga = GeneticAlgorithm::builder(nz(50))
+    let mut ga = EvolutionaryAlgorithm::builder(nz(50))
         .initializer(Random::new())
         .termination(MaxGenerations::new(10))
         .fitness(|g: &[u8; 2]| g[0] as u16 + g[1] as u16)
@@ -374,7 +374,7 @@ fn builder_with_all_fields() {
 
 #[test]
 fn builder_with_minimize() {
-    let mut ga = GeneticAlgorithm::builder(nz(50))
+    let mut ga = EvolutionaryAlgorithm::builder(nz(50))
         .initializer(Random::new())
         .termination(MaxGenerations::new(10))
         .fitness(|g: &[u8; 2]| g[0] as u16 + g[1] as u16)
@@ -389,7 +389,7 @@ fn builder_with_minimize() {
 
 #[test]
 fn builder_with_pipeline() {
-    let mut ga = GeneticAlgorithm::builder(nz(100))
+    let mut ga = EvolutionaryAlgorithm::builder(nz(100))
         .initializer(Random::new())
         .termination(MaxGenerations::new(10))
         .fitness(|g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>())
@@ -411,7 +411,7 @@ fn builder_with_pipeline() {
 
 #[test]
 fn builder_fields_in_any_order() {
-    let mut ga = GeneticAlgorithm::builder(nz(50))
+    let mut ga = EvolutionaryAlgorithm::builder(nz(50))
         .comparator(Maximize)
         .rng(rand::rng())
         .operators(Fill::from_population_size(RandomReset::new()))

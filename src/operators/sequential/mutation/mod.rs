@@ -1,3 +1,8 @@
+/// Segment deletion mutation operator.
+pub mod deletion;
+/// Segment duplication mutation operator.
+pub mod duplication;
+
 use crate::{
     core::{
         context::Context, individual::Individual, offspring::Offspring, population::Population,

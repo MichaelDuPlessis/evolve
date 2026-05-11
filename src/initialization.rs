@@ -8,8 +8,10 @@ use crate::{
     fitness::FitnessEvaluator,
     random::Randomizable,
 };
-use rand::Rng;
+use rand::{Rng, RngExt};
+use std::marker::PhantomData;
 use std::num::NonZero;
+use std::ops::Range;
 
 /// Creates the initial population for the algorithm.
 ///
@@ -75,6 +77,70 @@ where
     }
 }
 
+/// An [`Initializer`] that creates a population of random variable-length genomes.
+///
+/// Each genome's length is sampled uniformly from the given range.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::core::context::Context;
+/// use evolve::fitness::Maximize;
+/// use evolve::initialization::{Initializer, RangedRandom};
+/// use std::num::NonZero;
+///
+/// let mut rng = rand::rng();
+/// let fitness_fn = |g: &Vec<u8>| g.iter().map(|&x| x as u32).sum::<u32>();
+/// # #[cfg(not(feature = "parallel"))]
+/// let mut ctx = Context::new(&fitness_fn, &mut rng, &Maximize);
+/// # #[cfg(feature = "parallel")]
+/// # let runtime = pooled::Runtime::new(1);
+/// # #[cfg(feature = "parallel")]
+/// # let mut ctx = Context::new(&fitness_fn, &mut rng, &Maximize, &runtime);
+///
+/// let pop = RangedRandom::<u8>::new(5..10).initialize(NonZero::new(50).unwrap(), &mut ctx);
+/// assert_eq!(pop.len(), 50);
+/// for ind in &pop {
+///     assert!((5..10).contains(&ind.genome().len()));
+/// }
+/// ```
+#[derive(Debug, Clone)]
+pub struct RangedRandom<T> {
+    length_range: Range<usize>,
+    _marker: PhantomData<T>,
+}
+
+impl<T> RangedRandom<T> {
+    /// Creates a new `RangedRandom` initializer with the given length range.
+    pub fn new(length_range: Range<usize>) -> Self {
+        Self {
+            length_range,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T, F, Fe, R, C> Initializer<Vec<T>, F, Fe, R, C> for RangedRandom<T>
+where
+    Fe: FitnessEvaluator<Vec<T>, F>,
+    T: Randomizable<R>,
+    R: Rng,
+{
+    fn initialize(
+        &self,
+        population_size: NonZero<usize>,
+        ctx: &mut Context<Fe, R, C>,
+    ) -> Population<Vec<T>, F> {
+        (0..population_size.get())
+            .map(|_| {
+                let len = ctx.rng().random_range(self.length_range.clone());
+                let genome: Vec<T> = (0..len).map(|_| T::random(ctx.rng())).collect();
+                Individual::new(genome)
+            })
+            .collect()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -116,6 +182,34 @@ mod test {
                 *ind.fitness(&id),
                 ind.genome()[0] as u16 + ind.genome()[1] as u16
             );
+        }
+    }
+
+    fn vec_sum(g: &Vec<u8>) -> u32 {
+        g.iter().map(|&x| x as u32).sum()
+    }
+
+    #[test]
+    fn ranged_random_creates_correct_size() {
+        let mut rng = rand::rng();
+        #[cfg(not(feature = "parallel"))]
+        let mut ctx = Context::new(&(vec_sum as fn(&Vec<u8>) -> u32), &mut rng, &Maximize);
+        #[cfg(feature = "parallel")]
+        let mut ctx = Context::new(&(vec_sum as fn(&Vec<u8>) -> u32), &mut rng, &Maximize, test_runtime());
+        let pop = RangedRandom::<u8>::new(3..8).initialize(NonZero::new(20).unwrap(), &mut ctx);
+        assert_eq!(pop.len(), 20);
+    }
+
+    #[test]
+    fn ranged_random_genome_lengths_within_range() {
+        let mut rng = rand::rng();
+        #[cfg(not(feature = "parallel"))]
+        let mut ctx = Context::new(&(vec_sum as fn(&Vec<u8>) -> u32), &mut rng, &Maximize);
+        #[cfg(feature = "parallel")]
+        let mut ctx = Context::new(&(vec_sum as fn(&Vec<u8>) -> u32), &mut rng, &Maximize, test_runtime());
+        let pop = RangedRandom::<u8>::new(5..10).initialize(NonZero::new(50).unwrap(), &mut ctx);
+        for ind in &pop {
+            assert!((5..10).contains(&ind.genome().len()));
         }
     }
 }

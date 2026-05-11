@@ -17,7 +17,7 @@ A generic, composable genetic algorithm framework for Rust.
 
 ```rust
 use evolve::{
-    algorithm::ga::GeneticAlgorithm,
+    algorithm::EvolutionaryAlgorithm,
     fitness::Maximize,
     initialization::Random,
     operators::sequential::combinator::Fill,
@@ -29,7 +29,7 @@ use std::num::NonZero;
 fn main() {
     let fitness_fn = |args: &[u32; 2]| (args[0] as usize) * (args[0] as usize) - (args[1] as usize);
 
-    let mut ga = GeneticAlgorithm::new(
+    let mut ga = EvolutionaryAlgorithm::new(
         Random::new(),
         MaxGenerations::new(100),
         fitness_fn,
@@ -51,7 +51,7 @@ The GA can also be constructed incrementally with a builder:
 
 ```rust
 use evolve::{
-    algorithm::ga::GeneticAlgorithm,
+    algorithm::EvolutionaryAlgorithm,
     fitness::Maximize,
     initialization::Random,
     operators::sequential::combinator::Fill,
@@ -63,7 +63,7 @@ use std::num::NonZero;
 fn main() {
     let fitness_fn = |args: &[u32; 2]| (args[0] as usize) * (args[0] as usize) - (args[1] as usize);
 
-    let mut ga = GeneticAlgorithm::builder(NonZero::new(500).unwrap())
+    let mut ga = EvolutionaryAlgorithm::builder(NonZero::new(500).unwrap())
         .initializer(Random::new())
         .termination(MaxGenerations::new(100))
         .fitness(fitness_fn)
@@ -109,7 +109,7 @@ Parallel operators distribute work across a thread pool using the `pooled` crate
 
 ```rust
 use evolve::{
-    algorithm::ga::GeneticAlgorithm,
+    algorithm::EvolutionaryAlgorithm,
     fitness::Maximize,
     initialization::Random,
     operators::parallel::combinator::Fill,
@@ -119,7 +119,7 @@ use evolve::{
 use std::num::NonZero;
 
 fn main() {
-    let mut ga = GeneticAlgorithm::builder(NonZero::new(500).unwrap())
+    let mut ga = EvolutionaryAlgorithm::builder(NonZero::new(500).unwrap())
         .initializer(Random::new())
         .termination(MaxGenerations::new(100))
         .fitness(|g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>())
@@ -136,7 +136,7 @@ A `Runtime` is created automatically (defaulting to `available_parallelism` thre
 
 ```rust
 // Use a custom thread pool size
-let ga = GeneticAlgorithm::builder(NonZero::new(500).unwrap())
+let ga = EvolutionaryAlgorithm::builder(NonZero::new(500).unwrap())
     // ...
     .runtime(pooled::Runtime::new(4))
     .build();

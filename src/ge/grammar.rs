@@ -1,0 +1,238 @@
+//! Grammar representation and builder for grammatical evolution.
+
+use std::collections::{HashMap, HashSet};
+
+/// A symbol in a grammar production.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Symbol {
+    /// A terminal symbol. The usize is an index into `Grammar::terminals`.
+    Terminal(usize),
+    /// A non-terminal symbol. The usize is an index into `Grammar::rules`.
+    NonTerminal(usize),
+}
+
+/// A rule in the grammar (a non-terminal and its productions).
+#[derive(Debug, Clone)]
+pub struct Rule {
+    pub(crate) productions: Vec<Vec<Symbol>>,
+}
+
+/// A context-free grammar for grammatical evolution.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::ge::grammar::Grammar;
+///
+/// let grammar = Grammar::builder()
+///     .rule("expr", &[&["expr", "op", "expr"], &["x"]])
+///     .rule("op", &[&["+"], &["-"]])
+///     .start("expr")
+///     .build();
+/// ```
+#[derive(Debug, Clone)]
+pub struct Grammar {
+    rules: Vec<Rule>,
+    terminals: Vec<String>,
+    start: usize,
+}
+
+impl Grammar {
+    /// Creates a new [`GrammarBuilder`].
+    pub fn builder() -> GrammarBuilder {
+        GrammarBuilder::new()
+    }
+
+    /// Returns the terminal string value for the given index.
+    pub fn terminal_value(&self, idx: usize) -> &str {
+        &self.terminals[idx]
+    }
+
+    /// Returns the rules.
+    pub fn rules(&self) -> &[Rule] {
+        &self.rules
+    }
+
+    /// Returns the terminals.
+    pub fn terminals(&self) -> &[String] {
+        &self.terminals
+    }
+
+    /// Returns the start rule index.
+    pub fn start(&self) -> usize {
+        self.start
+    }
+}
+
+/// Builder for ergonomic grammar construction.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::ge::grammar::GrammarBuilder;
+///
+/// let grammar = GrammarBuilder::new()
+///     .rule("expr", &[&["expr", "+", "expr"], &["x"]])
+///     .start("expr")
+///     .build();
+/// ```
+pub struct GrammarBuilder {
+    rules: Vec<(String, Vec<Vec<String>>)>,
+    start: Option<String>,
+}
+
+impl GrammarBuilder {
+    /// Creates a new empty builder.
+    pub fn new() -> Self {
+        Self {
+            rules: Vec::new(),
+            start: None,
+        }
+    }
+
+    /// Adds a rule. Symbols matching any rule name are classified as non-terminals
+    /// at [`build()`](Self::build) time; everything else is a terminal.
+    pub fn rule(mut self, name: &str, productions: &[&[&str]]) -> Self {
+        let prods = productions
+            .iter()
+            .map(|p| p.iter().map(|s| s.to_string()).collect())
+            .collect();
+        self.rules.push((name.to_string(), prods));
+        self
+    }
+
+    /// Sets the start symbol.
+    pub fn start(mut self, name: &str) -> Self {
+        self.start = Some(name.to_string());
+        self
+    }
+
+    /// Builds the grammar.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the start symbol is unset or doesn't match a rule name.
+    pub fn build(self) -> Grammar {
+        let start_name = self.start.expect("start symbol must be set");
+        let rule_names: HashSet<&str> = self.rules.iter().map(|(n, _)| n.as_str()).collect();
+        assert!(
+            rule_names.contains(start_name.as_str()),
+            "start symbol must match a rule name"
+        );
+
+        // Assign rule indices (order of definition).
+        let mut rule_index: HashMap<&str, usize> = HashMap::new();
+        for (i, (name, _)) in self.rules.iter().enumerate() {
+            rule_index.insert(name.as_str(), i);
+        }
+
+        // Collect terminals.
+        let mut terminal_index: HashMap<String, usize> = HashMap::new();
+        let mut terminals: Vec<String> = Vec::new();
+        for (_, prods) in &self.rules {
+            for prod in prods {
+                for sym in prod {
+                    if !rule_names.contains(sym.as_str()) && !terminal_index.contains_key(sym) {
+                        terminal_index.insert(sym.clone(), terminals.len());
+                        terminals.push(sym.clone());
+                    }
+                }
+            }
+        }
+
+        // Build rules with Symbol references.
+        let rules: Vec<Rule> = self
+            .rules
+            .iter()
+            .map(|(_name, prods)| {
+                let productions = prods
+                    .iter()
+                    .map(|p| {
+                        p.iter()
+                            .map(|s| {
+                                if let Some(&idx) = rule_index.get(s.as_str()) {
+                                    Symbol::NonTerminal(idx)
+                                } else {
+                                    Symbol::Terminal(terminal_index[s])
+                                }
+                            })
+                            .collect()
+                    })
+                    .collect();
+                Rule {
+                    productions,
+                }
+            })
+            .collect();
+
+        let start = rule_index[start_name.as_str()];
+
+        Grammar {
+            rules,
+            terminals,
+            start,
+        }
+    }
+}
+
+impl Default for GrammarBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn builder_constructs_grammar() {
+        let grammar = Grammar::builder()
+            .rule("expr", &[&["expr", "op", "expr"], &["x"]])
+            .rule("op", &[&["+"], &["-"]])
+            .start("expr")
+            .build();
+
+        assert_eq!(grammar.start, 0);
+        assert_eq!(grammar.rules[grammar.start].productions.len(), 2);
+    }
+
+    #[test]
+    fn symbol_classification() {
+        let grammar = Grammar::builder()
+            .rule("expr", &[&["expr", "+", "x"]])
+            .start("expr")
+            .build();
+
+        // "expr" is a rule, "+" and "x" are terminals
+        assert_eq!(grammar.rules.len(), 1);
+        assert_eq!(grammar.terminals.len(), 2);
+        assert!(grammar.terminals.contains(&"+".to_string()));
+        assert!(grammar.terminals.contains(&"x".to_string()));
+    }
+
+    #[test]
+    fn terminal_value_lookup() {
+        let grammar = Grammar::builder()
+            .rule("s", &[&["hello"]])
+            .start("s")
+            .build();
+
+        assert_eq!(grammar.terminal_value(0), "hello");
+    }
+
+    #[test]
+    #[should_panic(expected = "start symbol must be set")]
+    fn missing_start_panics() {
+        Grammar::builder().rule("s", &[&["x"]]).build();
+    }
+
+    #[test]
+    #[should_panic(expected = "start symbol must match a rule name")]
+    fn invalid_start_panics() {
+        Grammar::builder()
+            .rule("s", &[&["x"]])
+            .start("missing")
+            .build();
+    }
+}

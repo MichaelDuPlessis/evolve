@@ -9,7 +9,7 @@ use crate::core::{population::Population, state::State};
 ///
 /// ```
 /// use evolve::{
-///     algorithm::ga::GeneticAlgorithm,
+///     algorithm::EvolutionaryAlgorithm,
 ///     fitness::Maximize,
 ///     initialization::Random,
 ///     operators::sequential::combinator::Fill,
@@ -18,7 +18,7 @@ use crate::core::{population::Population, state::State};
 /// };
 /// use std::num::NonZero;
 ///
-/// let mut ga = GeneticAlgorithm::new(
+/// let mut ga = EvolutionaryAlgorithm::new(
 ///     Random::new(),
 ///     MaxGenerations::new(10),
 ///     |g: &[u8; 2]| g[0] as u16 + g[1] as u16,

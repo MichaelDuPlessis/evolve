@@ -24,7 +24,7 @@
 //!
 //! ```
 //! use evolve::{
-//!     algorithm::ga::GeneticAlgorithm,
+//!     algorithm::EvolutionaryAlgorithm,
 //!     fitness::Maximize,
 //!     initialization::Random,
 //!     operators::sequential::combinator::Fill,
@@ -33,7 +33,7 @@
 //! };
 //! use std::num::NonZero;
 //!
-//! let mut ga = GeneticAlgorithm::new(
+//! let mut ga = EvolutionaryAlgorithm::new(
 //!     Random::new(),
 //!     MaxGenerations::new(100),
 //!     |args: &[u32; 2]| args[0] as usize + args[1] as usize,
@@ -57,7 +57,7 @@
 //!
 //! ```
 //! use evolve::{
-//!     algorithm::ga::GeneticAlgorithm,
+//!     algorithm::EvolutionaryAlgorithm,
 //!     fitness::Maximize,
 //!     initialization::Random,
 //!     operators::sequential::combinator::{Combine, Fill, Pipeline},
@@ -78,7 +78,7 @@
 //!     RandomReset::new(),
 //! )));
 //!
-//! let mut ga = GeneticAlgorithm::new(
+//! let mut ga = EvolutionaryAlgorithm::new(
 //!     Random::new(),
 //!     MaxGenerations::new(200),
 //!     |g: &[u8; 8]| g.iter().map(|x| *x as u32).sum::<u32>(),
@@ -116,7 +116,7 @@
 //!
 //! ```
 //! use evolve::{
-//!     algorithm::ga::GeneticAlgorithm,
+//!     algorithm::EvolutionaryAlgorithm,
 //!     initialization::Random,
 //!     operators::sequential::combinator::Fill,
 //!     operators::sequential::mutation::RandomReset,
@@ -125,7 +125,7 @@
 //! use std::num::NonZero;
 //!
 //! // Custom comparator: prefer fitness values closer to 100
-//! let mut ga = GeneticAlgorithm::new(
+//! let mut ga = EvolutionaryAlgorithm::new(
 //!     Random::new(),
 //!     MaxGenerations::new(100),
 //!     |g: &[u8; 2]| (g[0] as i32 + g[1] as i32 - 100).abs(),
@@ -173,6 +173,7 @@
 pub mod algorithm;
 pub mod core;
 pub mod fitness;
+pub mod ge;
 pub mod initialization;
 pub mod observer;
 pub mod operators;

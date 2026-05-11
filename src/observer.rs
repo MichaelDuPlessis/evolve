@@ -86,7 +86,7 @@ where
 
 /// An observer that does nothing.
 ///
-/// Used internally by [`GeneticAlgorithm::run`](crate::algorithm::ga::GeneticAlgorithm::run)
+/// Used internally by [`EvolutionaryAlgorithm::run`](crate::algorithm::EvolutionaryAlgorithm::run)
 /// when no observer is needed.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct NoOp;

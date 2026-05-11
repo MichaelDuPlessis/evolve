@@ -1,7 +1,7 @@
 #![cfg(feature = "parallel")]
 
 use evolve::{
-    algorithm::ga::GeneticAlgorithm,
+    algorithm::EvolutionaryAlgorithm,
     core::{context::Context, individual::Individual, population::Population, state::State},
     fitness::Maximize,
     initialization::Random,
@@ -91,7 +91,7 @@ fn parallel_repeat_produces_output() {
 fn parallel_ga_improves_over_generations() {
     let fitness_fn = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
 
-    let mut ga_short = GeneticAlgorithm::builder(nz(100))
+    let mut ga_short = EvolutionaryAlgorithm::builder(nz(100))
         .initializer(Random::new())
         .termination(MaxGenerations::new(1))
         .fitness(fitness_fn)
@@ -101,7 +101,7 @@ fn parallel_ga_improves_over_generations() {
         .runtime(pooled::Runtime::new(2))
         .build();
 
-    let mut ga_long = GeneticAlgorithm::builder(nz(100))
+    let mut ga_long = EvolutionaryAlgorithm::builder(nz(100))
         .initializer(Random::new())
         .termination(MaxGenerations::new(100))
         .fitness(fitness_fn)

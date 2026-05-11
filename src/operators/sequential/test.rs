@@ -347,3 +347,188 @@ fn weighted_boxed_slice_picks_one_operator() {
     let op = Weighted::new(ops);
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 1);
 }
+
+// ── SinglePoint crossover for Vec<T> ──
+
+fn id_vec(g: &Vec<i32>) -> i32 {
+    g.iter().sum()
+}
+
+fn make_state_vec(genomes: &[Vec<i32>]) -> State<Vec<i32>, i32> {
+    let pop: Population<Vec<i32>, i32> = genomes.iter().map(|g| Individual::new(g.clone())).collect();
+    State::new(pop, 0)
+}
+
+fn make_ctx_vec(
+    rng: &mut impl rand::Rng,
+) -> Context<
+    '_,
+    fn(&Vec<i32>) -> i32,
+    impl rand::Rng + '_,
+    impl crate::fitness::FitnessComparator<i32> + '_,
+> {
+    #[cfg(feature = "parallel")]
+    {
+        use std::sync::LazyLock;
+        static RUNTIME: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(id_vec as fn(&Vec<i32>) -> i32), rng, &Maximize, &RUNTIME)
+    }
+    #[cfg(not(feature = "parallel"))]
+    Context::new(&(id_vec as fn(&Vec<i32>) -> i32), rng, &Maximize)
+}
+
+#[test]
+fn single_point_crossover_vec_single_pair() {
+    let state = make_state_vec(&[vec![1, 1, 1, 1], vec![2, 2, 2, 2]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx_vec(&mut rng);
+    let op = SinglePoint::<i32>::new();
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 2);
+}
+
+#[test]
+fn single_point_crossover_vec_children_contain_parent_genes() {
+    let state = make_state_vec(&[vec![0, 0, 0, 0], vec![1, 1, 1, 1]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx_vec(&mut rng);
+    let op = SinglePoint::<i32>::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    for ind in &pop {
+        for gene in ind.genome() {
+            assert!(*gene == 0 || *gene == 1);
+        }
+    }
+}
+
+#[test]
+fn single_point_crossover_vec_variable_length_parents() {
+    let state = make_state_vec(&[vec![1, 2, 3], vec![4, 5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx_vec(&mut rng);
+    let op = SinglePoint::<i32>::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    // Children lengths should sum to parents' total length
+    let total: usize = pop.iter().map(|i| i.genome().len()).sum();
+    assert_eq!(total, 8); // 3 + 5 = 8
+}
+
+// ── SegmentDuplication ──
+
+#[test]
+fn segment_duplication_increases_length() {
+    use crate::operators::sequential::mutation::duplication::SegmentDuplication;
+
+    let genomes: Vec<Vec<i32>> = vec![vec![1, 2, 3, 4, 5]];
+    let pop: Population<Vec<i32>, i32> = genomes.into_iter().map(Individual::new).collect();
+    let state = State::new(pop, 0);
+    let mut rng = rand::rng();
+
+    fn eval(g: &Vec<i32>) -> i32 {
+        g.iter().sum()
+    }
+
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(eval as fn(&Vec<i32>) -> i32), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(eval as fn(&Vec<i32>) -> i32), &mut rng, &Maximize);
+
+    let op = SegmentDuplication::<i32>::new(0.5, 10);
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(pop.len(), 1);
+    assert!(pop.as_slice()[0].genome().len() > 5);
+}
+
+#[test]
+fn segment_duplication_skips_when_exceeds_max() {
+    use crate::operators::sequential::mutation::duplication::SegmentDuplication;
+
+    let genomes: Vec<Vec<i32>> = vec![vec![1, 2, 3, 4, 5]];
+    let pop: Population<Vec<i32>, i32> = genomes.into_iter().map(Individual::new).collect();
+    let state = State::new(pop, 0);
+    let mut rng = rand::rng();
+
+    fn eval(g: &Vec<i32>) -> i32 {
+        g.iter().sum()
+    }
+
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(eval as fn(&Vec<i32>) -> i32), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(eval as fn(&Vec<i32>) -> i32), &mut rng, &Maximize);
+
+    // max_genome_len = 5, so no duplication can happen
+    let op = SegmentDuplication::<i32>::new(0.5, 5);
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(pop.as_slice()[0].genome().len(), 5);
+}
+
+// ── SegmentDeletion ──
+
+#[test]
+fn segment_deletion_decreases_length() {
+    use crate::operators::sequential::mutation::deletion::SegmentDeletion;
+
+    let genomes: Vec<Vec<i32>> = vec![vec![1, 2, 3, 4, 5, 6, 7, 8]];
+    let pop: Population<Vec<i32>, i32> = genomes.into_iter().map(Individual::new).collect();
+    let state = State::new(pop, 0);
+    let mut rng = rand::rng();
+
+    fn eval(g: &Vec<i32>) -> i32 {
+        g.iter().sum()
+    }
+
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(eval as fn(&Vec<i32>) -> i32), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(eval as fn(&Vec<i32>) -> i32), &mut rng, &Maximize);
+
+    let op = SegmentDeletion::<i32>::new(0.5, 2);
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(pop.len(), 1);
+    assert!(pop.as_slice()[0].genome().len() < 8);
+}
+
+#[test]
+fn segment_deletion_skips_when_at_min_len() {
+    use crate::operators::sequential::mutation::deletion::SegmentDeletion;
+
+    let genomes: Vec<Vec<i32>> = vec![vec![1, 2, 3]];
+    let pop: Population<Vec<i32>, i32> = genomes.into_iter().map(Individual::new).collect();
+    let state = State::new(pop, 0);
+    let mut rng = rand::rng();
+
+    fn eval(g: &Vec<i32>) -> i32 {
+        g.iter().sum()
+    }
+
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(eval as fn(&Vec<i32>) -> i32), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(eval as fn(&Vec<i32>) -> i32), &mut rng, &Maximize);
+
+    // min_genome_len = 3, genome is already 3, so no deletion
+    let op = SegmentDeletion::<i32>::new(0.5, 3);
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(pop.as_slice()[0].genome().len(), 3);
+}
