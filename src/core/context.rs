@@ -12,22 +12,45 @@
 ///
 /// let fitness_fn = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
 /// let mut rng = rand::rng();
+/// # #[cfg(not(feature = "parallel"))]
 /// let ctx = Context::new(&fitness_fn, &mut rng, &Maximize);
+/// # #[cfg(feature = "parallel")]
+/// # let runtime = pooled::Runtime::new(1);
+/// # #[cfg(feature = "parallel")]
+/// # let ctx = Context::new(&fitness_fn, &mut rng, &Maximize, &runtime);
 /// ```
-#[derive(Debug)]
 pub struct Context<'a, Fe, R, C> {
     fitness: &'a Fe,
     rng: &'a mut R,
     comparator: &'a C,
+    #[cfg(feature = "parallel")]
+    runtime: &'a pooled::Runtime,
 }
 
 impl<'a, Fe, R, C> Context<'a, Fe, R, C> {
     /// Create a new `Context`.
+    #[cfg(not(feature = "parallel"))]
     pub fn new(fitness: &'a Fe, rng: &'a mut R, comparator: &'a C) -> Self {
         Self {
             fitness,
             rng,
             comparator,
+        }
+    }
+
+    /// Create a new `Context` with a thread pool runtime for parallel operations.
+    #[cfg(feature = "parallel")]
+    pub fn new(
+        fitness: &'a Fe,
+        rng: &'a mut R,
+        comparator: &'a C,
+        runtime: &'a pooled::Runtime,
+    ) -> Self {
+        Self {
+            fitness,
+            rng,
+            comparator,
+            runtime,
         }
     }
 
@@ -44,5 +67,17 @@ impl<'a, Fe, R, C> Context<'a, Fe, R, C> {
     /// Get the goal for the problem.
     pub fn comparator(&self) -> &C {
         self.comparator
+    }
+
+    /// Get the thread pool for parallel operations.
+    #[cfg(feature = "parallel")]
+    pub fn pool(&self) -> pooled::map::MapPool<'_> {
+        self.runtime.map_pool()
+    }
+
+    /// Get the runtime for parallel operations.
+    #[cfg(feature = "parallel")]
+    pub fn runtime(&self) -> &pooled::Runtime {
+        self.runtime
     }
 }

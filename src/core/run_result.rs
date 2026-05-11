@@ -12,8 +12,8 @@ use crate::core::{population::Population, state::State};
 ///     algorithm::ga::GeneticAlgorithm,
 ///     fitness::Maximize,
 ///     initialization::Random,
-///     operators::combinator::Fill,
-///     operators::mutation::RandomReset,
+///     operators::sequential::combinator::Fill,
+///     operators::sequential::mutation::RandomReset,
 ///     termination::MaxGenerations,
 /// };
 /// use std::num::NonZero;

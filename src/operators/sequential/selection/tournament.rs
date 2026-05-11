@@ -14,7 +14,7 @@ use std::num::NonZero;
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::selection::TournamentSelection;
+/// use evolve::operators::sequential::selection::TournamentSelection;
 /// use std::num::NonZero;
 ///
 /// let selection = TournamentSelection::new(NonZero::new(3).unwrap());
@@ -51,10 +51,10 @@ where
         for _ in 1..self.tournament_size {
             let candidate = unsafe { population.as_slice().choose(ctx.rng()).unwrap_unchecked() };
 
-            if ctx
-                .comparator()
-                .is_better(candidate.fitness(ctx.fitness_evaluator()), best.fitness(ctx.fitness_evaluator()))
-            {
+            if ctx.comparator().is_better(
+                candidate.fitness(ctx.fitness_evaluator()),
+                best.fitness(ctx.fitness_evaluator()),
+            ) {
                 best = candidate;
             }
         }

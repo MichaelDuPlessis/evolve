@@ -1,17 +1,14 @@
 use crate::core::{
-    context::Context,
-    individual::Individual,
-    offspring::Offspring,
-    population::Population,
+    context::Context, individual::Individual, offspring::Offspring, population::Population,
     state::State,
 };
 use crate::fitness::Maximize;
-use crate::operators::combinator::{Combine, Fill, Pipeline, Repeat, Weighted};
-use crate::operators::crossover::SinglePoint;
-use crate::operators::mutation::RandomReset;
-use crate::operators::selection::TournamentSelection;
-use crate::operators::selection::Elitism;
 use crate::operators::GeneticOperator;
+use crate::operators::sequential::combinator::{Combine, Fill, Pipeline, Repeat, Weighted};
+use crate::operators::sequential::crossover::SinglePoint;
+use crate::operators::sequential::mutation::RandomReset;
+use crate::operators::sequential::selection::Elitism;
+use crate::operators::sequential::selection::TournamentSelection;
 use std::num::NonZero;
 
 fn id(g: &[i32; 4]) -> i32 {
@@ -19,8 +16,7 @@ fn id(g: &[i32; 4]) -> i32 {
 }
 
 fn make_state(genomes: &[[i32; 4]]) -> State<[i32; 4], i32> {
-    let pop: Population<[i32; 4], i32> =
-        genomes.iter().map(|g| Individual::new(*g)).collect();
+    let pop: Population<[i32; 4], i32> = genomes.iter().map(|g| Individual::new(*g)).collect();
     State::new(pop, 0)
 }
 
@@ -32,6 +28,13 @@ fn make_ctx(
     impl rand::Rng + '_,
     impl crate::fitness::FitnessComparator<i32> + '_,
 > {
+    #[cfg(feature = "parallel")]
+    {
+        use std::sync::LazyLock;
+        static RUNTIME: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(id as fn(&[i32; 4]) -> i32), rng, &Maximize, &RUNTIME)
+    }
+    #[cfg(not(feature = "parallel"))]
     Context::new(&(id as fn(&[i32; 4]) -> i32), rng, &Maximize)
 }
 
@@ -236,7 +239,13 @@ fn elitism_default_returns_single_best() {
 
 #[test]
 fn elitism_returns_best_n() {
-    let state = make_state(&[[1, 0, 0, 0], [5, 0, 0, 0], [3, 0, 0, 0], [4, 0, 0, 0], [2, 0, 0, 0]]);
+    let state = make_state(&[
+        [1, 0, 0, 0],
+        [5, 0, 0, 0],
+        [3, 0, 0, 0],
+        [4, 0, 0, 0],
+        [2, 0, 0, 0],
+    ]);
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
     let elite = Elitism::new(NonZero::new(3).unwrap());
@@ -246,4 +255,95 @@ fn elitism_returns_best_n() {
     let mut fitnesses: Vec<i32> = pop.iter().map(|i| *i.fitness(&id)).collect();
     fitnesses.sort();
     assert_eq!(fitnesses, vec![3, 4, 5]);
+}
+
+// ── Combine with Vec ──
+
+#[test]
+fn combine_vec_merges_outputs() {
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let op = Combine::new(vec![
+        RandomReset::<i32>::new(),
+        RandomReset::<i32>::new(),
+        RandomReset::<i32>::new(),
+    ]);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 6);
+}
+
+// ── Pipeline with Vec ──
+
+#[test]
+fn pipeline_vec_chains_operators() {
+    let state = make_state(&[[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let op = Pipeline::new(vec![
+        RandomReset::<i32>::new(),
+        RandomReset::<i32>::new(),
+    ]);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+// ── Weighted with Vec ──
+
+#[test]
+fn weighted_vec_picks_one_operator() {
+    let state = make_state(&[[1, 2, 3, 4]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let op = Weighted::new(vec![
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+    ]);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 1);
+}
+
+// ── Combine with Box<[O]> ──
+
+#[test]
+fn combine_boxed_slice_merges_outputs() {
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let ops: Box<[RandomReset<i32>]> = vec![
+        RandomReset::new(),
+        RandomReset::new(),
+    ]
+    .into_boxed_slice();
+    let op = Combine::new(ops);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+// ── Pipeline with Box<[O]> ──
+
+#[test]
+fn pipeline_boxed_slice_chains_operators() {
+    let state = make_state(&[[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let ops: Box<[RandomReset<i32>]> = vec![
+        RandomReset::new(),
+        RandomReset::new(),
+    ]
+    .into_boxed_slice();
+    let op = Pipeline::new(ops);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+// ── Weighted with Box<[(O, NonZero<u16>)]> ──
+
+#[test]
+fn weighted_boxed_slice_picks_one_operator() {
+    let state = make_state(&[[1, 2, 3, 4]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let ops: Box<[(RandomReset<i32>, NonZero<u16>)]> = vec![
+        (RandomReset::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::new(), NonZero::new(1u16).unwrap()),
+    ]
+    .into_boxed_slice();
+    let op = Weighted::new(ops);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 1);
 }

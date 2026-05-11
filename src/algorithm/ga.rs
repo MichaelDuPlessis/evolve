@@ -23,8 +23,8 @@ use std::{marker::PhantomData, num::NonZero};
 ///     algorithm::ga::GeneticAlgorithm,
 ///     fitness::Maximize,
 ///     initialization::Random,
-///     operators::combinator::Fill,
-///     operators::mutation::RandomReset,
+///     operators::sequential::combinator::Fill,
+///     operators::sequential::mutation::RandomReset,
 ///     termination::MaxGenerations,
 /// };
 /// use std::num::NonZero;
@@ -41,7 +41,6 @@ use std::{marker::PhantomData, num::NonZero};
 ///
 /// let result = ga.run();
 /// ```
-#[derive(Debug)]
 pub struct GeneticAlgorithm<G, F, I, T, Fe, Ops, R, C = Maximize> {
     initializer: I,
     termination: T,
@@ -50,6 +49,8 @@ pub struct GeneticAlgorithm<G, F, I, T, Fe, Ops, R, C = Maximize> {
     population_size: NonZero<usize>,
     rng: R,
     comparator: C,
+    #[cfg(feature = "parallel")]
+    runtime: pooled::Runtime,
     _marker: PhantomData<(G, F)>,
 }
 
@@ -89,6 +90,12 @@ where
             population_size,
             rng,
             comparator,
+            #[cfg(feature = "parallel")]
+            runtime: pooled::Runtime::new(
+                std::thread::available_parallelism()
+                    .map(|n| n.get())
+                    .unwrap_or(1),
+            ),
             _marker: PhantomData,
         }
     }
@@ -103,7 +110,11 @@ where
     where
         O: Observer<G, F, Fe, R, C>,
     {
+        #[cfg(not(feature = "parallel"))]
         let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng, &self.comparator);
+        #[cfg(feature = "parallel")]
+        let mut ctx =
+            Context::new(&self.fitness_evaluator, &mut self.rng, &self.comparator, &self.runtime);
 
         let population = self.initializer.initialize(self.population_size, &mut ctx);
 
@@ -138,6 +149,8 @@ pub struct GeneticAlgorithmBuilder<G, F, I, T, Fe, Ops, R, C> {
     population_size: NonZero<usize>,
     rng: R,
     comparator: C,
+    #[cfg(feature = "parallel")]
+    runtime: Option<pooled::Runtime>,
     _marker: PhantomData<(G, F)>,
 }
 
@@ -151,8 +164,8 @@ impl GeneticAlgorithmBuilder<(), (), (), (), (), (), (), ()> {
     ///     algorithm::ga::GeneticAlgorithmBuilder,
     ///     fitness::Maximize,
     ///     initialization::Random,
-    ///     operators::combinator::Fill,
-    ///     operators::mutation::RandomReset,
+    ///     operators::sequential::combinator::Fill,
+    ///     operators::sequential::mutation::RandomReset,
     ///     termination::MaxGenerations,
     /// };
     /// use std::num::NonZero;
@@ -177,6 +190,8 @@ impl GeneticAlgorithmBuilder<(), (), (), (), (), (), (), ()> {
             population_size,
             rng: (),
             comparator: (),
+            #[cfg(feature = "parallel")]
+            runtime: None,
             _marker: PhantomData,
         }
     }
@@ -196,6 +211,8 @@ impl<G, F, I, T, Fe, Ops, R, C> GeneticAlgorithmBuilder<G, F, I, T, Fe, Ops, R, 
             population_size: self.population_size,
             rng: self.rng,
             comparator: self.comparator,
+            #[cfg(feature = "parallel")]
+            runtime: self.runtime,
             _marker: PhantomData,
         }
     }
@@ -213,6 +230,8 @@ impl<G, F, I, T, Fe, Ops, R, C> GeneticAlgorithmBuilder<G, F, I, T, Fe, Ops, R, 
             population_size: self.population_size,
             rng: self.rng,
             comparator: self.comparator,
+            #[cfg(feature = "parallel")]
+            runtime: self.runtime,
             _marker: PhantomData,
         }
     }
@@ -233,6 +252,8 @@ impl<G, F, I, T, Fe, Ops, R, C> GeneticAlgorithmBuilder<G, F, I, T, Fe, Ops, R, 
             population_size: self.population_size,
             rng: self.rng,
             comparator: self.comparator,
+            #[cfg(feature = "parallel")]
+            runtime: self.runtime,
             _marker: PhantomData,
         }
     }
@@ -250,6 +271,8 @@ impl<G, F, I, T, Fe, Ops, R, C> GeneticAlgorithmBuilder<G, F, I, T, Fe, Ops, R, 
             population_size: self.population_size,
             rng: self.rng,
             comparator: self.comparator,
+            #[cfg(feature = "parallel")]
+            runtime: self.runtime,
             _marker: PhantomData,
         }
     }
@@ -264,6 +287,8 @@ impl<G, F, I, T, Fe, Ops, R, C> GeneticAlgorithmBuilder<G, F, I, T, Fe, Ops, R, 
             population_size: self.population_size,
             rng,
             comparator: self.comparator,
+            #[cfg(feature = "parallel")]
+            runtime: self.runtime,
             _marker: PhantomData,
         }
     }
@@ -281,8 +306,17 @@ impl<G, F, I, T, Fe, Ops, R, C> GeneticAlgorithmBuilder<G, F, I, T, Fe, Ops, R, 
             population_size: self.population_size,
             rng: self.rng,
             comparator,
+            #[cfg(feature = "parallel")]
+            runtime: self.runtime,
             _marker: PhantomData,
         }
+    }
+
+    /// Sets the thread pool runtime for parallel operations.
+    #[cfg(feature = "parallel")]
+    pub fn runtime(mut self, runtime: pooled::Runtime) -> Self {
+        self.runtime = Some(runtime);
+        self
     }
 }
 
@@ -298,14 +332,23 @@ where
     /// Only available when all fields have been set to types that satisfy
     /// their required trait bounds.
     pub fn build(self) -> GeneticAlgorithm<G, F, I, T, Fe, Ops, R, C> {
-        GeneticAlgorithm::new(
-            self.initializer,
-            self.termination,
-            self.fitness_evaluator,
-            self.operators,
-            self.population_size,
-            self.rng,
-            self.comparator,
-        )
+        GeneticAlgorithm {
+            initializer: self.initializer,
+            termination: self.termination,
+            fitness_evaluator: self.fitness_evaluator,
+            operators: self.operators,
+            population_size: self.population_size,
+            rng: self.rng,
+            comparator: self.comparator,
+            #[cfg(feature = "parallel")]
+            runtime: self.runtime.unwrap_or_else(|| {
+                pooled::Runtime::new(
+                    std::thread::available_parallelism()
+                        .map(|n| n.get())
+                        .unwrap_or(1),
+                )
+            }),
+            _marker: PhantomData,
+        }
     }
 }

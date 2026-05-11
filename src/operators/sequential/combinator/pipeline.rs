@@ -11,10 +11,10 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::combinator::Pipeline;
-/// use evolve::operators::crossover::SinglePoint;
-/// use evolve::operators::mutation::RandomReset;
-/// use evolve::operators::selection::TournamentSelection;
+/// use evolve::operators::sequential::combinator::Pipeline;
+/// use evolve::operators::sequential::crossover::SinglePoint;
+/// use evolve::operators::sequential::mutation::RandomReset;
+/// use evolve::operators::sequential::selection::TournamentSelection;
 /// use std::num::NonZero;
 ///
 /// // Select → Crossover → Mutate
@@ -110,6 +110,40 @@ where
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         // this is bad, assuming its safe to just index
+        let mut offspring = self.0[0].apply(state, ctx);
+
+        for operator in &self.0[1..] {
+            let population = offspring.into_population();
+            let state = state.with_population(population);
+            offspring = operator.apply(&state, ctx);
+        }
+
+        offspring
+    }
+}
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Pipeline<Vec<O>>
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        let mut offspring = self.0[0].apply(state, ctx);
+
+        for operator in &self.0[1..] {
+            let population = offspring.into_population();
+            let state = state.with_population(population);
+            offspring = operator.apply(&state, ctx);
+        }
+
+        offspring
+    }
+}
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Pipeline<Box<[O]>>
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         let mut offspring = self.0[0].apply(state, ctx);
 
         for operator in &self.0[1..] {

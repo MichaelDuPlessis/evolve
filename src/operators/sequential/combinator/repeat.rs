@@ -8,8 +8,8 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::combinator::Repeat;
-/// use evolve::operators::mutation::RandomReset;
+/// use evolve::operators::sequential::combinator::Repeat;
+/// use evolve::operators::sequential::mutation::RandomReset;
 ///
 /// // Run mutation 5 times and merge the results
 /// let op = Repeat::new(RandomReset::<u8>::new(), 5);

@@ -1,6 +1,6 @@
 [package]
 name = "evolve"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "A generic, composable genetic algorithm framework for Rust"
 license = "MIT"
@@ -9,5 +9,9 @@ readme = "README.md"
 keywords = ["genetic-algorithm", "evolutionary", "optimization", "metaheuristic"]
 categories = ["artificial-intelligence", "algorithms"]
 
+[features]
+parallel = ["dep:pooled"]
+
 [dependencies]
 rand = "0.10.0"
+pooled = { version = "0.3", optional = true }

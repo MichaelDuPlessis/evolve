@@ -1,16 +1,13 @@
-//! Genetic operators and combinators.
+//! Genetic operators.
 //!
-//! - [`selection`] — operators that select individuals from the population
-//! - [`crossover`] — operators that recombine genomes
-//! - [`mutation`] — operators that introduce random changes
-//! - [`combinator`] — composable wrappers that structure operator flow
-
-pub mod combinator;
-pub mod crossover;
-pub mod mutation;
-pub mod selection;
+//! - [`sequential`] — single-threaded operators and combinators
 
 use crate::core::{context::Context, offspring::Offspring, state::State};
+
+pub(crate) mod common;
+#[cfg(feature = "parallel")]
+pub mod parallel;
+pub mod sequential;
 
 /// The core trait for all genetic operators (selection, crossover, mutation, combinators, etc.).
 ///
@@ -35,5 +32,20 @@ pub trait GeneticOperator<G, F, Fe, R, C> {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F>;
 }
 
-#[cfg(test)]
-mod test;
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for &O
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        (*self).apply(state, ctx)
+    }
+}
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for &mut O
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        (**self).apply(state, ctx)
+    }
+}

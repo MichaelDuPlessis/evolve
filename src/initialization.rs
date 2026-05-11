@@ -23,7 +23,12 @@ use std::num::NonZero;
 ///
 /// let mut rng = rand::rng();
 /// let fitness_fn = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
+/// # #[cfg(not(feature = "parallel"))]
 /// let mut ctx = Context::new(&fitness_fn, &mut rng, &Maximize);
+/// # #[cfg(feature = "parallel")]
+/// # let runtime = pooled::Runtime::new(1);
+/// # #[cfg(feature = "parallel")]
+/// # let mut ctx = Context::new(&fitness_fn, &mut rng, &Maximize, &runtime);
 ///
 /// let pop = Random::new().initialize(NonZero::new(100).unwrap(), &mut ctx);
 /// assert_eq!(pop.len(), 100);
@@ -80,10 +85,20 @@ mod test {
         g[0] as u16 + g[1] as u16
     }
 
+    #[cfg(feature = "parallel")]
+    fn test_runtime() -> &'static pooled::Runtime {
+        use std::sync::LazyLock;
+        static RUNTIME: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        &RUNTIME
+    }
+
     #[test]
     fn random_initializer_creates_correct_size() {
         let mut rng = rand::rng();
+        #[cfg(not(feature = "parallel"))]
         let mut ctx = Context::new(&(id as fn(&[u8; 2]) -> u16), &mut rng, &Maximize);
+        #[cfg(feature = "parallel")]
+        let mut ctx = Context::new(&(id as fn(&[u8; 2]) -> u16), &mut rng, &Maximize, test_runtime());
         let pop = Random::new().initialize(NonZero::new(10).unwrap(), &mut ctx);
         assert_eq!(pop.len(), 10);
     }
@@ -91,7 +106,10 @@ mod test {
     #[test]
     fn random_initializer_evaluates_fitness() {
         let mut rng = rand::rng();
+        #[cfg(not(feature = "parallel"))]
         let mut ctx = Context::new(&(id as fn(&[u8; 2]) -> u16), &mut rng, &Maximize);
+        #[cfg(feature = "parallel")]
+        let mut ctx = Context::new(&(id as fn(&[u8; 2]) -> u16), &mut rng, &Maximize, test_runtime());
         let pop = Random::new().initialize(NonZero::new(5).unwrap(), &mut ctx);
         for ind in &pop {
             assert_eq!(

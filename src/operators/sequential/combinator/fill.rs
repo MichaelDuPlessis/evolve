@@ -45,8 +45,8 @@ impl<G, F> GetSize<G, F> for PopSize {
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::combinator::Fill;
-/// use evolve::operators::mutation::RandomReset;
+/// use evolve::operators::sequential::combinator::Fill;
+/// use evolve::operators::sequential::mutation::RandomReset;
 ///
 /// // Maintain the same population size each generation
 /// let op = Fill::from_population_size(RandomReset::<u8>::new());

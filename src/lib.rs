@@ -14,21 +14,21 @@
 //! - Composable combinators for structuring the flow of the algorithm
 //! - [`Maximize`](fitness::Maximize) and [`Minimize`](fitness::Minimize) fitness comparators out of the box
 //! - Closures work as fitness evaluators and comparators via blanket trait impls
-//! - No dependencies beyond `rand`
+//! - No dependencies beyond `rand` (optional `pooled` for parallel execution)
 //!
 //! ## Quick Start
 //!
 //! The simplest way to get started is to use [`Random`](initialization::Random) initialization,
 //! a [`MaxGenerations`](termination::MaxGenerations) termination condition, and
-//! [`Fill`](operators::combinator::Fill) with a mutation operator:
+//! [`Fill`](operators::sequential::combinator::Fill) with a mutation operator:
 //!
 //! ```
 //! use evolve::{
 //!     algorithm::ga::GeneticAlgorithm,
 //!     fitness::Maximize,
 //!     initialization::Random,
-//!     operators::combinator::Fill,
-//!     operators::mutation::RandomReset,
+//!     operators::sequential::combinator::Fill,
+//!     operators::sequential::mutation::RandomReset,
 //!     termination::MaxGenerations,
 //! };
 //! use std::num::NonZero;
@@ -60,10 +60,10 @@
 //!     algorithm::ga::GeneticAlgorithm,
 //!     fitness::Maximize,
 //!     initialization::Random,
-//!     operators::combinator::{Combine, Fill, Pipeline},
-//!     operators::crossover::SinglePoint,
-//!     operators::mutation::RandomReset,
-//!     operators::selection::TournamentSelection,
+//!     operators::sequential::combinator::{Combine, Fill, Pipeline},
+//!     operators::sequential::crossover::SinglePoint,
+//!     operators::sequential::mutation::RandomReset,
+//!     operators::sequential::selection::TournamentSelection,
 //!     termination::MaxGenerations,
 //! };
 //! use std::num::NonZero;
@@ -93,13 +93,13 @@
 //!
 //! ## Weighted Operator Selection
 //!
-//! Use [`Weighted`](operators::combinator::Weighted) to probabilistically choose
+//! Use [`Weighted`](operators::sequential::combinator::Weighted) to probabilistically choose
 //! between different operators each time:
 //!
 //! ```
-//! use evolve::operators::combinator::{Fill, Weighted};
-//! use evolve::operators::mutation::RandomReset;
-//! use evolve::operators::crossover::SinglePoint;
+//! use evolve::operators::sequential::combinator::{Fill, Weighted};
+//! use evolve::operators::sequential::mutation::RandomReset;
+//! use evolve::operators::sequential::crossover::SinglePoint;
 //! use std::num::NonZero;
 //!
 //! // 75% chance of mutation, 25% chance of crossover
@@ -118,8 +118,8 @@
 //! use evolve::{
 //!     algorithm::ga::GeneticAlgorithm,
 //!     initialization::Random,
-//!     operators::combinator::Fill,
-//!     operators::mutation::RandomReset,
+//!     operators::sequential::combinator::Fill,
+//!     operators::sequential::mutation::RandomReset,
 //!     termination::MaxGenerations,
 //! };
 //! use std::num::NonZero;
@@ -156,6 +156,19 @@
 //!     }
 //! }
 //! ```
+//!
+//! ## Parallel Execution
+//!
+//! Enable the `parallel` feature to distribute operator work across multiple threads.
+//! This adds an optional dependency on [`pooled`](https://crates.io/crates/pooled).
+//!
+//! ```toml
+//! [dependencies]
+//! evolve = { version = "0.1.0", features = ["parallel"] }
+//! ```
+//!
+//! Parallel versions of mutation, crossover, and combinators are available under
+//! `operators::parallel` (requires the `parallel` feature).
 
 pub mod algorithm;
 pub mod core;

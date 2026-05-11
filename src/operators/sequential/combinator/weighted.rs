@@ -1,11 +1,9 @@
-use std::num::NonZero;
-
-use rand::{Rng, RngExt};
-
 use crate::{
     core::{context::Context, offspring::Offspring, state::State},
     operators::GeneticOperator,
 };
+use rand::{Rng, RngExt};
+use std::num::NonZero;
 
 /// Selects one operator per invocation based on assigned weights.
 ///
@@ -17,8 +15,8 @@ use crate::{
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::combinator::Weighted;
-/// use evolve::operators::mutation::RandomReset;
+/// use evolve::operators::sequential::combinator::Weighted;
+/// use evolve::operators::sequential::mutation::RandomReset;
 /// use std::num::NonZero;
 ///
 /// // 75% chance of first operator, 25% chance of second
@@ -97,6 +95,50 @@ where
         let mut roll = ctx.rng().random_range(0..total_weight);
 
         for (operator, weight) in &self.0 {
+            let weight = weight.get();
+            if roll < weight {
+                return operator.apply(state, ctx);
+            }
+            roll -= weight;
+        }
+
+        unreachable!("Weighted selection failed")
+    }
+}
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Weighted<Vec<(O, NonZero<u16>)>>
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+    R: Rng,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        let total_weight: u16 = self.0.iter().map(|(_, w)| w.get()).sum();
+
+        let mut roll = ctx.rng().random_range(0..total_weight);
+
+        for (operator, weight) in &self.0 {
+            let weight = weight.get();
+            if roll < weight {
+                return operator.apply(state, ctx);
+            }
+            roll -= weight;
+        }
+
+        unreachable!("Weighted selection failed")
+    }
+}
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Weighted<Box<[(O, NonZero<u16>)]>>
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+    R: Rng,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        let total_weight: u16 = self.0.iter().map(|(_, w)| w.get()).sum();
+
+        let mut roll = ctx.rng().random_range(0..total_weight);
+
+        for (operator, weight) in self.0.iter() {
             let weight = weight.get();
             if roll < weight {
                 return operator.apply(state, ctx);
