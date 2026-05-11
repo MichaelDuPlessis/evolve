@@ -102,7 +102,7 @@ Enable the `parallel` feature to run operators across multiple threads:
 
 ```toml
 [dependencies]
-evolve = { version = "0.1.0", features = ["parallel"] }
+evolve = { version = "0.2.0", features = ["parallel"] }
 ```
 
 Parallel operators distribute work across a thread pool using the `pooled` crate:

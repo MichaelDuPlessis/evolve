@@ -1,6 +1,6 @@
 [package]
 name = "evolve"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "A generic, composable genetic algorithm framework for Rust"
 license = "MIT"
