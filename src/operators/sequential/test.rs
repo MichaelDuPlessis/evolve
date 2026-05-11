@@ -256,3 +256,94 @@ fn elitism_returns_best_n() {
     fitnesses.sort();
     assert_eq!(fitnesses, vec![3, 4, 5]);
 }
+
+// ── Combine with Vec ──
+
+#[test]
+fn combine_vec_merges_outputs() {
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let op = Combine::new(vec![
+        RandomReset::<i32>::new(),
+        RandomReset::<i32>::new(),
+        RandomReset::<i32>::new(),
+    ]);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 6);
+}
+
+// ── Pipeline with Vec ──
+
+#[test]
+fn pipeline_vec_chains_operators() {
+    let state = make_state(&[[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let op = Pipeline::new(vec![
+        RandomReset::<i32>::new(),
+        RandomReset::<i32>::new(),
+    ]);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+// ── Weighted with Vec ──
+
+#[test]
+fn weighted_vec_picks_one_operator() {
+    let state = make_state(&[[1, 2, 3, 4]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let op = Weighted::new(vec![
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+    ]);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 1);
+}
+
+// ── Combine with Box<[O]> ──
+
+#[test]
+fn combine_boxed_slice_merges_outputs() {
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let ops: Box<[RandomReset<i32>]> = vec![
+        RandomReset::new(),
+        RandomReset::new(),
+    ]
+    .into_boxed_slice();
+    let op = Combine::new(ops);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+// ── Pipeline with Box<[O]> ──
+
+#[test]
+fn pipeline_boxed_slice_chains_operators() {
+    let state = make_state(&[[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let ops: Box<[RandomReset<i32>]> = vec![
+        RandomReset::new(),
+        RandomReset::new(),
+    ]
+    .into_boxed_slice();
+    let op = Pipeline::new(ops);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+// ── Weighted with Box<[(O, NonZero<u16>)]> ──
+
+#[test]
+fn weighted_boxed_slice_picks_one_operator() {
+    let state = make_state(&[[1, 2, 3, 4]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let ops: Box<[(RandomReset<i32>, NonZero<u16>)]> = vec![
+        (RandomReset::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::new(), NonZero::new(1u16).unwrap()),
+    ]
+    .into_boxed_slice();
+    let op = Weighted::new(ops);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 1);
+}

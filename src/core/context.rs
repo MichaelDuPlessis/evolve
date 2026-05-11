@@ -6,15 +6,18 @@
 ///
 /// # Examples
 ///
-/// ```no_run
+/// ```
 /// use evolve::core::context::Context;
 /// use evolve::fitness::Maximize;
 ///
 /// let fitness_fn = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
 /// let mut rng = rand::rng();
-/// // When the `parallel` feature is enabled, pass a `&pooled::Runtime` as the 4th argument.
 /// # #[cfg(not(feature = "parallel"))]
 /// let ctx = Context::new(&fitness_fn, &mut rng, &Maximize);
+/// # #[cfg(feature = "parallel")]
+/// # let runtime = pooled::Runtime::new(1);
+/// # #[cfg(feature = "parallel")]
+/// # let ctx = Context::new(&fitness_fn, &mut rng, &Maximize, &runtime);
 /// ```
 pub struct Context<'a, Fe, R, C> {
     fitness: &'a Fe,

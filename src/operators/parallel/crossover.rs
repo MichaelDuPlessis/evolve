@@ -26,6 +26,12 @@ impl<T> SinglePoint<T> {
     }
 }
 
+impl<T> Default for SinglePoint<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T, F, Fe, R, C, const N: usize> GeneticOperator<[T; N], F, Fe, R, C> for SinglePoint<T>
 where
     T: Clone + Send + Sync,

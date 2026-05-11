@@ -14,7 +14,7 @@
 //! - Composable combinators for structuring the flow of the algorithm
 //! - [`Maximize`](fitness::Maximize) and [`Minimize`](fitness::Minimize) fitness comparators out of the box
 //! - Closures work as fitness evaluators and comparators via blanket trait impls
-//! - No dependencies beyond `rand`
+//! - No dependencies beyond `rand` (optional `pooled` for parallel execution)
 //!
 //! ## Quick Start
 //!
@@ -156,6 +156,19 @@
 //!     }
 //! }
 //! ```
+//!
+//! ## Parallel Execution
+//!
+//! Enable the `parallel` feature to distribute operator work across multiple threads.
+//! This adds an optional dependency on [`pooled`](https://crates.io/crates/pooled).
+//!
+//! ```toml
+//! [dependencies]
+//! evolve = { version = "0.1.0", features = ["parallel"] }
+//! ```
+//!
+//! Parallel versions of mutation, crossover, and combinators are available under
+//! [`operators::parallel`].
 
 pub mod algorithm;
 pub mod core;

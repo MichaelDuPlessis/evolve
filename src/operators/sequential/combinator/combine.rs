@@ -87,3 +87,33 @@ where
         Offspring::Multiple(population)
     }
 }
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Combine<Vec<O>>
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        let mut population = Population::new();
+
+        for operator in &self.0 {
+            population.add_offspring(operator.apply(state, ctx));
+        }
+
+        Offspring::Multiple(population)
+    }
+}
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Combine<Box<[O]>>
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        let mut population = Population::new();
+
+        for operator in self.0.iter() {
+            population.add_offspring(operator.apply(state, ctx));
+        }
+
+        Offspring::Multiple(population)
+    }
+}

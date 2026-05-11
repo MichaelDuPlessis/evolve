@@ -27,6 +27,12 @@ impl<T> RandomReset<T> {
     }
 }
 
+impl<T> Default for RandomReset<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Helper trait — see sequential mutation module.
 trait GeneCollection {}
 impl<T> GeneCollection for Vec<T> {}

@@ -15,7 +15,7 @@ use std::num::NonZero;
 ///
 /// # Examples
 ///
-/// ```no_run
+/// ```
 /// use evolve::core::context::Context;
 /// use evolve::fitness::Maximize;
 /// use evolve::initialization::{Initializer, Random};
@@ -25,10 +25,12 @@ use std::num::NonZero;
 /// let fitness_fn = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
 /// # #[cfg(not(feature = "parallel"))]
 /// let mut ctx = Context::new(&fitness_fn, &mut rng, &Maximize);
+/// # #[cfg(feature = "parallel")]
+/// # let runtime = pooled::Runtime::new(1);
+/// # #[cfg(feature = "parallel")]
+/// # let mut ctx = Context::new(&fitness_fn, &mut rng, &Maximize, &runtime);
 ///
-/// # #[cfg(not(feature = "parallel"))]
 /// let pop = Random::new().initialize(NonZero::new(100).unwrap(), &mut ctx);
-/// # #[cfg(not(feature = "parallel"))]
 /// assert_eq!(pop.len(), 100);
 /// ```
 pub trait Initializer<G, F, Fe, R, C>
