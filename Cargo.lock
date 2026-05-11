@@ -262,9 +262,9 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "pooled"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43d7b8fa9d6f22ef833bf1631ec62aa7422bd3be4324b8c1eab6ebcde387a018"
+checksum = "abad79a388490a0e723027cbb7604657b7338f931a7f1421f9c358a83213ef06"
 dependencies = [
  "lockout",
 ]

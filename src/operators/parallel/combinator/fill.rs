@@ -36,9 +36,7 @@ where
     State<G, F>: Sync,
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
-        let num_chunks = std::thread::available_parallelism()
-            .map(|n| n.get())
-            .unwrap_or(1);
+        let num_chunks = ctx.runtime().num_workers();
         let chunk_size = self.target_size / num_chunks;
         let extra = self.target_size % num_chunks;
 

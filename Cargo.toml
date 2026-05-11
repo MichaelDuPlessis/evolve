@@ -14,4 +14,4 @@ parallel = ["dep:pooled"]
 
 [dependencies]
 rand = "0.10.0"
-pooled = { version = "0.2", optional = true }
+pooled = { version = "0.3", optional = true }
