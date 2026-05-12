@@ -179,6 +179,19 @@ impl<G, C, F, E, B> GeFitness<G, C, F, E, B> {
             _marker: PhantomData,
         }
     }
+
+    /// Maps a genome to its phenotype without evaluating fitness.
+    ///
+    /// Returns `None` if the genome fails to map (codons exhausted after max wraps).
+    pub fn phenotype(&self, genome: &[C]) -> Option<B::Output>
+    where
+        G: GrammarDef,
+        G::Terminal: Clone,
+        C: Codon,
+        B: PhenotypeBuilder<G::Terminal> + Default,
+    {
+        map(&self.grammar, genome, self.max_wraps, B::default())
+    }
 }
 
 impl<G, C, F, E, B> FitnessEvaluator<Vec<C>, F> for GeFitness<G, C, F, E, B>
