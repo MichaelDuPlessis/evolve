@@ -79,6 +79,32 @@ impl Parse for GrammarInput {
     }
 }
 
+/// Generates a zero-cost grammar with compile-time dispatch.
+///
+/// Produces a grammar struct, a symbol enum, and a `GrammarDef` implementation
+/// with all dispatch resolved via match arms (no allocations, no HashMap lookups).
+///
+/// # Syntax
+///
+/// ```ignore
+/// grammar! {
+///     grammar MyGrammar;
+///     symbol MySymbol;
+///     start Expr;
+///
+///     Expr => [Expr, Expr, BinOp] | [Val];
+///     BinOp => [Add] | [Sub] | [Mul];
+///     Val => [X] | [One];
+/// }
+/// ```
+///
+/// - `grammar <name>` — name of the generated struct implementing `GrammarDef`
+/// - `symbol <name>` — name of the generated enum with all grammar symbols
+/// - `start <rule>` — the start rule
+/// - Rules: `<name> => [symbols...] | [symbols...];`
+///
+/// Symbols appearing on the left side of `=>` are non-terminals.
+/// All other symbols are terminals.
 #[proc_macro]
 pub fn grammar(input: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(input as GrammarInput);
