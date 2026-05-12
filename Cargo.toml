@@ -9,9 +9,13 @@ readme = "README.md"
 keywords = ["genetic-algorithm", "evolutionary", "optimization", "metaheuristic"]
 categories = ["artificial-intelligence", "algorithms"]
 
+[workspace]
+members = ["evolve-derive"]
+
 [features]
 parallel = ["dep:pooled"]
 
 [dependencies]
 rand = "0.10.0"
 pooled = { version = "0.3", optional = true }
+evolve-derive = { path = "evolve-derive" }

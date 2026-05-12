@@ -1,10 +1,7 @@
 use evolve::{
     algorithm::EvolutionaryAlgorithm,
-    fitness::{GeFitness, Maximize},
-    grammar::{
-        grammar::Grammar,
-        mapper::map,
-    },
+    fitness::{FitnessEvaluator, GeFitness, Maximize},
+    grammar::grammar::Grammar,
     phenotype::bytecode::{Bytecode, BytecodeBuilder, Instruction},
     phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder},
     initialization::RangedRandom,
@@ -154,20 +151,10 @@ fn ge_best_has_valid_phenotype() {
     );
 
     let best = result.population.best(&fe, &Maximize);
-
-    let phenotype = map(
-        &grammar,
-        best.genome(),
-        3,
-        CountBuilder::default(),
-    );
+    let fitness = fe.evaluate(best.genome());
     assert!(
-        phenotype.is_some(),
-        "Best individual should produce a valid phenotype"
-    );
-    assert!(
-        phenotype.unwrap().run(&()) > 0,
-        "Phenotype should have at least one terminal"
+        fitness > 0.0,
+        "Best individual should produce a valid phenotype with at least one terminal"
     );
 }
 
@@ -246,8 +233,6 @@ fn ge_bytecode_integration() {
     );
 
     let best = result.population.best(&fe, &Maximize);
-    let phenotype = map(&grammar, best.genome(), 2, BytecodeBuilder::<Op>::default());
-    assert!(phenotype.is_some(), "Best individual should produce a valid Bytecode");
-    // Just verify it can run without panicking
-    let _ = phenotype.unwrap().run(&());
+    let fitness = fe.evaluate(best.genome());
+    assert!(fitness > i32::MIN, "Best individual should produce a valid Bytecode");
 }

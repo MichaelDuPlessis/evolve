@@ -39,40 +39,7 @@ impl Codon for usize {
 ///
 /// Returns `None` if codons are exhausted after `max_wraps` wraps before all
 /// non-terminals are expanded.
-///
-/// # Examples
-///
-/// ```
-/// use evolve::grammar::grammar::Grammar;
-/// use evolve::grammar::mapper::map;
-/// use evolve::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
-///
-/// struct Program(Vec<&'static str>);
-/// impl Phenotype for Program {
-///     type Input = ();
-///     type Output = Vec<&'static str>;
-///     fn run(&self, _: &()) -> Vec<&'static str> { self.0.clone() }
-/// }
-///
-/// #[derive(Default)]
-/// struct Builder(Vec<&'static str>);
-/// impl PhenotypeBuilder<&'static str> for Builder {
-///     type Output = Program;
-///     fn push(&mut self, event: Event<&'static str>) {
-///         if let Event::Terminal(t) = event { self.0.push(t); }
-///     }
-///     fn finish(self) -> Program { Program(self.0) }
-/// }
-///
-/// let grammar = Grammar::builder()
-///     .rule("expr", &[&["x"], &["y"]])
-///     .start("expr")
-///     .build();
-///
-/// let result = map(&grammar, &[0u8], 0, Builder::default());
-/// assert_eq!(result.unwrap().run(&()), vec!["x"]);
-/// ```
-pub fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
+pub(crate) fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
     grammar: &G,
     codons: &[C],
     max_wraps: usize,
@@ -234,5 +201,35 @@ mod test {
         // 254 % 3 == 2 → picks "c"
         let result = map(&g, &[254u8], 0, ProgramBuilder::default());
         assert_eq!(result.unwrap().run(&()), "c");
+    }
+
+    #[test]
+    fn maps_terminal_list() {
+        use crate::phenotype::phenotype::Phenotype;
+
+        struct TermList(Vec<&'static str>);
+        impl Phenotype for TermList {
+            type Input = ();
+            type Output = Vec<&'static str>;
+            fn run(&self, _: &()) -> Vec<&'static str> { self.0.clone() }
+        }
+
+        #[derive(Default)]
+        struct TermListBuilder(Vec<&'static str>);
+        impl PhenotypeBuilder<&'static str> for TermListBuilder {
+            type Output = TermList;
+            fn push(&mut self, event: Event<&'static str>) {
+                if let Event::Terminal(t) = event { self.0.push(t); }
+            }
+            fn finish(self) -> TermList { TermList(self.0) }
+        }
+
+        let grammar = Grammar::builder()
+            .rule("expr", &[&["x"], &["y"]])
+            .start("expr")
+            .build();
+
+        let result = map(&grammar, &[0u8], 0, TermListBuilder::default());
+        assert_eq!(result.unwrap().run(&()), vec!["x"]);
     }
 }

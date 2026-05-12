@@ -170,6 +170,8 @@
 //! Parallel versions of mutation, crossover, and combinators are available under
 //! `operators::parallel` (requires the `parallel` feature).
 
+pub use evolve_derive::grammar;
+
 pub mod algorithm;
 pub mod core;
 pub mod fitness;
