@@ -3,7 +3,7 @@
 use evolve::{
     algorithm::EvolutionaryAlgorithm,
     core::{context::Context, individual::Individual, population::Population, state::State},
-    fitness::Maximize,
+    fitness::{FitnessEvaluator, Maximize},
     initialization::Random,
     operators::{
         GeneticOperator,
@@ -311,8 +311,6 @@ fn parallel_repeat_large_count() {
 
 #[test]
 fn parallel_ga_full_pipeline() {
-    use evolve::operators::parallel::combinator::Combine;
-
     let fitness_fn = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
 
     let mut ga = EvolutionaryAlgorithm::builder(nz(200))
@@ -326,7 +324,10 @@ fn parallel_ga_full_pipeline() {
         .build();
 
     let result = ga.run();
-    let best = *result.population.best(&fitness_fn, &Maximize).fitness(&fitness_fn);
+    let best = *result
+        .population
+        .best(&fitness_fn, &Maximize)
+        .fitness(&fitness_fn);
 
     // With 200 generations and pop 200, maximize sum of 4 bytes should get close to max (1020)
     assert!(

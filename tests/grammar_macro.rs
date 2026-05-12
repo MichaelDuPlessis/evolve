@@ -1,8 +1,8 @@
 use evolve::fitness::{FitnessEvaluator, GeFitness};
 use evolve::grammar;
 use evolve::grammar::grammar_def::GrammarDef;
-use evolve::phenotype::bytecode::{Bytecode, BytecodeBuilder, Instruction};
 use evolve::phenotype::Phenotype;
+use evolve::phenotype::bytecode::{Bytecode, BytecodeBuilder, Instruction};
 
 grammar! {
     grammar Grammar;

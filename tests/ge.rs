@@ -252,9 +252,8 @@ fn ge_improves_fitness_over_generations() {
 
     let fitness_fn = |p: &TerminalCount| p.run(&()) as f64;
 
-    let make_fitness = || {
-        GeFitness::<_, u8, f64, _, CountBuilder>::new(arithmetic_grammar(), 3, fitness_fn, -1.0)
-    };
+    let make_fitness =
+        || GeFitness::<_, u8, f64, _, CountBuilder>::new(arithmetic_grammar(), 3, fitness_fn, -1.0);
 
     let ops = || {
         Fill::from_population_size(Pipeline::new((
@@ -277,6 +276,8 @@ fn ge_improves_fitness_over_generations() {
         Maximize,
     );
 
+    let short_result = ga_short.run();
+
     let mut ga_long = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..20),
         MaxGenerations::new(100),
@@ -287,9 +288,13 @@ fn ge_improves_fitness_over_generations() {
         Maximize,
     );
 
+    let long_result = ga_long.run();
+
     let fe = make_fitness();
-    let short_best = fe.evaluate(ga_short.run().population.best(&fe, &Maximize).genome());
-    let long_best = fe.evaluate(ga_long.run().population.best(&fe, &Maximize).genome());
+    let short_best = fe.evaluate(short_result.population.best(&fe, &Maximize).genome());
+    let long_best = fe.evaluate(long_result.population.best(&fe, &Maximize).genome());
+
+    eprintln!("Short best: {short_best}, Long best: {long_best}");
 
     assert!(
         long_best >= short_best,
