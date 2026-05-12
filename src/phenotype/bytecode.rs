@@ -1,6 +1,6 @@
 //! Bytecode phenotype — a flat list of instructions executed on a stack machine.
 
-use crate::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
+use crate::phenotype::{Event, Phenotype, PhenotypeBuilder};
 
 /// Trait for types that can be executed as stack machine instructions.
 ///
@@ -8,7 +8,7 @@ use crate::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
 ///
 /// ```
 /// use evolve::phenotype::bytecode::{Instruction, Bytecode, BytecodeBuilder};
-/// use evolve::phenotype::phenotype::{Phenotype, PhenotypeBuilder, Event};
+/// use evolve::phenotype::{Phenotype, PhenotypeBuilder, Event};
 ///
 /// #[derive(Clone, PartialEq, Eq, Hash)]
 /// enum Op { Push(i32), Add }

@@ -1,6 +1,6 @@
 use evolve::fitness::{FitnessEvaluator, GeFitness};
 use evolve::grammar::grammar_def::GrammarDef;
-use evolve::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
+use evolve::phenotype::{Event, Phenotype, PhenotypeBuilder};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 enum Sym {

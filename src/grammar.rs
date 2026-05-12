@@ -1,5 +1,8 @@
 //! Grammar representation and builder for grammatical evolution.
 
+pub mod grammar_def;
+pub mod mapper;
+
 use std::collections::HashMap;
 use std::hash::Hash;
 
@@ -23,7 +26,7 @@ pub struct Rule {
 /// # Examples
 ///
 /// ```
-/// use evolve::grammar::grammar::Grammar;
+/// use evolve::grammar::Grammar;
 ///
 /// let grammar = Grammar::builder()
 ///     .rule("expr", &[&["expr", "op", "expr"], &["x"]])
@@ -72,7 +75,7 @@ impl<T> Grammar<T> {
 /// # Examples
 ///
 /// ```
-/// use evolve::grammar::grammar::GrammarBuilder;
+/// use evolve::grammar::GrammarBuilder;
 ///
 /// let grammar = GrammarBuilder::new()
 ///     .rule("expr", &[&["expr", "+", "expr"], &["x"]])

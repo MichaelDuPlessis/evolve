@@ -1,7 +1,7 @@
 //! Codon-to-phenotype mapping.
 
 use crate::grammar::grammar_def::GrammarDef;
-use crate::phenotype::phenotype::{Event, PhenotypeBuilder};
+use crate::phenotype::{Event, PhenotypeBuilder};
 
 /// Trait bound for codon types. Converts a codon to a choice index.
 pub trait Codon: Clone + Copy {
@@ -101,8 +101,8 @@ pub(crate) fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::grammar::grammar::Grammar;
-    use crate::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
+    use crate::grammar::Grammar;
+    use crate::phenotype::{Event, Phenotype, PhenotypeBuilder};
 
     #[derive(Debug, PartialEq)]
     struct Program(String);
@@ -209,7 +209,7 @@ mod test {
 
     #[test]
     fn maps_terminal_list() {
-        use crate::phenotype::phenotype::Phenotype;
+        use crate::phenotype::Phenotype;
 
         struct TermList(Vec<&'static str>);
         impl Phenotype for TermList {

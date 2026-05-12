@@ -1,5 +1,7 @@
 //! Phenotype building during grammar mapping.
 
+pub mod bytecode;
+
 /// A runnable phenotype produced by grammatical evolution.
 ///
 /// Represents an evolved program that can be executed with an input
@@ -8,7 +10,7 @@
 /// # Examples
 ///
 /// ```
-/// use evolve::phenotype::phenotype::Phenotype;
+/// use evolve::phenotype::Phenotype;
 ///
 /// struct Adder(i32);
 ///
@@ -50,7 +52,7 @@ pub enum Event<T> {
 /// # Examples
 ///
 /// ```
-/// use evolve::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
+/// use evolve::phenotype::{Event, Phenotype, PhenotypeBuilder};
 ///
 /// struct Count(usize);
 /// impl Phenotype for Count {

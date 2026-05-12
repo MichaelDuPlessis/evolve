@@ -1,7 +1,7 @@
 use evolve::{
     algorithm::EvolutionaryAlgorithm,
     fitness::{FitnessEvaluator, GeFitness, Maximize},
-    grammar::grammar::Grammar,
+    grammar::Grammar,
     initialization::RangedRandom,
     operators::sequential::{
         combinator::{Combine, Fill, Pipeline, Weighted},
@@ -10,7 +10,7 @@ use evolve::{
         selection::TournamentSelection,
     },
     phenotype::bytecode::{Bytecode, BytecodeBuilder, Instruction},
-    phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder},
+    phenotype::{Event, Phenotype, PhenotypeBuilder},
     termination::MaxGenerations,
 };
 use std::num::NonZero;

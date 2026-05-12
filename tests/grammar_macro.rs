@@ -2,7 +2,7 @@ use evolve::fitness::{FitnessEvaluator, GeFitness};
 use evolve::grammar;
 use evolve::grammar::grammar_def::GrammarDef;
 use evolve::phenotype::bytecode::{Bytecode, BytecodeBuilder, Instruction};
-use evolve::phenotype::phenotype::Phenotype;
+use evolve::phenotype::Phenotype;
 
 grammar! {
     grammar Grammar;

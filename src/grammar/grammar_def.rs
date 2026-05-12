@@ -1,6 +1,6 @@
 //! The [`GrammarDef`] trait abstracting grammar access for the mapper.
 
-use crate::grammar::grammar::{Grammar, Symbol};
+use crate::grammar::{Grammar, Symbol};
 
 /// Trait abstracting grammar access for the mapper.
 ///
@@ -10,7 +10,7 @@ use crate::grammar::grammar::{Grammar, Symbol};
 /// # Examples
 ///
 /// ```
-/// use evolve::grammar::grammar::Grammar;
+/// use evolve::grammar::Grammar;
 /// use evolve::grammar::grammar_def::GrammarDef;
 ///
 /// let grammar = Grammar::builder()

@@ -111,7 +111,7 @@ use std::marker::PhantomData;
 
 use crate::grammar::grammar_def::GrammarDef;
 use crate::grammar::mapper::{Codon, map};
-use crate::phenotype::phenotype::PhenotypeBuilder;
+use crate::phenotype::PhenotypeBuilder;
 
 /// A fitness evaluator for grammatical evolution.
 ///
@@ -127,8 +127,8 @@ use crate::phenotype::phenotype::PhenotypeBuilder;
 ///
 /// ```
 /// use evolve::fitness::{FitnessEvaluator, GeFitness};
-/// use evolve::grammar::grammar::Grammar;
-/// use evolve::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
+/// use evolve::grammar::Grammar;
+/// use evolve::phenotype::{Event, Phenotype, PhenotypeBuilder};
 ///
 /// struct Len(usize);
 /// impl Phenotype for Len {
@@ -202,8 +202,8 @@ where
 #[cfg(test)]
 mod ge_fitness_tests {
     use super::*;
-    use crate::grammar::grammar::Grammar;
-    use crate::phenotype::phenotype::{Event, Phenotype};
+    use crate::grammar::Grammar;
+    use crate::phenotype::{Event, Phenotype};
 
     #[derive(Debug, PartialEq)]
     struct Program(String);
