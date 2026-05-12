@@ -169,6 +169,22 @@
 //!
 //! Parallel versions of mutation, crossover, and combinators are available under
 //! `operators::parallel` (requires the `parallel` feature).
+//!
+//! ## Grammatical Evolution
+//!
+//! The crate supports Grammatical Evolution (GE) via the `grammar` and `phenotype` modules.
+//! GE evolves variable-length integer codon sequences (`Vec<u8>`) that are mapped through a
+//! context-free grammar to produce executable programs.
+//!
+//! - [`Grammar<T>`](grammar::Grammar) provides runtime grammar construction, or use the
+//!   [`grammar!`] proc-macro from `evolve-derive` for zero-cost compile-time grammars.
+//! - [`GeFitness`](fitness::GeFitness) wraps the codon→phenotype→fitness pipeline automatically,
+//!   handling grammar mapping and builder invocation.
+//! - [`Bytecode<T>`](phenotype::Bytecode) and the [`Instruction`](phenotype::Instruction) trait
+//!   provide a built-in stack-machine execution engine for evolved programs.
+//! - Variable-length genome operators are included:
+//!   [`RangedRandom`](initialization::RangedRandom) for initialization,
+//!   `SegmentDuplication` and `SegmentDeletion` for structural mutation.
 
 pub use evolve_derive::grammar;
 

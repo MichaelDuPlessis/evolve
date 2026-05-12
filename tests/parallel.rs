@@ -416,3 +416,34 @@ fn parallel_ge_runs_to_completion() {
         "parallel GE should produce valid phenotypes, got {best_fitness}"
     );
 }
+
+// ── Parallel Vec<T> crossover ──
+
+#[test]
+fn parallel_single_point_vec_crossover() {
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &Vec<u8>| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let pop: Population<Vec<u8>, u32> = vec![
+        Individual::new(vec![0u8; 10]),
+        Individual::new(vec![255u8; 10]),
+        Individual::new(vec![1u8; 8]),
+        Individual::new(vec![128u8; 12]),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+
+    let op = SinglePoint::<u8>::new();
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 4);
+
+    // Verify recombination occurred
+    let result = offspring.into_population();
+    let child1 = result.as_slice()[0].genome();
+    let child2 = result.as_slice()[1].genome();
+    let is_recombined = child1 != &vec![0u8; 10] || child2 != &vec![255u8; 10];
+    assert!(is_recombined, "Vec crossover should recombine parent genomes");
+}
