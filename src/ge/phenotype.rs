@@ -51,16 +51,16 @@ impl StringBuilder {
     }
 }
 
-impl PhenotypeBuilder<Grammar> for StringBuilder {
+impl<T: AsRef<str>> PhenotypeBuilder<Grammar<T>> for StringBuilder {
     type Output = String;
 
-    fn terminal(&mut self, symbol: Symbol, grammar: &Grammar) {
+    fn terminal(&mut self, symbol: Symbol, grammar: &Grammar<T>) {
         if let Symbol::Terminal(idx) = symbol {
-            self.0.push_str(grammar.terminal_value(idx));
+            self.0.push_str(grammar.terminal_value(idx).as_ref());
         }
     }
 
-    fn begin_rule(&mut self, _: Symbol, _: usize, _: &Grammar) {}
+    fn begin_rule(&mut self, _: Symbol, _: usize, _: &Grammar<T>) {}
 
     fn end_rule(&mut self) {}
 

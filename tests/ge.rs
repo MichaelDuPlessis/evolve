@@ -26,7 +26,7 @@ fn nz16(n: u16) -> NonZero<u16> {
     NonZero::new(n).unwrap()
 }
 
-fn arithmetic_grammar() -> Grammar {
+fn arithmetic_grammar() -> Grammar<&'static str> {
     Grammar::builder()
         .rule("expr", &[&["expr", "op", "expr"], &["var"], &["const"]])
         .rule("op", &[&["+"], &["-"], &["*"]])

@@ -24,7 +24,7 @@ pub trait GrammarDef {
     fn is_terminal(&self, symbol: Self::Symbol) -> bool;
 }
 
-impl GrammarDef for Grammar {
+impl<T> GrammarDef for Grammar<T> {
     type Symbol = Symbol;
 
     fn start(&self) -> Symbol {

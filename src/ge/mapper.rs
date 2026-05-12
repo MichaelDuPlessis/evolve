@@ -128,7 +128,7 @@ mod test {
     use crate::ge::grammar::Grammar;
     use crate::ge::phenotype::StringBuilder;
 
-    fn expr_grammar() -> Grammar {
+    fn expr_grammar() -> Grammar<&'static str> {
         Grammar::builder()
             .rule("expr", &[&["expr", "op", "expr"], &["x"], &["1"]])
             .rule("op", &[&["+"], &["-"]])

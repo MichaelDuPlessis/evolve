@@ -119,12 +119,12 @@ mod test {
     fn custom_builder() {
         #[derive(Default)]
         struct CountBuilder(usize);
-        impl PhenotypeBuilder<Grammar> for CountBuilder {
+        impl PhenotypeBuilder<Grammar<&'static str>> for CountBuilder {
             type Output = usize;
-            fn terminal(&mut self, _: Symbol, _: &Grammar) {
+            fn terminal(&mut self, _: Symbol, _: &Grammar<&str>) {
                 self.0 += 1;
             }
-            fn begin_rule(&mut self, _: Symbol, _: usize, _: &Grammar) {}
+            fn begin_rule(&mut self, _: Symbol, _: usize, _: &Grammar<&str>) {}
             fn end_rule(&mut self) {}
             fn finish(self) -> usize {
                 self.0
