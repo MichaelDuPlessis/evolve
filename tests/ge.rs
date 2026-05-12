@@ -2,6 +2,7 @@ use evolve::{
     algorithm::EvolutionaryAlgorithm,
     fitness::Maximize,
     ge::{
+        fitness::GeFitness,
         grammar::Grammar,
         mapper::map,
         phenotype::{Event, Phenotype, PhenotypeBuilder},
@@ -56,16 +57,12 @@ fn arithmetic_grammar() -> Grammar<&'static str> {
 
 #[test]
 fn ge_runs_to_completion() {
-    let grammar = arithmetic_grammar();
-    let fitness = {
-        let g = grammar.clone();
-        move |genome: &Vec<u8>| -> f64 {
-            match map(&g, genome, 3, CountBuilder::default()) {
-                Some(p) => p.run(&()) as f64,
-                None => -1.0,
-            }
-        }
-    };
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
+        arithmetic_grammar(),
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
 
     let mut ga = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..20),
@@ -89,16 +86,12 @@ fn ge_runs_to_completion() {
 
 #[test]
 fn ge_with_segment_operators() {
-    let grammar = arithmetic_grammar();
-    let fitness = {
-        let g = grammar.clone();
-        move |genome: &Vec<u8>| -> f64 {
-            match map(&g, genome, 3, CountBuilder::default()) {
-                Some(p) => p.run(&()) as f64,
-                None => -1.0,
-            }
-        }
-    };
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
+        arithmetic_grammar(),
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
 
     let mut ga = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..20),
@@ -127,15 +120,12 @@ fn ge_with_segment_operators() {
 #[test]
 fn ge_best_has_valid_phenotype() {
     let grammar = arithmetic_grammar();
-    let fitness = {
-        let g = grammar.clone();
-        move |genome: &Vec<u8>| -> f64 {
-            match map(&g, genome, 3, CountBuilder::default()) {
-                Some(p) => p.run(&()) as f64,
-                None => -1.0,
-            }
-        }
-    };
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
+        grammar.clone(),
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
 
     let mut ga = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..20),
@@ -156,12 +146,12 @@ fn ge_best_has_valid_phenotype() {
 
     let result = ga.run();
 
-    let fe = |genome: &Vec<u8>| -> f64 {
-        match map(&grammar, genome, 3, CountBuilder::default()) {
-            Some(p) => p.run(&()) as f64,
-            None => -1.0,
-        }
-    };
+    let fe = GeFitness::<_, u8, f64, _, CountBuilder>::new(
+        grammar.clone(),
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
 
     let best = result.population.best(&fe, &Maximize);
 

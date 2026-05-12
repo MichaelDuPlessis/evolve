@@ -5,6 +5,7 @@
 //! algorithm runner.
 
 pub mod bytecode;
+pub mod fitness;
 pub mod grammar;
 pub mod grammar_def;
 pub mod mapper;
