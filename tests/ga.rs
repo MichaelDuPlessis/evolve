@@ -423,3 +423,31 @@ fn builder_fields_in_any_order() {
     let result = ga.run();
     assert!(result.population.len() > 0);
 }
+
+#[test]
+fn ga_with_variable_length_genome() {
+    use evolve::initialization::RangedRandom;
+
+    let fitness_fn = |g: &Vec<u8>| g.iter().map(|x| *x as u32).sum::<u32>();
+
+    let mut ga = EvolutionaryAlgorithm::new(
+        RangedRandom::<u8>::new(5..20),
+        MaxGenerations::new(50),
+        fitness_fn,
+        Fill::from_population_size(Pipeline::new((
+            Combine::new((
+                TournamentSelection::new(nz(3)),
+                TournamentSelection::new(nz(3)),
+            )),
+            SinglePoint::<u8>::new(),
+            RandomReset::<u8>::new(),
+        ))),
+        nz(100),
+        rand::rng(),
+        Maximize,
+    );
+
+    let result = ga.run();
+    let best = *result.population.best(&fitness_fn, &Maximize).fitness(&fitness_fn);
+    assert!(best > 100, "variable-length GA should find good solutions, got {best}");
+}

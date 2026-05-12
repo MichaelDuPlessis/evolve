@@ -301,3 +301,32 @@ fn ge_improves_fitness_over_generations() {
         "100 generations ({long_best}) should be >= 1 generation ({short_best})"
     );
 }
+
+#[test]
+fn ge_with_fixed_length_genome() {
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
+        arithmetic_grammar(),
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
+
+    let mut ea = EvolutionaryAlgorithm::new(
+        RangedRandom::<u8>::new(20..21),
+        MaxGenerations::new(20),
+        fitness,
+        Fill::from_population_size(Pipeline::new((
+            Combine::new((
+                TournamentSelection::new(nz(3)),
+                TournamentSelection::new(nz(3)),
+            )),
+            SinglePoint::<u8>::new(),
+            RandomReset::<u8>::new(),
+        ))),
+        nz(50),
+        rand::rng(),
+        Maximize,
+    );
+
+    let _result = ea.run();
+}
