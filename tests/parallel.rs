@@ -344,13 +344,11 @@ fn parallel_ge_runs_to_completion() {
         fitness::GeFitness,
         grammar::Grammar,
         initialization::RangedRandom,
-        phenotype::{Event, Phenotype, PhenotypeBuilder},
+        phenotype::{Event, PhenotypeBuilder},
     };
 
     struct TerminalCount(usize);
-    impl Phenotype for TerminalCount {
-        type Input = ();
-        type Output = usize;
+    impl TerminalCount {
         fn run(&self, _: &()) -> usize {
             self.0
         }

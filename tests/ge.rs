@@ -10,16 +10,14 @@ use evolve::{
         selection::TournamentSelection,
     },
     phenotype::bytecode::{Bytecode, BytecodeBuilder, Instruction},
-    phenotype::{Event, Phenotype, PhenotypeBuilder},
+    phenotype::{Event, PhenotypeBuilder},
     termination::MaxGenerations,
 };
 use std::num::NonZero;
 
 struct TerminalCount(usize);
 
-impl Phenotype for TerminalCount {
-    type Input = ();
-    type Output = usize;
+impl TerminalCount {
     fn run(&self, _: &()) -> usize {
         self.0
     }

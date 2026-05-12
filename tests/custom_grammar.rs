@@ -1,6 +1,6 @@
 use evolve::fitness::{FitnessEvaluator, GeFitness};
 use evolve::grammar::grammar_def::GrammarDef;
-use evolve::phenotype::{Event, Phenotype, PhenotypeBuilder};
+use evolve::phenotype::{Event, PhenotypeBuilder};
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 enum Sym {
@@ -64,10 +64,7 @@ impl GrammarDef for MathGrammar {
 // Stack machine phenotype
 struct StackMachine(Vec<Sym>);
 
-impl Phenotype for StackMachine {
-    type Input = f64; // value of X
-    type Output = f64;
-
+impl StackMachine {
     fn run(&self, x: &f64) -> f64 {
         let mut stack: Vec<f64> = Vec::new();
         for &sym in &self.0 {

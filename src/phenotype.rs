@@ -2,37 +2,6 @@
 
 pub mod bytecode;
 
-/// A runnable phenotype produced by grammatical evolution.
-///
-/// Represents an evolved program that can be executed with an input
-/// to produce an output.
-///
-/// # Examples
-///
-/// ```
-/// use evolve::phenotype::Phenotype;
-///
-/// struct Adder(i32);
-///
-/// impl Phenotype for Adder {
-///     type Input = i32;
-///     type Output = i32;
-///     fn run(&self, input: &i32) -> i32 { self.0 + input }
-/// }
-///
-/// let program = Adder(5);
-/// assert_eq!(program.run(&3), 8);
-/// ```
-pub trait Phenotype {
-    /// The input type the program accepts.
-    type Input;
-    /// The output type the program produces.
-    type Output;
-
-    /// Runs the program with the given input.
-    fn run(&self, input: &Self::Input) -> Self::Output;
-}
-
 /// Events emitted during grammar derivation, consumed by a [`PhenotypeBuilder`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Event<T> {
@@ -52,14 +21,9 @@ pub enum Event<T> {
 /// # Examples
 ///
 /// ```
-/// use evolve::phenotype::{Event, Phenotype, PhenotypeBuilder};
+/// use evolve::phenotype::{Event, PhenotypeBuilder};
 ///
 /// struct Count(usize);
-/// impl Phenotype for Count {
-///     type Input = ();
-///     type Output = usize;
-///     fn run(&self, _: &()) -> usize { self.0 }
-/// }
 ///
 /// #[derive(Default)]
 /// struct Counter(usize);
@@ -72,7 +36,7 @@ pub enum Event<T> {
 /// }
 /// ```
 pub trait PhenotypeBuilder<T> {
-    type Output: Phenotype;
+    type Output;
 
     /// Process a derivation event.
     fn push(&mut self, event: Event<T>);

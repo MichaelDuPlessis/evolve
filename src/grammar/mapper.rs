@@ -97,17 +97,10 @@ pub(crate) fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
 mod test {
     use super::*;
     use crate::grammar::Grammar;
-    use crate::phenotype::{Event, Phenotype, PhenotypeBuilder};
+    use crate::phenotype::{Event, PhenotypeBuilder};
 
     #[derive(Debug, PartialEq)]
     struct Program(String);
-    impl Phenotype for Program {
-        type Input = ();
-        type Output = String;
-        fn run(&self, _: &()) -> String {
-            self.0.clone()
-        }
-    }
 
     #[derive(Default)]
     struct ProgramBuilder(String);
@@ -135,14 +128,14 @@ mod test {
     fn simple_terminal() {
         let g = expr_grammar();
         let result = map(&g, &[1u8], 0, ProgramBuilder::default());
-        assert_eq!(result.unwrap().run(&()), "x");
+        assert_eq!(result.unwrap().0, "x");
     }
 
     #[test]
     fn recursive_expansion() {
         let g = expr_grammar();
         let result = map(&g, &[0u8, 1, 0, 2], 0, ProgramBuilder::default());
-        assert_eq!(result.unwrap().run(&()), "x+1");
+        assert_eq!(result.unwrap().0, "x+1");
     }
 
     #[test]
@@ -161,7 +154,7 @@ mod test {
             .build();
 
         let result = map(&g, &[0u8], 0, ProgramBuilder::default());
-        assert_eq!(result.unwrap().run(&()), "hi");
+        assert_eq!(result.unwrap().0, "hi");
     }
 
     #[test]
@@ -172,7 +165,7 @@ mod test {
             .build();
 
         let result = map(&g, &[0u8], 0, ProgramBuilder::default());
-        assert_eq!(result.unwrap().run(&()), "hello");
+        assert_eq!(result.unwrap().0, "hello");
     }
 
     #[test]
@@ -195,25 +188,16 @@ mod test {
 
         // u8::MAX (255) % 3 == 0 → picks "a"
         let result = map(&g, &[u8::MAX], 0, ProgramBuilder::default());
-        assert_eq!(result.unwrap().run(&()), "a");
+        assert_eq!(result.unwrap().0, "a");
 
         // 254 % 3 == 2 → picks "c"
         let result = map(&g, &[254u8], 0, ProgramBuilder::default());
-        assert_eq!(result.unwrap().run(&()), "c");
+        assert_eq!(result.unwrap().0, "c");
     }
 
     #[test]
     fn maps_terminal_list() {
-        use crate::phenotype::Phenotype;
-
         struct TermList(Vec<&'static str>);
-        impl Phenotype for TermList {
-            type Input = ();
-            type Output = Vec<&'static str>;
-            fn run(&self, _: &()) -> Vec<&'static str> {
-                self.0.clone()
-            }
-        }
 
         #[derive(Default)]
         struct TermListBuilder(Vec<&'static str>);
@@ -235,6 +219,6 @@ mod test {
             .build();
 
         let result = map(&grammar, &[0u8], 0, TermListBuilder::default());
-        assert_eq!(result.unwrap().run(&()), vec!["x"]);
+        assert_eq!(result.unwrap().0, vec!["x"]);
     }
 }

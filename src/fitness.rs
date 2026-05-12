@@ -128,12 +128,10 @@ use crate::phenotype::PhenotypeBuilder;
 /// ```
 /// use evolve::fitness::{FitnessEvaluator, GeFitness};
 /// use evolve::grammar::Grammar;
-/// use evolve::phenotype::{Event, Phenotype, PhenotypeBuilder};
+/// use evolve::phenotype::{Event, PhenotypeBuilder};
 ///
 /// struct Len(usize);
-/// impl Phenotype for Len {
-///     type Input = ();
-///     type Output = usize;
+/// impl Len {
 ///     fn run(&self, _: &()) -> usize { self.0 }
 /// }
 ///
@@ -203,13 +201,11 @@ where
 mod ge_fitness_tests {
     use super::*;
     use crate::grammar::Grammar;
-    use crate::phenotype::{Event, Phenotype};
+    use crate::phenotype::Event;
 
     #[derive(Debug, PartialEq)]
     struct Program(String);
-    impl Phenotype for Program {
-        type Input = ();
-        type Output = String;
+    impl Program {
         fn run(&self, _: &()) -> String {
             self.0.clone()
         }

@@ -1,6 +1,6 @@
 //! Bytecode phenotype — a flat list of instructions executed on a stack machine.
 
-use crate::phenotype::{Event, Phenotype, PhenotypeBuilder};
+use crate::phenotype::{Event, PhenotypeBuilder};
 
 /// Trait for types that can be executed as stack machine instructions.
 ///
@@ -8,7 +8,7 @@ use crate::phenotype::{Event, Phenotype, PhenotypeBuilder};
 ///
 /// ```
 /// use evolve::phenotype::bytecode::{Instruction, Bytecode, BytecodeBuilder};
-/// use evolve::phenotype::{Phenotype, PhenotypeBuilder, Event};
+/// use evolve::phenotype::{PhenotypeBuilder, Event};
 ///
 /// #[derive(Clone, PartialEq, Eq, Hash)]
 /// enum Op { Push(i32), Add }
@@ -44,11 +44,8 @@ pub trait Instruction {
 /// A bytecode program — a flat list of instructions.
 pub struct Bytecode<T>(pub Vec<T>);
 
-impl<T: Instruction> Phenotype for Bytecode<T> {
-    type Input = T::Input;
-    type Output = T::Value;
-
-    fn run(&self, input: &Self::Input) -> Self::Output {
+impl<T: Instruction> Bytecode<T> {
+    pub fn run(&self, input: &T::Input) -> T::Value {
         let mut stack = Vec::new();
         for instruction in &self.0 {
             instruction.execute(&mut stack, input);
