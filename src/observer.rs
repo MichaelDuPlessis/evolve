@@ -74,7 +74,9 @@ where
 {
     fn on_generation(&mut self, state: &State<G, F>, ctx: &Context<Fe, R, C>) {
         if state.generation().is_multiple_of(self.every) {
-            let best = state.population().best(ctx.fitness_evaluator(), ctx.comparator());
+            let best = state
+                .population()
+                .best(ctx.fitness_evaluator(), ctx.comparator());
             println!(
                 "[gen {}] best fitness: {}",
                 state.generation(),

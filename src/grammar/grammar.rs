@@ -96,10 +96,7 @@ impl<T: Eq + Hash + Clone> GrammarBuilder<T> {
     /// Adds a rule. Symbols matching any rule name are classified as non-terminals
     /// at [`build()`](Self::build) time; everything else is a terminal.
     pub fn rule(mut self, name: T, productions: &[&[T]]) -> Self {
-        let prods = productions
-            .iter()
-            .map(|p| p.to_vec())
-            .collect();
+        let prods = productions.iter().map(|p| p.to_vec()).collect();
         self.rules.push((name, prods));
         self
     }

@@ -9,7 +9,7 @@ use crate::{
         state::State,
     },
     fitness::FitnessEvaluator,
-    operators::{common::random_reset_mutate, GeneticOperator},
+    operators::{GeneticOperator, common::random_reset_mutate},
     random::Randomizable,
 };
 use rand::Rng;
@@ -56,12 +56,18 @@ where
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         if state.population().len() == 1 {
             let individual = unsafe { state.population().as_slice().get_unchecked(0) };
-            Offspring::Single(Individual::new(random_reset_mutate(individual.genome(), ctx.rng())))
+            Offspring::Single(Individual::new(random_reset_mutate(
+                individual.genome(),
+                ctx.rng(),
+            )))
         } else {
             let mut population = Population::with_capacity(state.population().len());
 
             for individual in state.population() {
-                population.add(Individual::new(random_reset_mutate(individual.genome(), ctx.rng())));
+                population.add(Individual::new(random_reset_mutate(
+                    individual.genome(),
+                    ctx.rng(),
+                )));
             }
 
             Offspring::Multiple(population)

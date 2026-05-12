@@ -279,10 +279,7 @@ fn pipeline_vec_chains_operators() {
     let state = make_state(&[[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]]);
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
-    let op = Pipeline::new(vec![
-        RandomReset::<i32>::new(),
-        RandomReset::<i32>::new(),
-    ]);
+    let op = Pipeline::new(vec![RandomReset::<i32>::new(), RandomReset::<i32>::new()]);
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
 }
 
@@ -307,11 +304,8 @@ fn combine_boxed_slice_merges_outputs() {
     let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
-    let ops: Box<[RandomReset<i32>]> = vec![
-        RandomReset::new(),
-        RandomReset::new(),
-    ]
-    .into_boxed_slice();
+    let ops: Box<[RandomReset<i32>]> =
+        vec![RandomReset::new(), RandomReset::new()].into_boxed_slice();
     let op = Combine::new(ops);
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
 }
@@ -323,11 +317,8 @@ fn pipeline_boxed_slice_chains_operators() {
     let state = make_state(&[[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]]);
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
-    let ops: Box<[RandomReset<i32>]> = vec![
-        RandomReset::new(),
-        RandomReset::new(),
-    ]
-    .into_boxed_slice();
+    let ops: Box<[RandomReset<i32>]> =
+        vec![RandomReset::new(), RandomReset::new()].into_boxed_slice();
     let op = Pipeline::new(ops);
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
 }
@@ -355,7 +346,8 @@ fn id_vec(g: &Vec<i32>) -> i32 {
 }
 
 fn make_state_vec(genomes: &[Vec<i32>]) -> State<Vec<i32>, i32> {
-    let pop: Population<Vec<i32>, i32> = genomes.iter().map(|g| Individual::new(g.clone())).collect();
+    let pop: Population<Vec<i32>, i32> =
+        genomes.iter().map(|g| Individual::new(g.clone())).collect();
     State::new(pop, 0)
 }
 

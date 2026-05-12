@@ -164,7 +164,12 @@ mod test {
         #[cfg(not(feature = "parallel"))]
         let mut ctx = Context::new(&(id as fn(&[u8; 2]) -> u16), &mut rng, &Maximize);
         #[cfg(feature = "parallel")]
-        let mut ctx = Context::new(&(id as fn(&[u8; 2]) -> u16), &mut rng, &Maximize, test_runtime());
+        let mut ctx = Context::new(
+            &(id as fn(&[u8; 2]) -> u16),
+            &mut rng,
+            &Maximize,
+            test_runtime(),
+        );
         let pop = Random::new().initialize(NonZero::new(10).unwrap(), &mut ctx);
         assert_eq!(pop.len(), 10);
     }
@@ -175,7 +180,12 @@ mod test {
         #[cfg(not(feature = "parallel"))]
         let mut ctx = Context::new(&(id as fn(&[u8; 2]) -> u16), &mut rng, &Maximize);
         #[cfg(feature = "parallel")]
-        let mut ctx = Context::new(&(id as fn(&[u8; 2]) -> u16), &mut rng, &Maximize, test_runtime());
+        let mut ctx = Context::new(
+            &(id as fn(&[u8; 2]) -> u16),
+            &mut rng,
+            &Maximize,
+            test_runtime(),
+        );
         let pop = Random::new().initialize(NonZero::new(5).unwrap(), &mut ctx);
         for ind in &pop {
             assert_eq!(
@@ -195,7 +205,12 @@ mod test {
         #[cfg(not(feature = "parallel"))]
         let mut ctx = Context::new(&(vec_sum as fn(&Vec<u8>) -> u32), &mut rng, &Maximize);
         #[cfg(feature = "parallel")]
-        let mut ctx = Context::new(&(vec_sum as fn(&Vec<u8>) -> u32), &mut rng, &Maximize, test_runtime());
+        let mut ctx = Context::new(
+            &(vec_sum as fn(&Vec<u8>) -> u32),
+            &mut rng,
+            &Maximize,
+            test_runtime(),
+        );
         let pop = RangedRandom::<u8>::new(3..8).initialize(NonZero::new(20).unwrap(), &mut ctx);
         assert_eq!(pop.len(), 20);
     }
@@ -206,7 +221,12 @@ mod test {
         #[cfg(not(feature = "parallel"))]
         let mut ctx = Context::new(&(vec_sum as fn(&Vec<u8>) -> u32), &mut rng, &Maximize);
         #[cfg(feature = "parallel")]
-        let mut ctx = Context::new(&(vec_sum as fn(&Vec<u8>) -> u32), &mut rng, &Maximize, test_runtime());
+        let mut ctx = Context::new(
+            &(vec_sum as fn(&Vec<u8>) -> u32),
+            &mut rng,
+            &Maximize,
+            test_runtime(),
+        );
         let pop = RangedRandom::<u8>::new(5..10).initialize(NonZero::new(50).unwrap(), &mut ctx);
         for ind in &pop {
             assert!((5..10).contains(&ind.genome().len()));

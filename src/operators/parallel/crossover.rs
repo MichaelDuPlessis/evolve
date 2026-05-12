@@ -3,7 +3,7 @@ use crate::{
         context::Context, individual::Individual, offspring::Offspring, population::Population,
         state::State,
     },
-    operators::{common::single_point_crossover, GeneticOperator},
+    operators::{GeneticOperator, common::single_point_crossover},
 };
 use rand::{Rng, RngExt, SeedableRng};
 use std::marker::PhantomData;
@@ -41,11 +41,7 @@ where
     C: Sync,
     Individual<[T; N], F>: Sync,
 {
-    fn apply(
-        &self,
-        state: &State<[T; N], F>,
-        ctx: &mut Context<Fe, R, C>,
-    ) -> Offspring<[T; N], F> {
+    fn apply(&self, state: &State<[T; N], F>, ctx: &mut Context<Fe, R, C>) -> Offspring<[T; N], F> {
         let individuals = state.population().as_slice();
         let inputs: Vec<(u64, usize)> = individuals
             .chunks_exact(2)

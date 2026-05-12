@@ -70,7 +70,12 @@ impl Parse for GrammarInput {
         while !input.is_empty() {
             rules.push(input.parse()?);
         }
-        Ok(GrammarInput { grammar_name, symbol_name, start, rules })
+        Ok(GrammarInput {
+            grammar_name,
+            symbol_name,
+            start,
+            rules,
+        })
     }
 }
 

@@ -6,12 +6,12 @@ use evolve::{
     fitness::Maximize,
     initialization::Random,
     operators::{
+        GeneticOperator,
         parallel::{
             combinator::{Fill, Repeat},
             crossover::SinglePoint,
             mutation::RandomReset,
         },
-        GeneticOperator,
     },
     termination::MaxGenerations,
 };
@@ -202,11 +202,8 @@ fn parallel_combine_boxed_slice() {
     let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
 
     let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
-    let ops: Box<[RandomReset<u8>]> = vec![
-        RandomReset::new(),
-        RandomReset::new(),
-    ]
-    .into_boxed_slice();
+    let ops: Box<[RandomReset<u8>]> =
+        vec![RandomReset::new(), RandomReset::new()].into_boxed_slice();
     let op = Combine::new(ops);
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
 }

@@ -5,8 +5,8 @@ use crate::{
     },
     fitness::FitnessEvaluator,
     operators::{
-        common::{single_point_crossover, single_point_crossover_vec},
         GeneticOperator,
+        common::{single_point_crossover, single_point_crossover_vec},
     },
 };
 use rand::Rng;
@@ -71,8 +71,7 @@ where
             let p1 = unsafe { chunk.get_unchecked(0) };
             let p2 = unsafe { chunk.get_unchecked(1) };
 
-            let (child1, child2) =
-                single_point_crossover_vec(p1.genome(), p2.genome(), ctx.rng());
+            let (child1, child2) = single_point_crossover_vec(p1.genome(), p2.genome(), ctx.rng());
 
             population.add(Individual::new(child1));
             population.add(Individual::new(child2));

@@ -110,7 +110,7 @@ where
 use std::marker::PhantomData;
 
 use crate::grammar::grammar_def::GrammarDef;
-use crate::grammar::mapper::{map, Codon};
+use crate::grammar::mapper::{Codon, map};
 use crate::phenotype::phenotype::PhenotypeBuilder;
 
 /// A fitness evaluator for grammatical evolution.
@@ -210,7 +210,9 @@ mod ge_fitness_tests {
     impl Phenotype for Program {
         type Input = ();
         type Output = String;
-        fn run(&self, _: &()) -> String { self.0.clone() }
+        fn run(&self, _: &()) -> String {
+            self.0.clone()
+        }
     }
 
     #[derive(Default)]
@@ -222,7 +224,9 @@ mod ge_fitness_tests {
                 self.0.push_str(val);
             }
         }
-        fn finish(self) -> Program { Program(self.0) }
+        fn finish(self) -> Program {
+            Program(self.0)
+        }
     }
 
     fn simple_grammar() -> Grammar<&'static str> {

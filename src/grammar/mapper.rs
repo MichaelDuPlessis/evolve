@@ -109,7 +109,9 @@ mod test {
     impl Phenotype for Program {
         type Input = ();
         type Output = String;
-        fn run(&self, _: &()) -> String { self.0.clone() }
+        fn run(&self, _: &()) -> String {
+            self.0.clone()
+        }
     }
 
     #[derive(Default)]
@@ -121,7 +123,9 @@ mod test {
                 self.0.push_str(val);
             }
         }
-        fn finish(self) -> Program { Program(self.0) }
+        fn finish(self) -> Program {
+            Program(self.0)
+        }
     }
 
     fn expr_grammar() -> Grammar<&'static str> {
@@ -211,7 +215,9 @@ mod test {
         impl Phenotype for TermList {
             type Input = ();
             type Output = Vec<&'static str>;
-            fn run(&self, _: &()) -> Vec<&'static str> { self.0.clone() }
+            fn run(&self, _: &()) -> Vec<&'static str> {
+                self.0.clone()
+            }
         }
 
         #[derive(Default)]
@@ -219,9 +225,13 @@ mod test {
         impl PhenotypeBuilder<&'static str> for TermListBuilder {
             type Output = TermList;
             fn push(&mut self, event: Event<&'static str>) {
-                if let Event::Terminal(t) = event { self.0.push(t); }
+                if let Event::Terminal(t) = event {
+                    self.0.push(t);
+                }
             }
-            fn finish(self) -> TermList { TermList(self.0) }
+            fn finish(self) -> TermList {
+                TermList(self.0)
+            }
         }
 
         let grammar = Grammar::builder()

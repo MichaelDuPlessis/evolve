@@ -118,8 +118,12 @@ where
         #[cfg(not(feature = "parallel"))]
         let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng, &self.comparator);
         #[cfg(feature = "parallel")]
-        let mut ctx =
-            Context::new(&self.fitness_evaluator, &mut self.rng, &self.comparator, &self.runtime);
+        let mut ctx = Context::new(
+            &self.fitness_evaluator,
+            &mut self.rng,
+            &self.comparator,
+            &self.runtime,
+        );
 
         let population = self.initializer.initialize(self.population_size, &mut ctx);
 

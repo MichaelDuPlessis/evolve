@@ -2,15 +2,15 @@ use evolve::{
     algorithm::EvolutionaryAlgorithm,
     fitness::{FitnessEvaluator, GeFitness, Maximize},
     grammar::grammar::Grammar,
-    phenotype::bytecode::{Bytecode, BytecodeBuilder, Instruction},
-    phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder},
     initialization::RangedRandom,
     operators::sequential::{
         combinator::{Combine, Fill, Pipeline, Weighted},
         crossover::SinglePoint,
-        mutation::{deletion::SegmentDeletion, duplication::SegmentDuplication, RandomReset},
+        mutation::{RandomReset, deletion::SegmentDeletion, duplication::SegmentDuplication},
         selection::TournamentSelection,
     },
+    phenotype::bytecode::{Bytecode, BytecodeBuilder, Instruction},
+    phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder},
     termination::MaxGenerations,
 };
 use std::num::NonZero;
@@ -20,7 +20,9 @@ struct TerminalCount(usize);
 impl Phenotype for TerminalCount {
     type Input = ();
     type Output = usize;
-    fn run(&self, _: &()) -> usize { self.0 }
+    fn run(&self, _: &()) -> usize {
+        self.0
+    }
 }
 
 #[derive(Default)]
@@ -29,9 +31,13 @@ struct CountBuilder(usize);
 impl PhenotypeBuilder<&'static str> for CountBuilder {
     type Output = TerminalCount;
     fn push(&mut self, event: Event<&'static str>) {
-        if let Event::Terminal(_) = event { self.0 += 1; }
+        if let Event::Terminal(_) = event {
+            self.0 += 1;
+        }
     }
-    fn finish(self) -> TerminalCount { TerminalCount(self.0) }
+    fn finish(self) -> TerminalCount {
+        TerminalCount(self.0)
+    }
 }
 
 fn nz(n: usize) -> NonZero<usize> {
@@ -234,5 +240,8 @@ fn ge_bytecode_integration() {
 
     let best = result.population.best(&fe, &Maximize);
     let fitness = fe.evaluate(best.genome());
-    assert!(fitness > i32::MIN, "Best individual should produce a valid Bytecode");
+    assert!(
+        fitness > i32::MIN,
+        "Best individual should produce a valid Bytecode"
+    );
 }
