@@ -1,17 +1,17 @@
 #![cfg(feature = "parallel")]
 
 use evolve::{
-    algorithm::ga::GeneticAlgorithm,
+    algorithm::EvolutionaryAlgorithm,
     core::{context::Context, individual::Individual, population::Population, state::State},
-    fitness::Maximize,
+    fitness::{FitnessEvaluator, Maximize},
     initialization::Random,
     operators::{
+        GeneticOperator,
         parallel::{
             combinator::{Fill, Repeat},
             crossover::SinglePoint,
             mutation::RandomReset,
         },
-        GeneticOperator,
     },
     termination::MaxGenerations,
 };
@@ -91,7 +91,7 @@ fn parallel_repeat_produces_output() {
 fn parallel_ga_improves_over_generations() {
     let fitness_fn = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
 
-    let mut ga_short = GeneticAlgorithm::builder(nz(100))
+    let mut ga_short = EvolutionaryAlgorithm::builder(nz(100))
         .initializer(Random::new())
         .termination(MaxGenerations::new(1))
         .fitness(fitness_fn)
@@ -101,7 +101,7 @@ fn parallel_ga_improves_over_generations() {
         .runtime(pooled::Runtime::new(2))
         .build();
 
-    let mut ga_long = GeneticAlgorithm::builder(nz(100))
+    let mut ga_long = EvolutionaryAlgorithm::builder(nz(100))
         .initializer(Random::new())
         .termination(MaxGenerations::new(100))
         .fitness(fitness_fn)
@@ -113,12 +113,12 @@ fn parallel_ga_improves_over_generations() {
 
     let short_best = *ga_short
         .run()
-        .population
+        .population()
         .best(&fitness_fn, &Maximize)
         .fitness(&fitness_fn);
     let long_best = *ga_long
         .run()
-        .population
+        .population()
         .best(&fitness_fn, &Maximize)
         .fitness(&fitness_fn);
 
@@ -202,11 +202,8 @@ fn parallel_combine_boxed_slice() {
     let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
 
     let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
-    let ops: Box<[RandomReset<u8>]> = vec![
-        RandomReset::new(),
-        RandomReset::new(),
-    ]
-    .into_boxed_slice();
+    let ops: Box<[RandomReset<u8>]> =
+        vec![RandomReset::new(), RandomReset::new()].into_boxed_slice();
     let op = Combine::new(ops);
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
 }
@@ -308,4 +305,146 @@ fn parallel_repeat_large_count() {
     let op = Repeat::new(RandomReset::<u8>::new(), 50);
     // Each rep produces 2 individuals (one per input), so 50 * 2 = 100
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 100);
+}
+
+// ── Full GA with parallel pipeline operators ──
+
+#[test]
+fn parallel_ga_full_pipeline() {
+    let fitness_fn = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+
+    let mut ga = EvolutionaryAlgorithm::builder(nz(200))
+        .initializer(Random::new())
+        .termination(MaxGenerations::new(100))
+        .fitness(fitness_fn)
+        .operators(Fill::new(RandomReset::<u8>::new(), 200))
+        .rng(SmallRng::seed_from_u64(42))
+        .comparator(Maximize)
+        .runtime(pooled::Runtime::new(4))
+        .build();
+
+    let result = ga.run();
+    let best = *result
+        .population()
+        .best(&fitness_fn, &Maximize)
+        .fitness(&fitness_fn);
+
+    // With 200 generations and pop 200, maximize sum of 4 bytes should get close to max (1020)
+    assert!(
+        best > 500,
+        "parallel GA should find good solutions, got {best}"
+    );
+}
+
+// ── GE with parallel operators ──
+
+#[test]
+fn parallel_ge_runs_to_completion() {
+    use evolve::{
+        fitness::GeFitness,
+        grammar::Grammar,
+        initialization::RangedRandom,
+        phenotype::{Event, PhenotypeBuilder},
+    };
+
+    struct TerminalCount(usize);
+    impl TerminalCount {
+        fn run(&self, _: &()) -> usize {
+            self.0
+        }
+    }
+
+    #[derive(Default)]
+    struct CountBuilder(usize);
+    impl PhenotypeBuilder<&'static str> for CountBuilder {
+        type Output = TerminalCount;
+        fn push(&mut self, event: Event<&'static str>) {
+            if let Event::Terminal(_) = event {
+                self.0 += 1;
+            }
+        }
+        fn finish(self) -> TerminalCount {
+            TerminalCount(self.0)
+        }
+    }
+
+    let grammar = Grammar::builder()
+        .rule("expr", &[&["expr", "op", "expr"], &["var"], &["const"]])
+        .rule("op", &[&["+"], &["-"], &["*"]])
+        .rule("var", &[&["x"], &["y"]])
+        .rule("const", &[&["1"], &["2"]])
+        .start("expr")
+        .build();
+
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
+        grammar,
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
+
+    let mut ga = EvolutionaryAlgorithm::builder(nz(100))
+        .initializer(RangedRandom::<u8>::new(5..20))
+        .termination(MaxGenerations::new(50))
+        .fitness(fitness)
+        .operators(Fill::new(RandomReset::<u8>::new(), 100))
+        .rng(SmallRng::seed_from_u64(42))
+        .comparator(Maximize)
+        .runtime(pooled::Runtime::new(2))
+        .build();
+
+    let result = ga.run();
+
+    let fe = GeFitness::<_, u8, f64, _, CountBuilder>::new(
+        Grammar::builder()
+            .rule("expr", &[&["expr", "op", "expr"], &["var"], &["const"]])
+            .rule("op", &[&["+"], &["-"], &["*"]])
+            .rule("var", &[&["x"], &["y"]])
+            .rule("const", &[&["1"], &["2"]])
+            .start("expr")
+            .build(),
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
+
+    let best_fitness = fe.evaluate(result.population().best(&fe, &Maximize).genome());
+    assert!(
+        best_fitness > 0.0,
+        "parallel GE should produce valid phenotypes, got {best_fitness}"
+    );
+}
+
+// ── Parallel Vec<T> crossover ──
+
+#[test]
+fn parallel_single_point_vec_crossover() {
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &Vec<u8>| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let pop: Population<Vec<u8>, u32> = vec![
+        Individual::new(vec![0u8; 10]),
+        Individual::new(vec![255u8; 10]),
+        Individual::new(vec![1u8; 8]),
+        Individual::new(vec![128u8; 12]),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+
+    let op = SinglePoint::<u8>::new();
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 4);
+
+    // Verify recombination occurred
+    let result = offspring.into_population();
+    let child1 = result.as_slice()[0].genome();
+    let child2 = result.as_slice()[1].genome();
+    let is_recombined = child1 != &vec![0u8; 10] || child2 != &vec![255u8; 10];
+    assert!(
+        is_recombined,
+        "Vec crossover should recombine parent genomes"
+    );
 }

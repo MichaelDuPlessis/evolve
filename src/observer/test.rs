@@ -42,10 +42,19 @@ fn custom_observer_receives_all_hooks() {
     #[cfg(not(feature = "parallel"))]
     let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize);
     #[cfg(feature = "parallel")]
-    let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize, test_runtime());
+    let ctx = Context::new(
+        &(fe as fn(&[u8; 1]) -> u8),
+        &mut rng,
+        &Maximize,
+        test_runtime(),
+    );
     let state = make_state();
 
-    let mut tracker = Tracker { started: false, generations: 0, ended: false };
+    let mut tracker = Tracker {
+        started: false,
+        generations: 0,
+        ended: false,
+    };
     tracker.on_start(&state, &ctx);
     tracker.on_generation(&state, &ctx);
     tracker.on_generation(&state, &ctx);
@@ -62,7 +71,12 @@ fn noop_observer_compiles() {
     #[cfg(not(feature = "parallel"))]
     let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize);
     #[cfg(feature = "parallel")]
-    let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize, test_runtime());
+    let ctx = Context::new(
+        &(fe as fn(&[u8; 1]) -> u8),
+        &mut rng,
+        &Maximize,
+        test_runtime(),
+    );
     let state = make_state();
 
     let mut noop = NoOp::new();
@@ -80,7 +94,12 @@ fn default_methods_are_noop() {
     #[cfg(not(feature = "parallel"))]
     let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize);
     #[cfg(feature = "parallel")]
-    let ctx = Context::new(&(fe as fn(&[u8; 1]) -> u8), &mut rng, &Maximize, test_runtime());
+    let ctx = Context::new(
+        &(fe as fn(&[u8; 1]) -> u8),
+        &mut rng,
+        &Maximize,
+        test_runtime(),
+    );
     let state = make_state();
 
     let mut empty = Empty;

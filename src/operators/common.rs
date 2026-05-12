@@ -20,6 +20,26 @@ pub(crate) fn single_point_crossover<T: Clone, const N: usize>(
     (child1, child2)
 }
 
+/// Performs single-point crossover on two variable-length genomes, returning two children.
+pub(crate) fn single_point_crossover_vec<T: Clone>(
+    p1: &[T],
+    p2: &[T],
+    rng: &mut impl Rng,
+) -> (Vec<T>, Vec<T>) {
+    if p1.len() < 2 || p2.len() < 2 {
+        return (p1.to_vec(), p2.to_vec());
+    }
+
+    let ratio: f64 = rng.random();
+    let point1 = ((ratio * p1.len() as f64) as usize).clamp(1, p1.len() - 1);
+    let point2 = ((ratio * p2.len() as f64) as usize).clamp(1, p2.len() - 1);
+
+    let child1 = [&p1[..point1], &p2[point2..]].concat();
+    let child2 = [&p2[..point2], &p1[point1..]].concat();
+
+    (child1, child2)
+}
+
 /// Mutates a genome by replacing a random gene with a new random value.
 pub(crate) fn random_reset_mutate<G, T, R>(genome: &G, rng: &mut R) -> G
 where

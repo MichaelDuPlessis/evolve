@@ -3,7 +3,7 @@ use crate::{
         context::Context, individual::Individual, offspring::Offspring, population::Population,
         state::State,
     },
-    operators::{common::random_reset_mutate, GeneticOperator},
+    operators::{GeneticOperator, common::random_reset_mutate},
     random::Randomizable,
 };
 use rand::{Rng, RngExt, SeedableRng};
