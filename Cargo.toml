@@ -19,4 +19,4 @@ parallel = ["dep:pooled"]
 [dependencies]
 rand = "0.10.0"
 pooled = { version = "0.3", optional = true }
-evolve-derive = { path = "evolve-derive" }
+evolve-derive = { path = "evolve-derive", version = "0.1" }
