@@ -10,6 +10,9 @@ pub trait GrammarDef {
     /// The type used to identify symbols.
     type Symbol: Copy;
 
+    /// The terminal value type.
+    type Terminal: Clone;
+
     /// Returns the start symbol.
     fn start(&self) -> Self::Symbol;
 
@@ -24,10 +27,14 @@ pub trait GrammarDef {
     fn is_terminal(&self, symbol: Self::Symbol) -> bool {
         self.num_productions(symbol) == 0
     }
+
+    /// Returns the terminal value for a terminal symbol.
+    fn terminal_value(&self, symbol: Self::Symbol) -> Self::Terminal;
 }
 
-impl<T> GrammarDef for Grammar<T> {
+impl<T: Clone> GrammarDef for Grammar<T> {
     type Symbol = Symbol;
+    type Terminal = T;
 
     fn start(&self) -> Symbol {
         Symbol::NonTerminal(self.start())
@@ -49,5 +56,12 @@ impl<T> GrammarDef for Grammar<T> {
 
     fn is_terminal(&self, symbol: Symbol) -> bool {
         matches!(symbol, Symbol::Terminal(_))
+    }
+
+    fn terminal_value(&self, symbol: Symbol) -> T {
+        match symbol {
+            Symbol::Terminal(idx) => self.terminals()[idx].clone(),
+            _ => panic!("terminal_value called on non-terminal"),
+        }
     }
 }

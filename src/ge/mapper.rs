@@ -1,7 +1,7 @@
 //! Codon-to-phenotype mapping.
 
 use crate::ge::grammar_def::GrammarDef;
-use crate::ge::phenotype::PhenotypeBuilder;
+use crate::ge::phenotype::{Event, PhenotypeBuilder};
 
 /// Trait bound for codon types. Converts a codon to a choice index.
 pub trait Codon: Clone + Copy {
@@ -39,20 +39,19 @@ impl Codon for usize {
 ///
 /// Returns `None` if codons are exhausted after `max_wraps` wraps before all
 /// non-terminals are expanded.
-pub fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G>>(
+pub fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
     grammar: &G,
     codons: &[C],
     max_wraps: usize,
     mut builder: B,
 ) -> Option<B::Output> {
     let mut stack: Vec<G::Symbol> = vec![grammar.start()];
-    // Track pending end_rule calls: each entry is remaining children count.
     let mut end_rule_stack: Vec<usize> = Vec::new();
     let mut codon_idx: usize = 0;
 
     while let Some(symbol) = stack.pop() {
         if grammar.is_terminal(symbol) {
-            builder.terminal(symbol, grammar);
+            builder.push(Event::Terminal(grammar.terminal_value(symbol)));
         } else {
             let n = grammar.num_productions(symbol);
             let choice = if n == 1 {
@@ -61,7 +60,6 @@ pub fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G>>(
                 if codons.is_empty() {
                     return None;
                 }
-                // Check if consuming this codon would exceed wraps.
                 let current_wrap = codon_idx / codons.len();
                 if current_wrap > max_wraps {
                     return None;
@@ -71,14 +69,12 @@ pub fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G>>(
                 c
             };
 
-            builder.begin_rule(symbol, choice, grammar);
+            builder.push(Event::BeginRule);
             let prod = grammar.production(symbol, choice);
-            // Push in reverse for left-to-right expansion.
             for &s in prod.iter().rev() {
                 stack.push(s);
             }
             end_rule_stack.push(prod.len());
-            // Skip the decrement logic below since we just pushed children.
             continue;
         }
 
@@ -89,7 +85,7 @@ pub fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G>>(
                     *count -= 1;
                     if *count == 0 {
                         end_rule_stack.pop();
-                        builder.end_rule();
+                        builder.push(Event::EndRule);
                     } else {
                         break;
                     }
@@ -105,8 +101,8 @@ pub fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G>>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::ge::grammar::{Grammar, Symbol};
-    use crate::ge::phenotype::{Phenotype, PhenotypeBuilder};
+    use crate::ge::grammar::Grammar;
+    use crate::ge::phenotype::{Event, Phenotype, PhenotypeBuilder};
 
     #[derive(Debug, PartialEq)]
     struct Program(String);
@@ -118,15 +114,13 @@ mod test {
 
     #[derive(Default)]
     struct ProgramBuilder(String);
-    impl PhenotypeBuilder<Grammar<&'static str>> for ProgramBuilder {
+    impl PhenotypeBuilder<&'static str> for ProgramBuilder {
         type Output = Program;
-        fn terminal(&mut self, symbol: Symbol, grammar: &Grammar<&'static str>) {
-            if let Symbol::Terminal(idx) = symbol {
-                self.0.push_str(grammar.terminal_value(idx).as_ref());
+        fn push(&mut self, event: Event<&'static str>) {
+            if let Event::Terminal(val) = event {
+                self.0.push_str(val);
             }
         }
-        fn begin_rule(&mut self, _: Symbol, _: usize, _: &Grammar<&'static str>) {}
-        fn end_rule(&mut self) {}
         fn finish(self) -> Program { Program(self.0) }
     }
 

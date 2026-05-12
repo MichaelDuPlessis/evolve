@@ -1,7 +1,5 @@
 //! Phenotype building during grammar mapping.
 
-use crate::ge::grammar_def::GrammarDef;
-
 /// A runnable phenotype produced by grammatical evolution.
 ///
 /// Represents an evolved program that can be executed with an input
@@ -16,23 +14,26 @@ pub trait Phenotype {
     fn run(&self, input: &Self::Input) -> Self::Output;
 }
 
-/// Trait for building a phenotype during grammar mapping.
+/// An event emitted during grammar mapping.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Event<T> {
+    /// A terminal value was encountered.
+    Terminal(T),
+    /// Entering a rule expansion (going deeper in the tree).
+    BeginRule,
+    /// Finished a rule expansion (coming back up).
+    EndRule,
+}
+
+/// Trait for building a phenotype from a stream of derivation events.
 ///
-/// The mapper calls these methods as it expands the derivation tree.
-/// Implement this to produce ASTs, typed expressions, or any structured
-/// output instead of plain strings.
-pub trait PhenotypeBuilder<G: GrammarDef> {
-    /// The final phenotype type produced.
+/// The mapper calls `push` for each event during derivation, then
+/// calls `finish` to produce the final phenotype.
+pub trait PhenotypeBuilder<T> {
     type Output: Phenotype;
 
-    /// Called when a terminal symbol is encountered.
-    fn terminal(&mut self, symbol: G::Symbol, grammar: &G);
-
-    /// Called when a non-terminal is about to be expanded.
-    fn begin_rule(&mut self, symbol: G::Symbol, production_index: usize, grammar: &G);
-
-    /// Called when a non-terminal's expansion is complete.
-    fn end_rule(&mut self);
+    /// Process a derivation event.
+    fn push(&mut self, event: Event<T>);
 
     /// Consume the builder and produce the final phenotype.
     fn finish(self) -> Self::Output;

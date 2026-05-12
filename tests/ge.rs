@@ -2,9 +2,9 @@ use evolve::{
     algorithm::EvolutionaryAlgorithm,
     fitness::Maximize,
     ge::{
-        grammar::{Grammar, Symbol},
+        grammar::Grammar,
         mapper::map,
-        phenotype::{Phenotype, PhenotypeBuilder},
+        phenotype::{Event, Phenotype, PhenotypeBuilder},
     },
     initialization::RangedRandom,
     operators::sequential::{
@@ -28,13 +28,11 @@ impl Phenotype for TerminalCount {
 #[derive(Default)]
 struct CountBuilder(usize);
 
-impl PhenotypeBuilder<Grammar<&'static str>> for CountBuilder {
+impl PhenotypeBuilder<&'static str> for CountBuilder {
     type Output = TerminalCount;
-    fn terminal(&mut self, symbol: Symbol, _: &Grammar<&'static str>) {
-        if let Symbol::Terminal(_) = symbol { self.0 += 1; }
+    fn push(&mut self, event: Event<&'static str>) {
+        if let Event::Terminal(_) = event { self.0 += 1; }
     }
-    fn begin_rule(&mut self, _: Symbol, _: usize, _: &Grammar<&'static str>) {}
-    fn end_rule(&mut self) {}
     fn finish(self) -> TerminalCount { TerminalCount(self.0) }
 }
 
