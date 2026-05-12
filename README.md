@@ -2,6 +2,8 @@
 
 A generic, composable genetic algorithm framework for Rust.
 
+> **Note:** This library is in rapid development. While breaking changes will be avoided where possible, there is no guarantee of API stability until 1.0.
+
 `evolve` provides the building blocks to assemble genetic algorithms from reusable, type-safe components. Operators are composed using combinators — chain them into pipelines, weight them probabilistically, or repeat them to fill a population — all with zero-cost abstractions.
 
 ## Features
