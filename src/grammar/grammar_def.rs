@@ -1,6 +1,6 @@
 //! The [`GrammarDef`] trait abstracting grammar access for the mapper.
 
-use crate::ge::grammar::{Grammar, Symbol};
+use crate::grammar::grammar::{Grammar, Symbol};
 
 /// Trait abstracting grammar access for the mapper.
 ///

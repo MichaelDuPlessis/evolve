@@ -1,12 +1,11 @@
 use evolve::{
     algorithm::EvolutionaryAlgorithm,
-    fitness::Maximize,
-    ge::{
-        fitness::GeFitness,
+    fitness::{GeFitness, Maximize},
+    grammar::{
         grammar::Grammar,
         mapper::map,
-        phenotype::{Event, Phenotype, PhenotypeBuilder},
     },
+    phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder},
     initialization::RangedRandom,
     operators::sequential::{
         combinator::{Combine, Fill, Pipeline, Weighted},

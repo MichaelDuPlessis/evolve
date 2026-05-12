@@ -1,6 +1,6 @@
 //! Bytecode phenotype — a flat list of instructions executed on a stack machine.
 
-use crate::ge::phenotype::{Event, Phenotype, PhenotypeBuilder};
+use crate::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
 
 /// Trait for types that can be executed as stack machine instructions.
 pub trait Instruction {

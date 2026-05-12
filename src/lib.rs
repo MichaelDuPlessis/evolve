@@ -173,9 +173,10 @@
 pub mod algorithm;
 pub mod core;
 pub mod fitness;
-pub mod ge;
+pub mod grammar;
 pub mod initialization;
 pub mod observer;
 pub mod operators;
+pub mod phenotype;
 pub mod random;
 pub mod termination;

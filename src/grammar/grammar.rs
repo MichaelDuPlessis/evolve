@@ -23,7 +23,7 @@ pub struct Rule {
 /// # Examples
 ///
 /// ```
-/// use evolve::ge::grammar::Grammar;
+/// use evolve::grammar::grammar::Grammar;
 ///
 /// let grammar = Grammar::builder()
 ///     .rule("expr", &[&["expr", "op", "expr"], &["x"]])
@@ -72,7 +72,7 @@ impl<T> Grammar<T> {
 /// # Examples
 ///
 /// ```
-/// use evolve::ge::grammar::GrammarBuilder;
+/// use evolve::grammar::grammar::GrammarBuilder;
 ///
 /// let grammar = GrammarBuilder::new()
 ///     .rule("expr", &[&["expr", "+", "expr"], &["x"]])
