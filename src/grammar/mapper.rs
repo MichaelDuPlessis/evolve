@@ -39,6 +39,39 @@ impl Codon for usize {
 ///
 /// Returns `None` if codons are exhausted after `max_wraps` wraps before all
 /// non-terminals are expanded.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::grammar::grammar::Grammar;
+/// use evolve::grammar::mapper::map;
+/// use evolve::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
+///
+/// struct Program(Vec<&'static str>);
+/// impl Phenotype for Program {
+///     type Input = ();
+///     type Output = Vec<&'static str>;
+///     fn run(&self, _: &()) -> Vec<&'static str> { self.0.clone() }
+/// }
+///
+/// #[derive(Default)]
+/// struct Builder(Vec<&'static str>);
+/// impl PhenotypeBuilder<&'static str> for Builder {
+///     type Output = Program;
+///     fn push(&mut self, event: Event<&'static str>) {
+///         if let Event::Terminal(t) = event { self.0.push(t); }
+///     }
+///     fn finish(self) -> Program { Program(self.0) }
+/// }
+///
+/// let grammar = Grammar::builder()
+///     .rule("expr", &[&["x"], &["y"]])
+///     .start("expr")
+///     .build();
+///
+/// let result = map(&grammar, &[0u8], 0, Builder::default());
+/// assert_eq!(result.unwrap().run(&()), vec!["x"]);
+/// ```
 pub fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
     grammar: &G,
     codons: &[C],
@@ -174,5 +207,32 @@ mod test {
 
         let result = map(&g, &[0u8], 0, ProgramBuilder::default());
         assert_eq!(result.unwrap().run(&()), "hello");
+    }
+
+    #[test]
+    fn empty_codons_multi_production_returns_none() {
+        let g = Grammar::builder()
+            .rule("s", &[&["a"], &["b"]])
+            .start("s")
+            .build();
+
+        let result = map(&g, &[] as &[u8], 0, ProgramBuilder::default());
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn large_codon_values() {
+        let g = Grammar::builder()
+            .rule("s", &[&["a"], &["b"], &["c"]])
+            .start("s")
+            .build();
+
+        // u8::MAX (255) % 3 == 0 → picks "a"
+        let result = map(&g, &[u8::MAX], 0, ProgramBuilder::default());
+        assert_eq!(result.unwrap().run(&()), "a");
+
+        // 254 % 3 == 2 → picks "c"
+        let result = map(&g, &[254u8], 0, ProgramBuilder::default());
+        assert_eq!(result.unwrap().run(&()), "c");
     }
 }

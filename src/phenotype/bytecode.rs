@@ -3,6 +3,34 @@
 use crate::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
 
 /// Trait for types that can be executed as stack machine instructions.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::phenotype::bytecode::{Instruction, Bytecode, BytecodeBuilder};
+/// use evolve::phenotype::phenotype::{Phenotype, PhenotypeBuilder, Event};
+///
+/// #[derive(Clone, PartialEq, Eq, Hash)]
+/// enum Op { Push(i32), Add }
+///
+/// impl Instruction for Op {
+///     type Value = i32;
+///     type Input = ();
+///     fn execute(&self, stack: &mut Vec<i32>, _: &()) {
+///         match self {
+///             Op::Push(n) => stack.push(*n),
+///             Op::Add => {
+///                 let b = stack.pop().unwrap_or(0);
+///                 let a = stack.pop().unwrap_or(0);
+///                 stack.push(a + b);
+///             }
+///         }
+///     }
+/// }
+///
+/// let program = Bytecode(vec![Op::Push(2), Op::Push(3), Op::Add]);
+/// assert_eq!(program.run(&()), 5);
+/// ```
 pub trait Instruction {
     /// The value type on the stack.
     type Value: Default;

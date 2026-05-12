@@ -4,6 +4,23 @@
 ///
 /// Represents an evolved program that can be executed with an input
 /// to produce an output.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::phenotype::phenotype::Phenotype;
+///
+/// struct Adder(i32);
+///
+/// impl Phenotype for Adder {
+///     type Input = i32;
+///     type Output = i32;
+///     fn run(&self, input: &i32) -> i32 { self.0 + input }
+/// }
+///
+/// let program = Adder(5);
+/// assert_eq!(program.run(&3), 8);
+/// ```
 pub trait Phenotype {
     /// The input type the program accepts.
     type Input;
@@ -14,7 +31,7 @@ pub trait Phenotype {
     fn run(&self, input: &Self::Input) -> Self::Output;
 }
 
-/// An event emitted during grammar mapping.
+/// Events emitted during grammar derivation, consumed by a [`PhenotypeBuilder`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Event<T> {
     /// A terminal value was encountered.
@@ -29,6 +46,29 @@ pub enum Event<T> {
 ///
 /// The mapper calls `push` for each event during derivation, then
 /// calls `finish` to produce the final phenotype.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
+///
+/// struct Count(usize);
+/// impl Phenotype for Count {
+///     type Input = ();
+///     type Output = usize;
+///     fn run(&self, _: &()) -> usize { self.0 }
+/// }
+///
+/// #[derive(Default)]
+/// struct Counter(usize);
+/// impl PhenotypeBuilder<&'static str> for Counter {
+///     type Output = Count;
+///     fn push(&mut self, event: Event<&str>) {
+///         if matches!(event, Event::Terminal(_)) { self.0 += 1; }
+///     }
+///     fn finish(self) -> Count { Count(self.0) }
+/// }
+/// ```
 pub trait PhenotypeBuilder<T> {
     type Output: Phenotype;
 

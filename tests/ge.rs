@@ -5,6 +5,7 @@ use evolve::{
         grammar::Grammar,
         mapper::map,
     },
+    phenotype::bytecode::{Bytecode, BytecodeBuilder, Instruction},
     phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder},
     initialization::RangedRandom,
     operators::sequential::{
@@ -168,4 +169,85 @@ fn ge_best_has_valid_phenotype() {
         phenotype.unwrap().run(&()) > 0,
         "Phenotype should have at least one terminal"
     );
+}
+
+// --- Bytecode integration test ---
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+enum Op {
+    Push1,
+    Push2,
+    Add,
+    // Used as non-terminal names
+    Prog,
+    Instr,
+}
+
+impl Instruction for Op {
+    type Value = i32;
+    type Input = ();
+    fn execute(&self, stack: &mut Vec<i32>, _: &()) {
+        match self {
+            Op::Push1 => stack.push(1),
+            Op::Push2 => stack.push(2),
+            Op::Add => {
+                let b = stack.pop().unwrap_or(0);
+                let a = stack.pop().unwrap_or(0);
+                stack.push(a + b);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn op_grammar() -> Grammar<Op> {
+    Grammar::builder()
+        .rule(Op::Prog, &[&[Op::Instr, Op::Prog], &[Op::Instr]])
+        .rule(Op::Instr, &[&[Op::Push1], &[Op::Push2], &[Op::Add]])
+        .start(Op::Prog)
+        .build()
+}
+
+#[test]
+fn ge_bytecode_integration() {
+    let grammar = op_grammar();
+
+    let fitness = GeFitness::<_, u8, i32, _, BytecodeBuilder<Op>>::new(
+        grammar.clone(),
+        2,
+        |p: &Bytecode<Op>| p.run(&()),
+        i32::MIN,
+    );
+
+    let mut ga = EvolutionaryAlgorithm::new(
+        RangedRandom::<u8>::new(5..15),
+        MaxGenerations::new(20),
+        fitness,
+        Fill::from_population_size(Pipeline::new((
+            Combine::new((
+                TournamentSelection::new(nz(3)),
+                TournamentSelection::new(nz(3)),
+            )),
+            SinglePoint::<u8>::new(),
+            RandomReset::<u8>::new(),
+        ))),
+        nz(50),
+        rand::rng(),
+        Maximize,
+    );
+
+    let result = ga.run();
+
+    let fe = GeFitness::<_, u8, i32, _, BytecodeBuilder<Op>>::new(
+        grammar.clone(),
+        2,
+        |p: &Bytecode<Op>| p.run(&()),
+        i32::MIN,
+    );
+
+    let best = result.population.best(&fe, &Maximize);
+    let phenotype = map(&grammar, best.genome(), 2, BytecodeBuilder::<Op>::default());
+    assert!(phenotype.is_some(), "Best individual should produce a valid Bytecode");
+    // Just verify it can run without panicking
+    let _ = phenotype.unwrap().run(&());
 }

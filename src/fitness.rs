@@ -122,6 +122,40 @@ use crate::phenotype::phenotype::PhenotypeBuilder;
 /// - A penalty for individuals that fail to map
 ///
 /// The user never calls `map()` directly.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::fitness::{FitnessEvaluator, GeFitness};
+/// use evolve::grammar::grammar::Grammar;
+/// use evolve::phenotype::phenotype::{Event, Phenotype, PhenotypeBuilder};
+///
+/// struct Len(usize);
+/// impl Phenotype for Len {
+///     type Input = ();
+///     type Output = usize;
+///     fn run(&self, _: &()) -> usize { self.0 }
+/// }
+///
+/// #[derive(Default)]
+/// struct LenBuilder(usize);
+/// impl PhenotypeBuilder<&'static str> for LenBuilder {
+///     type Output = Len;
+///     fn push(&mut self, event: Event<&str>) {
+///         if matches!(event, Event::Terminal(_)) { self.0 += 1; }
+///     }
+///     fn finish(self) -> Len { Len(self.0) }
+/// }
+///
+/// let grammar = Grammar::builder()
+///     .rule("s", &[&["a", "b"], &["c"]])
+///     .start("s")
+///     .build();
+///
+/// let ge = GeFitness::<_, u8, _, _, LenBuilder>::new(grammar, 3, |p: &Len| p.run(&()), 0);
+/// assert_eq!(ge.evaluate(&vec![0u8]), 2);  // production 0 has 2 terminals
+/// assert_eq!(ge.evaluate(&vec![1u8]), 1);  // production 1 has 1 terminal
+/// ```
 pub struct GeFitness<G, C, F, E, B> {
     grammar: G,
     max_wraps: usize,

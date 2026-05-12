@@ -6,6 +6,21 @@ use crate::grammar::grammar::{Grammar, Symbol};
 ///
 /// Both the built-in [`Grammar`] struct and user-defined types can implement
 /// this to work with [`map()`](super::mapper::map).
+///
+/// # Examples
+///
+/// ```
+/// use evolve::grammar::grammar::Grammar;
+/// use evolve::grammar::grammar_def::GrammarDef;
+///
+/// let grammar = Grammar::builder()
+///     .rule("s", &[&["a"], &["b"]])
+///     .start("s")
+///     .build();
+///
+/// let start = GrammarDef::start(&grammar);
+/// assert_eq!(grammar.num_productions(start), 2);
+/// ```
 pub trait GrammarDef {
     /// The type used to identify symbols.
     type Symbol: Copy;
@@ -63,5 +78,50 @@ impl<T: Clone> GrammarDef for Grammar<T> {
             Symbol::Terminal(idx) => self.terminals()[idx].clone(),
             _ => panic!("terminal_value called on non-terminal"),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    fn simple_grammar() -> Grammar<&'static str> {
+        Grammar::builder()
+            .rule("s", &[&["a"], &["b"], &["c"]])
+            .start("s")
+            .build()
+    }
+
+    #[test]
+    fn start_returns_non_terminal() {
+        let g = simple_grammar();
+        assert_eq!(GrammarDef::start(&g), Symbol::NonTerminal(0));
+    }
+
+    #[test]
+    fn num_productions_for_terminal() {
+        let g = simple_grammar();
+        assert_eq!(g.num_productions(Symbol::Terminal(0)), 0);
+    }
+
+    #[test]
+    fn num_productions_for_non_terminal() {
+        let g = simple_grammar();
+        assert_eq!(g.num_productions(Symbol::NonTerminal(0)), 3);
+    }
+
+    #[test]
+    fn is_terminal() {
+        let g = simple_grammar();
+        assert!(g.is_terminal(Symbol::Terminal(0)));
+        assert!(!g.is_terminal(Symbol::NonTerminal(0)));
+    }
+
+    #[test]
+    fn terminal_value() {
+        let g = simple_grammar();
+        assert_eq!(GrammarDef::terminal_value(&g, Symbol::Terminal(0)), "a");
+        assert_eq!(GrammarDef::terminal_value(&g, Symbol::Terminal(1)), "b");
+        assert_eq!(GrammarDef::terminal_value(&g, Symbol::Terminal(2)), "c");
     }
 }
