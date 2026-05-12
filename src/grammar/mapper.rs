@@ -80,7 +80,8 @@ pub(crate) fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
 
         // After processing a terminal, decrement parent counters.
         while let Some(count) = end_rule_stack.last_mut() {
-            if *count - 1 == 0 {
+            *count -= 1;
+            if *count == 0 {
                 end_rule_stack.pop();
                 builder.push(Event::EndRule);
             } else {

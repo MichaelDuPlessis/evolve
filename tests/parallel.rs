@@ -306,3 +306,112 @@ fn parallel_repeat_large_count() {
     // Each rep produces 2 individuals (one per input), so 50 * 2 = 100
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 100);
 }
+
+// ── Full GA with parallel pipeline operators ──
+
+#[test]
+fn parallel_ga_full_pipeline() {
+    use evolve::operators::parallel::combinator::Combine;
+
+    let fitness_fn = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+
+    let mut ga = EvolutionaryAlgorithm::builder(nz(200))
+        .initializer(Random::new())
+        .termination(MaxGenerations::new(100))
+        .fitness(fitness_fn)
+        .operators(Fill::new(RandomReset::<u8>::new(), 200))
+        .rng(SmallRng::seed_from_u64(42))
+        .comparator(Maximize)
+        .runtime(pooled::Runtime::new(4))
+        .build();
+
+    let result = ga.run();
+    let best = *result.population.best(&fitness_fn, &Maximize).fitness(&fitness_fn);
+
+    // With 200 generations and pop 200, maximize sum of 4 bytes should get close to max (1020)
+    assert!(
+        best > 500,
+        "parallel GA should find good solutions, got {best}"
+    );
+}
+
+// ── GE with parallel operators ──
+
+#[test]
+fn parallel_ge_runs_to_completion() {
+    use evolve::{
+        fitness::GeFitness,
+        grammar::Grammar,
+        initialization::RangedRandom,
+        phenotype::{Event, Phenotype, PhenotypeBuilder},
+    };
+
+    struct TerminalCount(usize);
+    impl Phenotype for TerminalCount {
+        type Input = ();
+        type Output = usize;
+        fn run(&self, _: &()) -> usize {
+            self.0
+        }
+    }
+
+    #[derive(Default)]
+    struct CountBuilder(usize);
+    impl PhenotypeBuilder<&'static str> for CountBuilder {
+        type Output = TerminalCount;
+        fn push(&mut self, event: Event<&'static str>) {
+            if let Event::Terminal(_) = event {
+                self.0 += 1;
+            }
+        }
+        fn finish(self) -> TerminalCount {
+            TerminalCount(self.0)
+        }
+    }
+
+    let grammar = Grammar::builder()
+        .rule("expr", &[&["expr", "op", "expr"], &["var"], &["const"]])
+        .rule("op", &[&["+"], &["-"], &["*"]])
+        .rule("var", &[&["x"], &["y"]])
+        .rule("const", &[&["1"], &["2"]])
+        .start("expr")
+        .build();
+
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
+        grammar,
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
+
+    let mut ga = EvolutionaryAlgorithm::builder(nz(100))
+        .initializer(RangedRandom::<u8>::new(5..20))
+        .termination(MaxGenerations::new(50))
+        .fitness(fitness)
+        .operators(Fill::new(RandomReset::<u8>::new(), 100))
+        .rng(SmallRng::seed_from_u64(42))
+        .comparator(Maximize)
+        .runtime(pooled::Runtime::new(2))
+        .build();
+
+    let result = ga.run();
+
+    let fe = GeFitness::<_, u8, f64, _, CountBuilder>::new(
+        Grammar::builder()
+            .rule("expr", &[&["expr", "op", "expr"], &["var"], &["const"]])
+            .rule("op", &[&["+"], &["-"], &["*"]])
+            .rule("var", &[&["x"], &["y"]])
+            .rule("const", &[&["1"], &["2"]])
+            .start("expr")
+            .build(),
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
+
+    let best_fitness = fe.evaluate(result.population.best(&fe, &Maximize).genome());
+    assert!(
+        best_fitness > 0.0,
+        "parallel GE should produce valid phenotypes, got {best_fitness}"
+    );
+}

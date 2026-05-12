@@ -245,3 +245,54 @@ fn ge_bytecode_integration() {
         "Best individual should produce a valid Bytecode"
     );
 }
+
+#[test]
+fn ge_improves_fitness_over_generations() {
+    use rand::SeedableRng;
+
+    let fitness_fn = |p: &TerminalCount| p.run(&()) as f64;
+
+    let make_fitness = || {
+        GeFitness::<_, u8, f64, _, CountBuilder>::new(arithmetic_grammar(), 3, fitness_fn, -1.0)
+    };
+
+    let ops = || {
+        Fill::from_population_size(Pipeline::new((
+            Combine::new((
+                TournamentSelection::new(nz(3)),
+                TournamentSelection::new(nz(3)),
+            )),
+            SinglePoint::<u8>::new(),
+            RandomReset::<u8>::new(),
+        )))
+    };
+
+    let mut ga_short = EvolutionaryAlgorithm::new(
+        RangedRandom::<u8>::new(5..20),
+        MaxGenerations::new(1),
+        make_fitness(),
+        ops(),
+        nz(100),
+        rand::rngs::SmallRng::seed_from_u64(42),
+        Maximize,
+    );
+
+    let mut ga_long = EvolutionaryAlgorithm::new(
+        RangedRandom::<u8>::new(5..20),
+        MaxGenerations::new(100),
+        make_fitness(),
+        ops(),
+        nz(100),
+        rand::rngs::SmallRng::seed_from_u64(42),
+        Maximize,
+    );
+
+    let fe = make_fitness();
+    let short_best = fe.evaluate(ga_short.run().population.best(&fe, &Maximize).genome());
+    let long_best = fe.evaluate(ga_long.run().population.best(&fe, &Maximize).genome());
+
+    assert!(
+        long_best >= short_best,
+        "100 generations ({long_best}) should be >= 1 generation ({short_best})"
+    );
+}
