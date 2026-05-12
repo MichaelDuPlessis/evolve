@@ -46,6 +46,12 @@ where
         for individual in state.population() {
             let genome = individual.genome();
             let len = genome.len();
+
+            if len == 0 {
+                population.add(Individual::new(genome.clone()));
+                continue;
+            }
+
             let max_seg = ((len as f64 * self.max_segment_fraction).floor() as usize).max(1);
             let seg_len = ctx.rng().random_range(1..=max_seg);
 

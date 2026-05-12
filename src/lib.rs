@@ -180,7 +180,7 @@
 //!   [`grammar!`] proc-macro from `evolve-derive` for zero-cost compile-time grammars.
 //! - [`GeFitness`](fitness::GeFitness) wraps the codon→phenotype→fitness pipeline automatically,
 //!   handling grammar mapping and builder invocation.
-//! - [`Bytecode<T>`](phenotype::Bytecode) and the [`Instruction`](phenotype::Instruction) trait
+//! - [`Bytecode<T>`](phenotype::bytecode::Bytecode) and the [`Instruction`](phenotype::bytecode::Instruction) trait
 //!   provide a built-in stack-machine execution engine for evolved programs.
 //! - Variable-length genome operators are included:
 //!   [`RangedRandom`](initialization::RangedRandom) for initialization,

@@ -36,6 +36,7 @@ pub enum Event<T> {
 /// }
 /// ```
 pub trait PhenotypeBuilder<T> {
+    /// The type produced by the builder.
     type Output;
 
     /// Process a derivation event.

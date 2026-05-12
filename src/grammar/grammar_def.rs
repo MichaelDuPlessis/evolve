@@ -5,7 +5,7 @@ use crate::grammar::{Grammar, Symbol};
 /// Trait abstracting grammar access for the mapper.
 ///
 /// Both the built-in [`Grammar`] struct and user-defined types can implement
-/// this to work with [`map()`](super::mapper::map).
+/// this to work with `map()`.
 ///
 /// # Examples
 ///

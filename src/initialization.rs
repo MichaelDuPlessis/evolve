@@ -112,7 +112,12 @@ pub struct RangedRandom<T> {
 
 impl<T> RangedRandom<T> {
     /// Creates a new `RangedRandom` initializer with the given length range.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `length_range` is empty.
     pub fn new(length_range: Range<usize>) -> Self {
+        assert!(!length_range.is_empty(), "length_range must be non-empty");
         Self {
             length_range,
             _marker: PhantomData,

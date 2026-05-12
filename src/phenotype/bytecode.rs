@@ -28,7 +28,7 @@ use crate::phenotype::{Event, PhenotypeBuilder};
 ///     }
 /// }
 ///
-/// let program = Bytecode(vec![Op::Push(2), Op::Push(3), Op::Add]);
+/// let program = Bytecode::new(vec![Op::Push(2), Op::Push(3), Op::Add]);
 /// assert_eq!(program.run(&()), 5);
 /// ```
 pub trait Instruction {
@@ -42,9 +42,18 @@ pub trait Instruction {
 }
 
 /// A bytecode program — a flat list of instructions.
-pub struct Bytecode<T>(pub Vec<T>);
+pub struct Bytecode<T>(Vec<T>);
+
+impl<T> Bytecode<T> {
+    /// Creates a new bytecode program from a list of instructions.
+    pub fn new(instructions: Vec<T>) -> Self { Self(instructions) }
+
+    /// Returns the instructions.
+    pub fn instructions(&self) -> &[T] { &self.0 }
+}
 
 impl<T: Instruction> Bytecode<T> {
+    /// Executes the bytecode program with the given input, returning the final stack value.
     pub fn run(&self, input: &T::Input) -> T::Value {
         let mut stack = Vec::new();
         for instruction in &self.0 {
@@ -107,7 +116,7 @@ mod tests {
 
     #[test]
     fn bytecode_runs_stack_machine() {
-        let prog = Bytecode(vec![Op::InputX, Op::Push(3.0), Op::Add]);
+        let prog = Bytecode::new(vec![Op::InputX, Op::Push(3.0), Op::Add]);
         assert_eq!(prog.run(&2.0), 5.0);
     }
 
@@ -125,7 +134,7 @@ mod tests {
 
     #[test]
     fn empty_program_returns_default() {
-        let prog: Bytecode<Op> = Bytecode(vec![]);
+        let prog: Bytecode<Op> = Bytecode::new(vec![]);
         assert_eq!(prog.run(&1.0), 0.0);
     }
 }
