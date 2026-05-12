@@ -6,7 +6,7 @@ authors = ["Michael du Plessis"]
 description = "Proc-macro crate for the evolve genetic algorithm framework — provides the grammar! macro"
 license = "MIT"
 repository = "https://github.com/MichaelDuPlessis/evolve"
-keywords = ["genetic-algorithm", "ge", "macro", "grammar"]
+keywords = ["genetic-algorithm", "ge", "ga", "macro", "grammar"]
 categories = ["artificial-intelligence", "algorithms"]
 
 [lib]
