@@ -2,10 +2,9 @@ use evolve::{
     algorithm::EvolutionaryAlgorithm,
     fitness::Maximize,
     ge::{
-        fitness::GeFitness,
-        grammar::Grammar,
+        grammar::{Grammar, Symbol},
         mapper::map,
-        phenotype::StringBuilder,
+        phenotype::{Phenotype, PhenotypeBuilder},
     },
     initialization::RangedRandom,
     operators::sequential::{
@@ -17,6 +16,27 @@ use evolve::{
     termination::MaxGenerations,
 };
 use std::num::NonZero;
+
+struct TerminalCount(usize);
+
+impl Phenotype for TerminalCount {
+    type Input = ();
+    type Output = usize;
+    fn run(&self, _: &()) -> usize { self.0 }
+}
+
+#[derive(Default)]
+struct CountBuilder(usize);
+
+impl PhenotypeBuilder<Grammar<&'static str>> for CountBuilder {
+    type Output = TerminalCount;
+    fn terminal(&mut self, symbol: Symbol, _: &Grammar<&'static str>) {
+        if let Symbol::Terminal(_) = symbol { self.0 += 1; }
+    }
+    fn begin_rule(&mut self, _: Symbol, _: usize, _: &Grammar<&'static str>) {}
+    fn end_rule(&mut self) {}
+    fn finish(self) -> TerminalCount { TerminalCount(self.0) }
+}
 
 fn nz(n: usize) -> NonZero<usize> {
     NonZero::new(n).unwrap()
@@ -39,12 +59,15 @@ fn arithmetic_grammar() -> Grammar<&'static str> {
 #[test]
 fn ge_runs_to_completion() {
     let grammar = arithmetic_grammar();
-    let fitness = GeFitness::<_, u8, f64, _, StringBuilder>::new(
-        grammar,
-        3,
-        |p: &String| p.len() as f64,
-        -1.0,
-    );
+    let fitness = {
+        let g = grammar.clone();
+        move |genome: &Vec<u8>| -> f64 {
+            match map(&g, genome, 3, CountBuilder::default()) {
+                Some(p) => p.run(&()) as f64,
+                None => -1.0,
+            }
+        }
+    };
 
     let mut ga = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..20),
@@ -69,12 +92,15 @@ fn ge_runs_to_completion() {
 #[test]
 fn ge_with_segment_operators() {
     let grammar = arithmetic_grammar();
-    let fitness = GeFitness::<_, u8, f64, _, StringBuilder>::new(
-        grammar,
-        3,
-        |p: &String| p.len() as f64,
-        -1.0,
-    );
+    let fitness = {
+        let g = grammar.clone();
+        move |genome: &Vec<u8>| -> f64 {
+            match map(&g, genome, 3, CountBuilder::default()) {
+                Some(p) => p.run(&()) as f64,
+                None => -1.0,
+            }
+        }
+    };
 
     let mut ga = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..20),
@@ -103,13 +129,15 @@ fn ge_with_segment_operators() {
 #[test]
 fn ge_best_has_valid_phenotype() {
     let grammar = arithmetic_grammar();
-
-    let fitness = GeFitness::<_, u8, f64, _, StringBuilder>::new(
-        grammar.clone(),
-        3,
-        |p: &String| p.len() as f64,
-        -1.0,
-    );
+    let fitness = {
+        let g = grammar.clone();
+        move |genome: &Vec<u8>| -> f64 {
+            match map(&g, genome, 3, CountBuilder::default()) {
+                Some(p) => p.run(&()) as f64,
+                None => -1.0,
+            }
+        }
+    };
 
     let mut ga = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..20),
@@ -130,28 +158,27 @@ fn ge_best_has_valid_phenotype() {
 
     let result = ga.run();
 
-    let ge_fitness = GeFitness::<_, u8, f64, _, StringBuilder>::new(
-        grammar.clone(),
-        3,
-        |p: &String| p.len() as f64,
-        -1.0,
-    );
+    let fe = |genome: &Vec<u8>| -> f64 {
+        match map(&grammar, genome, 3, CountBuilder::default()) {
+            Some(p) => p.run(&()) as f64,
+            None => -1.0,
+        }
+    };
 
-    let best = result.population.best(&ge_fitness, &Maximize);
+    let best = result.population.best(&fe, &Maximize);
 
-    // Verify the best individual can be mapped through the grammar
     let phenotype = map(
         &grammar,
         best.genome(),
         3,
-        StringBuilder::new(),
+        CountBuilder::default(),
     );
     assert!(
         phenotype.is_some(),
         "Best individual should produce a valid phenotype"
     );
     assert!(
-        !phenotype.unwrap().is_empty(),
-        "Phenotype should be non-empty"
+        phenotype.unwrap().run(&()) > 0,
+        "Phenotype should have at least one terminal"
     );
 }

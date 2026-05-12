@@ -21,7 +21,9 @@ pub trait GrammarDef {
     fn production(&self, symbol: Self::Symbol, index: usize) -> &[Self::Symbol];
 
     /// Returns true if the symbol is a terminal.
-    fn is_terminal(&self, symbol: Self::Symbol) -> bool;
+    fn is_terminal(&self, symbol: Self::Symbol) -> bool {
+        self.num_productions(symbol) == 0
+    }
 }
 
 impl<T> GrammarDef for Grammar<T> {

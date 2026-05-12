@@ -39,26 +39,6 @@ impl Codon for usize {
 ///
 /// Returns `None` if codons are exhausted after `max_wraps` wraps before all
 /// non-terminals are expanded.
-///
-/// # Examples
-///
-/// ```
-/// use evolve::ge::grammar::Grammar;
-/// use evolve::ge::mapper::map;
-/// use evolve::ge::phenotype::StringBuilder;
-///
-/// let grammar = Grammar::builder()
-///     .rule("expr", &[&["x"], &["y"]])
-///     .start("expr")
-///     .build();
-///
-/// // Codon 0 → first production "x", codon 1 → second production "y"
-/// let result = map(&grammar, &[0u8], 0, StringBuilder::new());
-/// assert_eq!(result, Some("x".to_string()));
-///
-/// let result = map(&grammar, &[1u8], 0, StringBuilder::new());
-/// assert_eq!(result, Some("y".to_string()));
-/// ```
 pub fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G>>(
     grammar: &G,
     codons: &[C],
@@ -125,8 +105,30 @@ pub fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G>>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::ge::grammar::Grammar;
-    use crate::ge::phenotype::StringBuilder;
+    use crate::ge::grammar::{Grammar, Symbol};
+    use crate::ge::phenotype::{Phenotype, PhenotypeBuilder};
+
+    #[derive(Debug, PartialEq)]
+    struct Program(String);
+    impl Phenotype for Program {
+        type Input = ();
+        type Output = String;
+        fn run(&self, _: &()) -> String { self.0.clone() }
+    }
+
+    #[derive(Default)]
+    struct ProgramBuilder(String);
+    impl PhenotypeBuilder<Grammar<&'static str>> for ProgramBuilder {
+        type Output = Program;
+        fn terminal(&mut self, symbol: Symbol, grammar: &Grammar<&'static str>) {
+            if let Symbol::Terminal(idx) = symbol {
+                self.0.push_str(grammar.terminal_value(idx).as_ref());
+            }
+        }
+        fn begin_rule(&mut self, _: Symbol, _: usize, _: &Grammar<&'static str>) {}
+        fn end_rule(&mut self) {}
+        fn finish(self) -> Program { Program(self.0) }
+    }
 
     fn expr_grammar() -> Grammar<&'static str> {
         Grammar::builder()
@@ -139,56 +141,44 @@ mod test {
     #[test]
     fn simple_terminal() {
         let g = expr_grammar();
-        // codon 1 % 3 = 1 → "x"
-        let result = map(&g, &[1u8], 0, StringBuilder::new());
-        assert_eq!(result, Some("x".to_string()));
+        let result = map(&g, &[1u8], 0, ProgramBuilder::default());
+        assert_eq!(result.unwrap().run(&()), "x");
     }
 
     #[test]
     fn recursive_expansion() {
         let g = expr_grammar();
-        // codon 0 % 3 = 0 → expr op expr
-        // codon 1 % 3 = 1 → "x" (left expr)
-        // codon 0 % 2 = 0 → "+" (op)
-        // codon 2 % 3 = 2 → "1" (right expr)
-        let result = map(&g, &[0u8, 1, 0, 2], 0, StringBuilder::new());
-        assert_eq!(result, Some("x+1".to_string()));
+        let result = map(&g, &[0u8, 1, 0, 2], 0, ProgramBuilder::default());
+        assert_eq!(result.unwrap().run(&()), "x+1");
     }
 
     #[test]
     fn wrapping() {
         let g = expr_grammar();
-        // With only 1 codon [0], it will wrap. codon 0 % 3 = 0 → recursive.
-        // This will keep recursing until wraps exceeded.
-        let result = map(&g, &[0u8], 1, StringBuilder::new());
-        // Should return None because infinite recursion exceeds wraps.
+        let result = map(&g, &[0u8], 1, ProgramBuilder::default());
         assert_eq!(result, None);
     }
 
     #[test]
     fn single_production_no_codon() {
-        // Single-production rules don't consume codons.
         let g = Grammar::builder()
             .rule("s", &[&["greeting"]])
             .rule("greeting", &[&["hi"], &["hello"]])
             .start("s")
             .build();
 
-        // "s" has 1 production → no codon consumed.
-        // "greeting" has 2 → codon 0 % 2 = 0 → "hi"
-        let result = map(&g, &[0u8], 0, StringBuilder::new());
-        assert_eq!(result, Some("hi".to_string()));
+        let result = map(&g, &[0u8], 0, ProgramBuilder::default());
+        assert_eq!(result.unwrap().run(&()), "hi");
     }
 
     #[test]
     fn empty_codons_single_production() {
-        // If all rules have single productions, empty codons should work.
         let g = Grammar::builder()
             .rule("s", &[&["hello"]])
             .start("s")
             .build();
 
-        let result = map(&g, &[0u8], 0, StringBuilder::new());
-        assert_eq!(result, Some("hello".to_string()));
+        let result = map(&g, &[0u8], 0, ProgramBuilder::default());
+        assert_eq!(result.unwrap().run(&()), "hello");
     }
 }
