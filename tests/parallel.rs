@@ -113,12 +113,12 @@ fn parallel_ga_improves_over_generations() {
 
     let short_best = *ga_short
         .run()
-        .population
+        .population()
         .best(&fitness_fn, &Maximize)
         .fitness(&fitness_fn);
     let long_best = *ga_long
         .run()
-        .population
+        .population()
         .best(&fitness_fn, &Maximize)
         .fitness(&fitness_fn);
 
@@ -325,7 +325,7 @@ fn parallel_ga_full_pipeline() {
 
     let result = ga.run();
     let best = *result
-        .population
+        .population()
         .best(&fitness_fn, &Maximize)
         .fitness(&fitness_fn);
 
@@ -408,7 +408,7 @@ fn parallel_ge_runs_to_completion() {
         -1.0,
     );
 
-    let best_fitness = fe.evaluate(result.population.best(&fe, &Maximize).genome());
+    let best_fitness = fe.evaluate(result.population().best(&fe, &Maximize).genome());
     assert!(
         best_fitness > 0.0,
         "parallel GE should produce valid phenotypes, got {best_fitness}"
@@ -443,5 +443,8 @@ fn parallel_single_point_vec_crossover() {
     let child1 = result.as_slice()[0].genome();
     let child2 = result.as_slice()[1].genome();
     let is_recombined = child1 != &vec![0u8; 10] || child2 != &vec![255u8; 10];
-    assert!(is_recombined, "Vec crossover should recombine parent genomes");
+    assert!(
+        is_recombined,
+        "Vec crossover should recombine parent genomes"
+    );
 }

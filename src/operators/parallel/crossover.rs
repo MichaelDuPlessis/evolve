@@ -3,7 +3,10 @@ use crate::{
         context::Context, individual::Individual, offspring::Offspring, population::Population,
         state::State,
     },
-    operators::{GeneticOperator, common::{single_point_crossover, single_point_crossover_vec}},
+    operators::{
+        GeneticOperator,
+        common::{single_point_crossover, single_point_crossover_vec},
+    },
 };
 use rand::{Rng, RngExt, SeedableRng};
 use std::marker::PhantomData;

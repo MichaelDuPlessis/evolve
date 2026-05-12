@@ -42,14 +42,19 @@ pub trait Instruction {
 }
 
 /// A bytecode program — a flat list of instructions.
+#[derive(Debug)]
 pub struct Bytecode<T>(Vec<T>);
 
 impl<T> Bytecode<T> {
     /// Creates a new bytecode program from a list of instructions.
-    pub fn new(instructions: Vec<T>) -> Self { Self(instructions) }
+    pub fn new(instructions: Vec<T>) -> Self {
+        Self(instructions)
+    }
 
     /// Returns the instructions.
-    pub fn instructions(&self) -> &[T] { &self.0 }
+    pub fn instructions(&self) -> &[T] {
+        &self.0
+    }
 }
 
 impl<T: Instruction> Bytecode<T> {
@@ -64,6 +69,7 @@ impl<T: Instruction> Bytecode<T> {
 }
 
 /// Builder that collects terminals into a [`Bytecode`] program.
+#[derive(Debug)]
 pub struct BytecodeBuilder<T>(Vec<T>);
 
 impl<T> Default for BytecodeBuilder<T> {

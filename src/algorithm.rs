@@ -361,3 +361,48 @@ where
         }
     }
 }
+
+impl<G, F, I, T, Fe, Ops, R, C> std::fmt::Debug for EvolutionaryAlgorithm<G, F, I, T, Fe, Ops, R, C>
+where
+    I: std::fmt::Debug,
+    T: std::fmt::Debug,
+    Fe: std::fmt::Debug,
+    Ops: std::fmt::Debug,
+    R: std::fmt::Debug,
+    C: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EvolutionaryAlgorithm")
+            .field("initializer", &self.initializer)
+            .field("termination", &self.termination)
+            .field("fitness_evaluator", &self.fitness_evaluator)
+            .field("operators", &self.operators)
+            .field("population_size", &self.population_size)
+            .field("rng", &self.rng)
+            .field("comparator", &self.comparator)
+            .finish_non_exhaustive()
+    }
+}
+
+impl<G, F, I, T, Fe, Ops, R, C> std::fmt::Debug
+    for EvolutionaryAlgorithmBuilder<G, F, I, T, Fe, Ops, R, C>
+where
+    I: std::fmt::Debug,
+    T: std::fmt::Debug,
+    Fe: std::fmt::Debug,
+    Ops: std::fmt::Debug,
+    R: std::fmt::Debug,
+    C: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EvolutionaryAlgorithmBuilder")
+            .field("initializer", &self.initializer)
+            .field("termination", &self.termination)
+            .field("fitness_evaluator", &self.fitness_evaluator)
+            .field("operators", &self.operators)
+            .field("population_size", &self.population_size)
+            .field("rng", &self.rng)
+            .field("comparator", &self.comparator)
+            .finish_non_exhaustive()
+    }
+}

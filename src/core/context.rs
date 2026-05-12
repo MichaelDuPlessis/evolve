@@ -81,3 +81,18 @@ impl<'a, Fe, R, C> Context<'a, Fe, R, C> {
         self.runtime
     }
 }
+
+impl<'a, Fe, R, C> std::fmt::Debug for Context<'a, Fe, R, C>
+where
+    Fe: std::fmt::Debug,
+    R: std::fmt::Debug,
+    C: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Context")
+            .field("fitness", &self.fitness)
+            .field("rng", &self.rng)
+            .field("comparator", &self.comparator)
+            .finish_non_exhaustive()
+    }
+}

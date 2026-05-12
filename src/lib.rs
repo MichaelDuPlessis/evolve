@@ -45,7 +45,7 @@
 //!
 //! let result = ga.run();
 //! let fe = |args: &[u32; 2]| args[0] as usize + args[1] as usize;
-//! let best = result.population.best(&fe, &Maximize);
+//! let best = result.population().best(&fe, &Maximize);
 //! println!("Best genome: {:?}, fitness: {:?}", best.genome(), best.fitness(&fe));
 //! ```
 //!

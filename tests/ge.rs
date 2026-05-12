@@ -154,7 +154,7 @@ fn ge_best_has_valid_phenotype() {
         -1.0,
     );
 
-    let best = result.population.best(&fe, &Maximize);
+    let best = result.population().best(&fe, &Maximize);
     let fitness = fe.evaluate(best.genome());
     assert!(
         fitness > 0.0,
@@ -236,7 +236,7 @@ fn ge_bytecode_integration() {
         i32::MIN,
     );
 
-    let best = result.population.best(&fe, &Maximize);
+    let best = result.population().best(&fe, &Maximize);
     let fitness = fe.evaluate(best.genome());
     assert!(
         fitness > i32::MIN,
@@ -289,8 +289,8 @@ fn ge_improves_fitness_over_generations() {
     let long_result = ga_long.run();
 
     let fe = make_fitness();
-    let short_best = fe.evaluate(short_result.population.best(&fe, &Maximize).genome());
-    let long_best = fe.evaluate(long_result.population.best(&fe, &Maximize).genome());
+    let short_best = fe.evaluate(short_result.population().best(&fe, &Maximize).genome());
+    let long_best = fe.evaluate(long_result.population().best(&fe, &Maximize).genome());
 
     eprintln!("Short best: {short_best}, Long best: {long_best}");
 

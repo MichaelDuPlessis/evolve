@@ -40,7 +40,7 @@ fn main() {
     );
 
     let result = ga.run();
-    let best = result.population.best(&fitness_fn, &Maximize);
+    let best = result.population().best(&fitness_fn, &Maximize);
     println!("Best genome: {:?}, fitness: {:?}", best.genome(), best.fitness(&fitness_fn));
 }
 ```

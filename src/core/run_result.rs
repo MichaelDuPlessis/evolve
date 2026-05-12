@@ -30,13 +30,30 @@ use crate::core::{population::Population, state::State};
 ///
 /// let result = ga.run();
 /// let fe = |g: &[u8; 2]| g[0] as u16 + g[1] as u16;
-/// let best = result.population.best(&fe, &Maximize);
-/// println!("generations: {}, best fitness: {:?}", result.generations, best.fitness(&fe));
+/// let best = result.population().best(&fe, &Maximize);
+/// println!("generations: {}, best fitness: {:?}", result.generations(), best.fitness(&fe));
 /// ```
 #[derive(Debug)]
 pub struct RunResult<G, F> {
-    pub population: Population<G, F>,
-    pub generations: usize,
+    population: Population<G, F>,
+    generations: usize,
+}
+
+impl<G, F> RunResult<G, F> {
+    /// Returns a reference to the final population.
+    pub fn population(&self) -> &Population<G, F> {
+        &self.population
+    }
+
+    /// Returns the number of generations that were run.
+    pub fn generations(&self) -> usize {
+        self.generations
+    }
+
+    /// Consumes the result and returns the final population.
+    pub fn into_population(self) -> Population<G, F> {
+        self.population
+    }
 }
 
 impl<G, F> From<State<G, F>> for RunResult<G, F> {

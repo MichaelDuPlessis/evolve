@@ -180,12 +180,12 @@ fn maximize_improves_over_generations() {
 
     let short_best = *ga_short
         .run()
-        .population
+        .population()
         .best(&fitness_fn, &Maximize)
         .fitness(&fitness_fn);
     let long_best = *ga_long
         .run()
-        .population
+        .population()
         .best(&fitness_fn, &Maximize)
         .fitness(&fitness_fn);
 
@@ -209,7 +209,7 @@ fn minimize_finds_low_fitness() {
     );
 
     let best = ga.run();
-    let best_ind = best.population.best(&fitness_fn, &Minimize);
+    let best_ind = best.population().best(&fitness_fn, &Minimize);
     assert!(
         *best_ind.fitness(&fitness_fn) < 100,
         "expected low fitness, got {}",
@@ -242,7 +242,7 @@ fn full_pipeline_runs_to_completion() {
     let best = ga.run();
     assert!(
         *best
-            .population
+            .population()
             .best(&fitness_fn, &Maximize)
             .fitness(&fitness_fn)
             > 0
@@ -267,7 +267,7 @@ fn zero_generations_returns_initial_best() {
     let best = ga.run();
     assert!(
         *best
-            .population
+            .population()
             .best(&fitness_fn, &Maximize)
             .fitness(&fitness_fn)
             > 0
@@ -305,7 +305,7 @@ fn weighted_pipeline_with_selection_and_mutation() {
     let best = ga.run();
     assert!(
         *best
-            .population
+            .population()
             .best(&fitness_fn, &Maximize)
             .fitness(&fitness_fn)
             > 0
@@ -352,7 +352,7 @@ fn run_with_observer() {
         generations: 0,
         ended: false,
     });
-    assert!(result.population.len() > 0);
+    assert!(result.population().len() > 0);
 }
 
 // ── Builder ──
@@ -369,7 +369,7 @@ fn builder_with_all_fields() {
         .build();
 
     let result = ga.run();
-    assert!(result.population.len() > 0);
+    assert!(result.population().len() > 0);
 }
 
 #[test]
@@ -384,7 +384,7 @@ fn builder_with_minimize() {
         .build();
 
     let result = ga.run();
-    assert!(result.population.len() > 0);
+    assert!(result.population().len() > 0);
 }
 
 #[test]
@@ -406,7 +406,7 @@ fn builder_with_pipeline() {
         .build();
 
     let result = ga.run();
-    assert!(result.population.len() > 0);
+    assert!(result.population().len() > 0);
 }
 
 #[test]
@@ -421,7 +421,7 @@ fn builder_fields_in_any_order() {
         .build();
 
     let result = ga.run();
-    assert!(result.population.len() > 0);
+    assert!(result.population().len() > 0);
 }
 
 #[test]
@@ -448,6 +448,12 @@ fn ga_with_variable_length_genome() {
     );
 
     let result = ga.run();
-    let best = *result.population.best(&fitness_fn, &Maximize).fitness(&fitness_fn);
-    assert!(best > 100, "variable-length GA should find good solutions, got {best}");
+    let best = *result
+        .population()
+        .best(&fitness_fn, &Maximize)
+        .fitness(&fitness_fn);
+    assert!(
+        best > 100,
+        "variable-length GA should find good solutions, got {best}"
+    );
 }

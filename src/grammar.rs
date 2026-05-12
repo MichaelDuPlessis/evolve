@@ -82,6 +82,7 @@ impl<T> Grammar<T> {
 ///     .start("expr")
 ///     .build();
 /// ```
+#[derive(Debug)]
 pub struct GrammarBuilder<T> {
     rules: Vec<(T, Vec<Vec<T>>)>,
     start: Option<T>,

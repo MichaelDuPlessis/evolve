@@ -154,6 +154,7 @@ use crate::phenotype::PhenotypeBuilder;
 /// assert_eq!(ge.evaluate(&vec![0u8]), 2);  // production 0 has 2 terminals
 /// assert_eq!(ge.evaluate(&vec![1u8]), 1);  // production 1 has 1 terminal
 /// ```
+#[derive(Debug)]
 pub struct GeFitness<G, C, F, E, B> {
     grammar: G,
     max_wraps: usize,
