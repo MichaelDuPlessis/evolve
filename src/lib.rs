@@ -194,7 +194,6 @@ pub mod core;
 pub mod fitness;
 pub mod grammar;
 pub mod initialization;
-pub mod observer;
 pub mod operators;
 pub mod phenotype;
 pub mod random;

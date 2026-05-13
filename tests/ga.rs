@@ -312,12 +312,13 @@ fn weighted_pipeline_with_selection_and_mutation() {
     );
 }
 
-// ── Observer via run_with ──
+// ── Collector via run_with ──
 
 #[test]
-fn run_with_observer() {
-    use evolve::core::{context::Context, state::State};
-    use evolve::observer::Observer;
+fn run_with_collector() {
+    use evolve::collector::Collector;
+    use evolve::core::state::State;
+    use evolve::fitness::{FitnessComparator, FitnessEvaluator};
 
     struct Counter {
         started: bool,
@@ -325,15 +326,36 @@ fn run_with_observer() {
         ended: bool,
     }
 
-    impl<G, F, Fe, R, C> Observer<G, F, Fe, R, C> for Counter {
-        fn on_start(&mut self, _: &State<G, F>, _: &Context<Fe, R, C>) {
+    struct CounterResult {
+        started: bool,
+        generations: usize,
+        ended: bool,
+        population_len: usize,
+    }
+
+    impl<G, F, Fe, C> Collector<G, F, Fe, C> for Counter
+    where
+        Fe: FitnessEvaluator<G, F>,
+        C: FitnessComparator<F>,
+    {
+        type Result = CounterResult;
+
+        fn on_start(&mut self, _: &State<G, F>, _: &Fe, _: &C) {
             self.started = true;
         }
-        fn on_generation(&mut self, _: &State<G, F>, _: &Context<Fe, R, C>) {
+        fn on_generation(&mut self, _: &State<G, F>, _: &Fe, _: &C) {
             self.generations += 1;
         }
-        fn on_end(&mut self, _: &State<G, F>, _: &Context<Fe, R, C>) {
+        fn on_end(&mut self, _: &State<G, F>, _: &Fe, _: &C) {
             self.ended = true;
+        }
+        fn finalize(self, state: State<G, F>) -> Self::Result {
+            CounterResult {
+                started: self.started,
+                generations: self.generations,
+                ended: self.ended,
+                population_len: state.population().len(),
+            }
         }
     }
 
@@ -352,7 +374,10 @@ fn run_with_observer() {
         generations: 0,
         ended: false,
     });
-    assert!(result.population().len() > 0);
+    assert!(result.started);
+    assert_eq!(result.generations, 5);
+    assert!(result.ended);
+    assert!(result.population_len > 0);
 }
 
 // ── Builder ──
