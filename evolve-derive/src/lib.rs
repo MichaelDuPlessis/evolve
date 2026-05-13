@@ -37,7 +37,9 @@ impl Parse for Rule {
 }
 
 struct GrammarInput {
+    grammar_vis: syn::Visibility,
     grammar_name: Ident,
+    symbol_vis: syn::Visibility,
     symbol_name: Ident,
     start: Ident,
     rules: Vec<Rule>,
@@ -49,6 +51,7 @@ impl Parse for GrammarInput {
         if kw != "grammar" {
             return Err(syn::Error::new(kw.span(), "expected `grammar`"));
         }
+        let grammar_vis: syn::Visibility = input.parse()?;
         let grammar_name: Ident = input.parse()?;
         input.parse::<Token![;]>()?;
 
@@ -56,6 +59,7 @@ impl Parse for GrammarInput {
         if kw != "symbol" {
             return Err(syn::Error::new(kw.span(), "expected `symbol`"));
         }
+        let symbol_vis: syn::Visibility = input.parse()?;
         let symbol_name: Ident = input.parse()?;
         input.parse::<Token![;]>()?;
 
@@ -71,7 +75,9 @@ impl Parse for GrammarInput {
             rules.push(input.parse()?);
         }
         Ok(GrammarInput {
+            grammar_vis,
             grammar_name,
+            symbol_vis,
             symbol_name,
             start,
             rules,
@@ -153,13 +159,16 @@ pub fn grammar(input: TokenStream) -> TokenStream {
     // Generate is_terminal match: rule names are non-terminals
     let non_terminal_names: Vec<_> = rule_names.iter().collect();
 
+    let grammar_vis = &input.grammar_vis;
+    let symbol_vis = &input.symbol_vis;
+
     let expanded = quote! {
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-        enum #symbol_name {
+        #symbol_vis enum #symbol_name {
             #(#all_symbols),*
         }
 
-        struct #grammar_name;
+        #grammar_vis struct #grammar_name;
 
         impl evolve::grammar::grammar_def::GrammarDef for #grammar_name {
             type Symbol = #symbol_name;
