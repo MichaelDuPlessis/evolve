@@ -191,6 +191,7 @@ pub use evolve_derive::grammar;
 pub mod algorithm;
 pub mod collector;
 pub mod core;
+pub mod experiment;
 pub mod fitness;
 pub mod grammar;
 pub mod initialization;
