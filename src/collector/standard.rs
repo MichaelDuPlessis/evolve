@@ -7,6 +7,35 @@ use crate::fitness::{FitnessComparator, FitnessEvaluator};
 use std::time::{Duration, Instant};
 
 /// Collects best fitness per generation and timing data during a run.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::{
+///     algorithm::EvolutionaryAlgorithm,
+///     collector::standard::Standard,
+///     fitness::Maximize,
+///     initialization::Random,
+///     operators::sequential::combinator::Fill,
+///     operators::sequential::mutation::RandomReset,
+///     termination::MaxGenerations,
+/// };
+/// use std::num::NonZero;
+///
+/// let mut ea = EvolutionaryAlgorithm::new(
+///     Random::new(),
+///     MaxGenerations::new(10),
+///     |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+///     Fill::from_population_size(RandomReset::new()),
+///     NonZero::new(50).unwrap(),
+///     rand::rng(),
+///     Maximize,
+/// );
+///
+/// let result = ea.run_with(Standard::default());
+/// assert_eq!(result.generations(), 10);
+/// assert_eq!(result.best_fitness().len(), 10);
+/// ```
 pub struct Standard<F> {
     start_time: Option<Instant>,
     best_fitness: Vec<F>,

@@ -243,6 +243,76 @@ let result = ea.run();
 
 GE benefits from variable-length genomes. Use `RangedRandom` for initialization (produces genomes of random length within a range) and the variable-length mutation operators `SegmentDuplication` and `SegmentDeletion` to explore different codon lengths during evolution.
 
+## Collectors
+
+The `run()` method uses a `Standard` collector that records best fitness and timing per generation:
+
+```rust
+let result = ea.run();
+println!("generations: {}", result.generations());
+println!("total time: {:?}", result.total_duration());
+println!("best fitness per gen: {:?}", result.best_fitness());
+println!("gen 50: {:?}", result.generation(50));
+```
+
+Use `run_with` for a different collector:
+
+```rust
+use evolve::collector::{Basic, NoOp, Logger};
+
+let result = ea.run_with(Basic);           // just population + generation count
+ea.run_with(NoOp);                         // discard everything, returns ()
+ea.run_with(Logger::default());            // prints each generation, returns ()
+ea.run_with(Logger::with_collector(        // prints + collects
+    NonZero::new(10).unwrap(),
+    Standard::default(),
+));
+```
+
+Implement the `Collector` trait for custom data collection:
+
+```rust
+use evolve::collector::Collector;
+use evolve::core::state::State;
+
+struct DiversityCollector(Vec<usize>);
+
+impl<Fe, C> Collector<[u8; 4], u32, Fe, C> for DiversityCollector {
+    type Result = Vec<usize>;
+
+    fn on_generation(&mut self, state: &State<[u8; 4], u32>, _fe: &Fe, _cmp: &C) {
+        let unique = state.population().iter()
+            .map(|ind| ind.genome())
+            .collect::<std::collections::HashSet<_>>()
+            .len();
+        self.0.push(unique);
+    }
+
+    fn finalize(self, _state: State<[u8; 4], u32>) -> Self::Result {
+        self.0
+    }
+}
+```
+
+## Experiment Runner
+
+Run multiple independent trials for statistical analysis:
+
+```rust
+use evolve::experiment::Experiment;
+use evolve::collector::standard::Standard;
+
+let results = Experiment::new(
+    || EvolutionaryAlgorithm::new(/* ... */),
+    30,
+    || Standard::default(),
+).run();
+
+for (i, r) in results.iter().enumerate() {
+    println!("Run {}: {} gens, {:?}", i, r.generations(), r.total_duration());
+}
+```
+
 ## Contributing
 
 Contributions are welcome! Feel free to open an issue for bug reports, feature requests, or questions. Pull requests are also appreciated.

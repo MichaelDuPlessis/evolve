@@ -5,6 +5,34 @@ use crate::core::population::Population;
 use crate::core::state::State;
 
 /// A minimal collector that produces a [`RunResult`] with no additional processing.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::{
+///     algorithm::EvolutionaryAlgorithm,
+///     collector::basic::Basic,
+///     fitness::Maximize,
+///     initialization::Random,
+///     operators::sequential::combinator::Fill,
+///     operators::sequential::mutation::RandomReset,
+///     termination::MaxGenerations,
+/// };
+/// use std::num::NonZero;
+///
+/// let mut ea = EvolutionaryAlgorithm::new(
+///     Random::new(),
+///     MaxGenerations::new(10),
+///     |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+///     Fill::from_population_size(RandomReset::new()),
+///     NonZero::new(50).unwrap(),
+///     rand::rng(),
+///     Maximize,
+/// );
+///
+/// let result = ea.run_with(Basic);
+/// assert_eq!(result.generations(), 10);
+/// ```
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Basic;
 

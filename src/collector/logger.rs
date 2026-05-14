@@ -9,6 +9,34 @@ use std::num::NonZero;
 ///
 /// Wraps an inner collector, delegating all hooks and adding logging on
 /// [`on_generation`](Collector::on_generation).
+///
+/// # Examples
+///
+/// ```no_run
+/// use evolve::{
+///     algorithm::EvolutionaryAlgorithm,
+///     collector::Logger,
+///     fitness::Maximize,
+///     initialization::Random,
+///     operators::sequential::combinator::Fill,
+///     operators::sequential::mutation::RandomReset,
+///     termination::MaxGenerations,
+/// };
+/// use std::num::NonZero;
+///
+/// let mut ea = EvolutionaryAlgorithm::new(
+///     Random::new(),
+///     MaxGenerations::new(100),
+///     |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+///     Fill::from_population_size(RandomReset::new()),
+///     NonZero::new(50).unwrap(),
+///     rand::rng(),
+///     Maximize,
+/// );
+///
+/// // Prints "[gen N] best fitness: F" every 10 generations
+/// ea.run_with(Logger::new(NonZero::new(10).unwrap()));
+/// ```
 pub struct Logger<Col = NoOp> {
     every: usize,
     inner: Col,

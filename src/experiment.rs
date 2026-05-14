@@ -8,6 +8,29 @@ use crate::operators::GeneticOperator;
 use crate::termination::TerminationCondition;
 
 /// Creates a fresh instance for each trial in an experiment.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::experiment::Factory;
+///
+/// // Closures implement Factory automatically:
+/// let mut factory = || 42u32;
+/// assert_eq!(factory.create(), 42);
+///
+/// // Structs can implement it too:
+/// struct Counter(u32);
+/// impl Factory<u32> for Counter {
+///     fn create(&mut self) -> u32 {
+///         self.0 += 1;
+///         self.0
+///     }
+/// }
+///
+/// let mut counter = Counter(0);
+/// assert_eq!(counter.create(), 1);
+/// assert_eq!(counter.create(), 2);
+/// ```
 pub trait Factory<A> {
     /// Create a new instance.
     fn create(&mut self) -> A;
@@ -22,6 +45,38 @@ impl<A, F: FnMut() -> A> Factory<A> for F {
 /// Runs multiple independent trials of an evolutionary algorithm.
 ///
 /// Construct with [`Experiment::new`], then call [`run`](Experiment::run).
+///
+/// # Examples
+///
+/// ```
+/// use evolve::{
+///     algorithm::EvolutionaryAlgorithm,
+///     collector::standard::Standard,
+///     experiment::Experiment,
+///     fitness::Maximize,
+///     initialization::Random,
+///     operators::sequential::combinator::Fill,
+///     operators::sequential::mutation::RandomReset,
+///     termination::MaxGenerations,
+/// };
+/// use std::num::NonZero;
+///
+/// let results = Experiment::new(
+///     || EvolutionaryAlgorithm::new(
+///         Random::new(),
+///         MaxGenerations::new(10),
+///         |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+///         Fill::from_population_size(RandomReset::new()),
+///         NonZero::new(50).unwrap(),
+///         rand::rng(),
+///         Maximize,
+///     ),
+///     3,
+///     || Standard::default(),
+/// ).run();
+///
+/// assert_eq!(results.len(), 3);
+/// ```
 pub struct Experiment<Fac, ColFac> {
     algorithm_factory: Fac,
     trials: usize,

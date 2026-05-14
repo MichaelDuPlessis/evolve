@@ -13,6 +13,27 @@ pub use logger::Logger;
 pub use standard::RunResult;
 
 /// Collects data during an algorithm run and produces a final result.
+///
+/// # Examples
+///
+/// ```
+/// use evolve::collector::Collector;
+/// use evolve::core::state::State;
+///
+/// struct GenerationCounter(usize);
+///
+/// impl<G, F, Fe, C> Collector<G, F, Fe, C> for GenerationCounter {
+///     type Result = usize;
+///
+///     fn on_generation(&mut self, _state: &State<G, F>, _fe: &Fe, _cmp: &C) {
+///         self.0 += 1;
+///     }
+///
+///     fn finalize(self, _state: State<G, F>) -> usize {
+///         self.0
+///     }
+/// }
+/// ```
 pub trait Collector<G, F, Fe, C> {
     type Result;
 
