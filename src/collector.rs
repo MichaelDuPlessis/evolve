@@ -31,3 +31,30 @@ impl<G, F, Fe, C> Collector<G, F, Fe, C> for NoOp {
 
     fn finalize(self, _state: State<G, F>) {}
 }
+
+#[cfg(test)]
+mod test {
+    use crate::algorithm::EvolutionaryAlgorithm;
+    use crate::collector::NoOp;
+    use crate::fitness::Maximize;
+    use crate::initialization::Random;
+    use crate::operators::sequential::combinator::Fill;
+    use crate::operators::sequential::mutation::RandomReset;
+    use crate::termination::MaxGenerations;
+    use std::num::NonZero;
+
+    #[test]
+    fn noop_returns_unit() {
+        let mut ga = EvolutionaryAlgorithm::new(
+            Random::new(),
+            MaxGenerations::new(10),
+            |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+            Fill::from_population_size(RandomReset::new()),
+            NonZero::new(20).unwrap(),
+            rand::rng(),
+            Maximize,
+        );
+        let result = ga.run_with(NoOp);
+        assert_eq!(result, ());
+    }
+}

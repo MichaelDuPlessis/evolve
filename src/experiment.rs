@@ -58,3 +58,25 @@ impl<Fac, ColFac> Experiment<Fac, ColFac> {
             .collect()
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    struct CountingFactory(u32);
+
+    impl Factory<u32> for CountingFactory {
+        fn create(&mut self) -> u32 {
+            self.0 += 1;
+            self.0
+        }
+    }
+
+    #[test]
+    fn factory_trait_on_struct() {
+        let mut factory = CountingFactory(0);
+        assert_eq!(factory.create(), 1);
+        assert_eq!(factory.create(), 2);
+        assert_eq!(factory.create(), 3);
+    }
+}

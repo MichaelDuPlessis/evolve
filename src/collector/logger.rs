@@ -73,3 +73,48 @@ where
         self.inner.finalize(state)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::algorithm::EvolutionaryAlgorithm;
+    use crate::collector::basic::Basic;
+    use crate::collector::standard::Standard;
+    use crate::fitness::Maximize;
+    use crate::initialization::Random;
+    use crate::operators::sequential::combinator::Fill;
+    use crate::operators::sequential::mutation::RandomReset;
+    use crate::termination::MaxGenerations;
+    use std::num::NonZero;
+
+    #[test]
+    fn delegates_to_inner() {
+        let mut ga = EvolutionaryAlgorithm::new(
+            Random::new(),
+            MaxGenerations::new(10),
+            |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+            Fill::from_population_size(RandomReset::new()),
+            NonZero::new(20).unwrap(),
+            rand::rng(),
+            Maximize,
+        );
+        let result = ga.run_with(Logger::with_collector(NonZero::new(1).unwrap(), Standard::default()));
+        assert_eq!(result.generations(), 10);
+        assert!(!result.best_fitness().is_empty());
+    }
+
+    #[test]
+    fn every_n_skips_generations() {
+        let mut ga = EvolutionaryAlgorithm::new(
+            Random::new(),
+            MaxGenerations::new(10),
+            |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+            Fill::from_population_size(RandomReset::new()),
+            NonZero::new(20).unwrap(),
+            rand::rng(),
+            Maximize,
+        );
+        let result = ga.run_with(Logger::with_collector(NonZero::new(5).unwrap(), Basic::new()));
+        assert_eq!(result.generations(), 10);
+    }
+}

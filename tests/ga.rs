@@ -512,3 +512,58 @@ fn experiment_runs_multiple_trials() {
         assert!(!result.best_fitness().is_empty());
     }
 }
+
+#[test]
+fn experiment_with_custom_collector() {
+    use evolve::collector::basic::{self, Basic};
+
+    let experiment = Experiment::new(
+        || {
+            EvolutionaryAlgorithm::new(
+                Random::new(),
+                MaxGenerations::new(10),
+                |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+                Fill::from_population_size(RandomReset::new()),
+                NonZero::new(20).unwrap(),
+                rand::rng(),
+                Maximize,
+            )
+        },
+        3,
+        || Basic::new(),
+    );
+
+    let results: Vec<basic::RunResult<[u8; 2], u16>> = experiment.run();
+    assert_eq!(results.len(), 3);
+    for result in &results {
+        assert_eq!(result.generations(), 10);
+    }
+}
+
+#[test]
+fn factory_trait_on_struct() {
+    use rand::rngs::SmallRng;
+    use std::cell::Cell;
+
+    let seed = Cell::new(42u64);
+    let experiment = Experiment::new(
+        move || {
+            let rng = SmallRng::seed_from_u64(seed.get());
+            seed.set(seed.get() + 1);
+            EvolutionaryAlgorithm::new(
+                Random::new(),
+                MaxGenerations::new(10),
+                |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+                Fill::from_population_size(RandomReset::new()),
+                NonZero::new(20).unwrap(),
+                rng,
+                Maximize,
+            )
+        },
+        3,
+        || Standard::default(),
+    );
+
+    let results = experiment.run();
+    assert_eq!(results.len(), 3);
+}
