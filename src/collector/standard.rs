@@ -137,3 +137,61 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        algorithm::EvolutionaryAlgorithm,
+        fitness::Maximize,
+        initialization::Random,
+        operators::sequential::{combinator::Fill, mutation::RandomReset},
+        termination::MaxGenerations,
+    };
+    use std::num::NonZero;
+
+    fn run_standard() -> super::RunResult<[u8; 2], u16> {
+        let mut ga = EvolutionaryAlgorithm::new(
+            Random::new(),
+            MaxGenerations::new(10),
+            |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+            Fill::from_population_size(RandomReset::new()),
+            NonZero::new(20).unwrap(),
+            rand::rng(),
+            Maximize,
+        );
+        ga.run()
+    }
+
+    #[test]
+    fn correct_generation_count() {
+        let result = run_standard();
+        assert_eq!(result.generations(), 10);
+    }
+
+    #[test]
+    fn best_fitness_has_one_entry_per_generation() {
+        let result = run_standard();
+        assert_eq!(result.best_fitness().len(), 10);
+    }
+
+    #[test]
+    fn generation_durations_has_one_entry_per_generation() {
+        let result = run_standard();
+        assert_eq!(result.generation_durations().len(), 10);
+    }
+
+    #[test]
+    fn generation_returns_correct_data() {
+        let result = run_standard();
+        let record = result.generation(0).unwrap();
+        assert_eq!(record.best_fitness(), &result.best_fitness()[0]);
+        assert_eq!(record.duration(), result.generation_durations()[0]);
+    }
+
+    #[test]
+    fn generation_out_of_bounds_returns_none() {
+        let result = run_standard();
+        assert!(result.generation(10).is_none());
+        assert!(result.generation(100).is_none());
+    }
+}

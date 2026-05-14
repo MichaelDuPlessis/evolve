@@ -49,3 +49,45 @@ impl<G, F, Fe, C> Collector<G, F, Fe, C> for Basic {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        algorithm::EvolutionaryAlgorithm,
+        fitness::Maximize,
+        initialization::Random,
+        operators::sequential::{combinator::Fill, mutation::RandomReset},
+        termination::MaxGenerations,
+    };
+    use std::num::NonZero;
+
+    #[test]
+    fn correct_generation_count() {
+        let mut ga = EvolutionaryAlgorithm::new(
+            Random::new(),
+            MaxGenerations::new(10),
+            |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+            Fill::from_population_size(RandomReset::new()),
+            NonZero::new(20).unwrap(),
+            rand::rng(),
+            Maximize,
+        );
+        let result = ga.run_with(super::Basic::new());
+        assert_eq!(result.generations(), 10);
+    }
+
+    #[test]
+    fn population_is_preserved() {
+        let mut ga = EvolutionaryAlgorithm::new(
+            Random::new(),
+            MaxGenerations::new(10),
+            |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+            Fill::from_population_size(RandomReset::new()),
+            NonZero::new(20).unwrap(),
+            rand::rng(),
+            Maximize,
+        );
+        let result = ga.run_with(super::Basic::new());
+        assert_eq!(result.population().len(), 20);
+    }
+}

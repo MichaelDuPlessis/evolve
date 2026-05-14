@@ -1,5 +1,7 @@
 use evolve::{
     algorithm::EvolutionaryAlgorithm,
+    collector::standard::Standard,
+    experiment::Experiment,
     fitness::{Maximize, Minimize},
     initialization::Random,
     operators::sequential::{
@@ -481,4 +483,32 @@ fn ga_with_variable_length_genome() {
         best > 100,
         "variable-length GA should find good solutions, got {best}"
     );
+}
+
+// ── Experiment ──
+
+#[test]
+fn experiment_runs_multiple_trials() {
+    let experiment = Experiment::new(
+        || {
+            EvolutionaryAlgorithm::new(
+                Random::new(),
+                MaxGenerations::new(10),
+                |g: &[u8; 2]| g[0] as u16 + g[1] as u16,
+                Fill::from_population_size(RandomReset::new()),
+                NonZero::new(20).unwrap(),
+                rand::rng(),
+                Maximize,
+            )
+        },
+        3,
+        || Standard::default(),
+    );
+
+    let results = experiment.run();
+    assert_eq!(results.len(), 3);
+    for result in &results {
+        assert_eq!(result.generations(), 10);
+        assert!(!result.best_fitness().is_empty());
+    }
 }
