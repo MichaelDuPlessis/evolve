@@ -59,7 +59,7 @@ where
     fn on_generation(&mut self, state: &State<G, F>, fe: &Fe, cmp: &C) {
         self.inner.on_generation(state, fe, cmp);
         let generation = state.generation();
-        if generation % self.every == 0 {
+        if generation.is_multiple_of(self.every) {
             let best = state.population().best(fe, cmp);
             println!("[gen {}] best fitness: {}", generation, best.fitness(fe));
         }
