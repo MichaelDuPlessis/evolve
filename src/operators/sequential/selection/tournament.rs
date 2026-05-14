@@ -60,7 +60,7 @@ where
         }
 
         // Clone the selected individual
-        let selected = best.clone();
+        let selected = best.clone_genome_only();
 
         Offspring::Single(selected)
     }

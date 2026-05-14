@@ -61,4 +61,19 @@ impl<G, F> Individual<G, F> {
         self.fitness
             .get_or_init(|| fitness_evaluator.evaluate(&self.genome))
     }
+
+    /// Creates a new `Individual` with a clone of this individual's genome
+    /// and an unevaluated fitness cell.
+    ///
+    /// Use this when the cloned individual will have its genome modified
+    /// (e.g., by crossover or mutation), making the original fitness irrelevant.
+    pub fn clone_genome_only(&self) -> Self
+    where
+        G: Clone,
+    {
+        Self {
+            genome: self.genome.clone(),
+            fitness: FitnessCell::new(),
+        }
+    }
 }
