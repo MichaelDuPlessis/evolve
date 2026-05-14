@@ -34,8 +34,13 @@ pub(crate) fn single_point_crossover_vec<T: Clone>(
     let point1 = ((ratio * p1.len() as f64) as usize).clamp(1, p1.len() - 1);
     let point2 = ((ratio * p2.len() as f64) as usize).clamp(1, p2.len() - 1);
 
-    let child1 = [&p1[..point1], &p2[point2..]].concat();
-    let child2 = [&p2[..point2], &p1[point1..]].concat();
+    let mut child1 = Vec::with_capacity(point1 + p2.len() - point2);
+    child1.extend_from_slice(&p1[..point1]);
+    child1.extend_from_slice(&p2[point2..]);
+
+    let mut child2 = Vec::with_capacity(point2 + p1.len() - point1);
+    child2.extend_from_slice(&p2[..point2]);
+    child2.extend_from_slice(&p1[point1..]);
 
     (child1, child2)
 }
