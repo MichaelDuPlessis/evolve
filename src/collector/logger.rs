@@ -1,32 +1,31 @@
 //! A collector that logs generation statistics to stdout.
 
-use crate::collector::Collector;
-use crate::collector::basic::Basic;
+use crate::collector::{Collector, NoOp};
 use crate::core::state::State;
 use crate::fitness::{FitnessComparator, FitnessEvaluator};
 use std::num::NonZero;
 
-/// A collector that prints generation statistics at a configurable interval.
+/// A collector that prints best fitness at a configurable interval.
 ///
 /// Wraps an inner collector, delegating all hooks and adding logging on
 /// [`on_generation`](Collector::on_generation).
-pub struct StatsLogger<Col> {
+pub struct Logger<Col = NoOp> {
     every: usize,
     inner: Col,
 }
 
-impl StatsLogger<Basic> {
-    /// Create a new `StatsLogger` that logs every `n` generations, using a [`Basic`] collector.
+impl Logger {
+    /// Create a new `Logger` that logs every `n` generations.
     pub fn new(n: NonZero<usize>) -> Self {
         Self {
             every: n.get(),
-            inner: Basic::new(),
+            inner: NoOp,
         }
     }
 }
 
-impl<Col> StatsLogger<Col> {
-    /// Create a new `StatsLogger` that logs every `n` generations, wrapping the given collector.
+impl<Col> Logger<Col> {
+    /// Create a new `Logger` that logs every `n` generations, wrapping the given collector.
     pub fn with_collector(n: NonZero<usize>, collector: Col) -> Self {
         Self {
             every: n.get(),
@@ -35,16 +34,16 @@ impl<Col> StatsLogger<Col> {
     }
 }
 
-impl Default for StatsLogger<Basic> {
+impl Default for Logger {
     fn default() -> Self {
         Self {
             every: 1,
-            inner: Basic::new(),
+            inner: NoOp,
         }
     }
 }
 
-impl<G, F, Fe, C, Col> Collector<G, F, Fe, C> for StatsLogger<Col>
+impl<G, F, Fe, C, Col> Collector<G, F, Fe, C> for Logger<Col>
 where
     F: std::fmt::Display + PartialOrd + Clone,
     Fe: FitnessEvaluator<G, F>,
