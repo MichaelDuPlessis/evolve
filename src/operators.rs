@@ -30,6 +30,15 @@ pub mod sequential;
 pub trait GeneticOperator<G, F, Fe, R, C> {
     /// Applies this operator to the current state and returns the resulting offspring.
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F>;
+
+    /// Applies this operator to an owned state, allowing in-place modification.
+    ///
+    /// The default implementation borrows the state and delegates to [`apply`](Self::apply).
+    /// Operators that can work in-place (e.g., mutation) may override this to
+    /// avoid cloning genomes.
+    fn transform(&self, state: State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        self.apply(&state, ctx)
+    }
 }
 
 impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for &O
@@ -39,6 +48,10 @@ where
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         (*self).apply(state, ctx)
     }
+
+    fn transform(&self, state: State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        (*self).transform(state, ctx)
+    }
 }
 
 impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for &mut O
@@ -47,5 +60,9 @@ where
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         (**self).apply(state, ctx)
+    }
+
+    fn transform(&self, state: State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        (**self).transform(state, ctx)
     }
 }

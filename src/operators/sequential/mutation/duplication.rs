@@ -69,4 +69,26 @@ where
 
         Offspring::Multiple(population)
     }
+
+    fn transform(&self, state: State<Vec<T>, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<Vec<T>, F> {
+        let population = state.into_population();
+        let mutated: Vec<_> = population.into_iter()
+            .map(|ind| ind.mutate_genome(|genome| {
+                let len = genome.len();
+                if len == 0 {
+                    return;
+                }
+                let max_seg = ((len as f64 * self.max_segment_fraction).floor() as usize).max(1);
+                let seg_len = ctx.rng().random_range(1..=max_seg);
+                if len + seg_len > self.max_genome_len {
+                    return;
+                }
+                let start = ctx.rng().random_range(0..=(len - seg_len));
+                let segment: Vec<T> = genome[start..start + seg_len].to_vec();
+                genome.splice(start + seg_len..start + seg_len, segment);
+            }))
+            .collect();
+
+        Offspring::Multiple(Population::from_individuals(mutated))
+    }
 }

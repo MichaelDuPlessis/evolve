@@ -76,4 +76,12 @@ impl<G, F> Individual<G, F> {
             fitness: FitnessCell::new(),
         }
     }
+
+    /// Consumes this individual, applies a function to its genome, and returns
+    /// a new individual with the modified genome and unevaluated fitness.
+    pub fn mutate_genome(self, f: impl FnOnce(&mut G)) -> Self {
+        let mut genome = self.genome;
+        f(&mut genome);
+        Self::new(genome)
+    }
 }
