@@ -55,7 +55,7 @@ impl<G, F> State<G, F> {
     }
 
     /// Transforms the `State` into a `Population`.
-    pub(crate) fn into_population(self) -> Population<G, F> {
+    pub fn into_population(self) -> Population<G, F> {
         self.population
     }
 }

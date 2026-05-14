@@ -14,6 +14,8 @@
 //! - Composable combinators for structuring the flow of the algorithm
 //! - [`Maximize`](fitness::Maximize) and [`Minimize`](fitness::Minimize) fitness comparators out of the box
 //! - Closures work as fitness evaluators and comparators via blanket trait impls
+//! - [`Collector`](collector::Collector) trait for customizable run results (timing, fitness history, or your own)
+//! - [`Experiment`](experiment::Experiment) runner for batch trials with configurable collectors
 //! - No dependencies beyond `rand` (optional `pooled` for parallel execution)
 //!
 //! ## Quick Start
@@ -189,11 +191,12 @@
 pub use evolve_derive::grammar;
 
 pub mod algorithm;
+pub mod collector;
 pub mod core;
+pub mod experiment;
 pub mod fitness;
 pub mod grammar;
 pub mod initialization;
-pub mod observer;
 pub mod operators;
 pub mod phenotype;
 pub mod random;

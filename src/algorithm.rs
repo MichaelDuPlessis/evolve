@@ -4,10 +4,10 @@
 //! initialization, operators, and termination into a runnable algorithm.
 
 use crate::{
-    core::{context::Context, run_result::RunResult, state::State},
-    fitness::{FitnessEvaluator, Maximize},
+    collector::{Collector, standard},
+    core::{context::Context, state::State},
+    fitness::{FitnessComparator, FitnessEvaluator, Maximize},
     initialization::Initializer,
-    observer::{NoOp, Observer},
     operators::GeneticOperator,
     termination::TerminationCondition,
 };
@@ -105,15 +105,19 @@ where
         }
     }
 
-    /// Runs the algorithm until the termination condition is met and returns a [`RunResult`].
-    pub fn run(&mut self) -> RunResult<G, F> {
-        self.run_with(NoOp::new())
+    /// Runs the algorithm until the termination condition is met and returns a [`RunResult`](collector::standard::RunResult).
+    pub fn run(&mut self) -> standard::RunResult<G, F>
+    where
+        F: Clone + PartialOrd,
+        C: FitnessComparator<F>,
+    {
+        self.run_with(standard::Standard::default())
     }
 
-    /// Runs the algorithm with an [`Observer`] that is notified at each stage of execution.
-    pub fn run_with<O>(&mut self, mut observer: O) -> RunResult<G, F>
+    /// Runs the algorithm with a [`Collector`] that is notified at each stage of execution.
+    pub fn run_with<Col>(&mut self, mut collector: Col) -> Col::Result
     where
-        O: Observer<G, F, Fe, R, C>,
+        Col: Collector<G, F, Fe, C>,
     {
         #[cfg(not(feature = "parallel"))]
         let mut ctx = Context::new(&self.fitness_evaluator, &mut self.rng, &self.comparator);
@@ -129,19 +133,19 @@ where
 
         let mut state = State::new(population, 0);
 
-        observer.on_start(&state, &ctx);
+        collector.on_start(&state, ctx.fitness_evaluator(), ctx.comparator());
 
         while !self.termination.should_terminate(&state) {
             // Apply pipeline — ownership flows through
             state.apply_operators(&mut ctx, &mut self.operators);
             state.inc_generation();
 
-            observer.on_generation(&state, &ctx);
+            collector.on_generation(&state, ctx.fitness_evaluator(), ctx.comparator());
         }
 
-        observer.on_end(&state, &ctx);
+        collector.on_end(&state, ctx.fitness_evaluator(), ctx.comparator());
 
-        state.into()
+        collector.finalize(state)
     }
 }
 
