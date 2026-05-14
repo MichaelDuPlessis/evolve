@@ -4,6 +4,7 @@ use evolve::{
     collector::standard::Standard,
     experiment::Experiment,
     fitness::{GeFitness, Maximize},
+    grammar,
     grammar::Grammar,
     initialization::{Random, RangedRandom},
     operators::sequential::{
@@ -51,6 +52,33 @@ fn arithmetic_grammar() -> Grammar<&'static str> {
         .rule("const", &[&["1"], &["2"]])
         .start("expr")
         .build()
+}
+
+// --- Macro grammar ---
+
+grammar! {
+    grammar MacroGrammar;
+    symbol Sym;
+    start Expr;
+    Expr => [Expr, Op, Expr] | [Var] | [Const];
+    Op => [Plus] | [Minus] | [Mul];
+    Var => [X] | [Y];
+    Const => [One] | [Two];
+}
+
+#[derive(Default)]
+struct MacroCountBuilder(usize);
+
+impl PhenotypeBuilder<Sym> for MacroCountBuilder {
+    type Output = TerminalCount;
+    fn push(&mut self, event: Event<Sym>) {
+        if let Event::Terminal(_) = event {
+            self.0 += 1;
+        }
+    }
+    fn finish(self) -> TerminalCount {
+        TerminalCount(self.0)
+    }
 }
 
 // --- GA benchmarks ---
@@ -111,7 +139,7 @@ fn bench_experiment(c: &mut Criterion) {
     });
 }
 
-// --- GE benchmarks ---
+// --- GE benchmarks (builder) ---
 
 fn bench_ge_run(c: &mut Criterion) {
     c.bench_function("ge_run_100pop_50gen", |b| {
@@ -134,8 +162,14 @@ fn bench_ge_run(c: &mut Criterion) {
                     SinglePoint::<u8>::new(),
                     Weighted::new((
                         (RandomReset::<u8>::new(), NonZero::new(3u16).unwrap()),
-                        (SegmentDuplication::<u8>::new(0.2, 50), NonZero::new(1u16).unwrap()),
-                        (SegmentDeletion::<u8>::new(0.2, 3), NonZero::new(1u16).unwrap()),
+                        (
+                            SegmentDuplication::<u8>::new(0.2, 50),
+                            NonZero::new(1u16).unwrap(),
+                        ),
+                        (
+                            SegmentDeletion::<u8>::new(0.2, 3),
+                            NonZero::new(1u16).unwrap(),
+                        ),
                     )),
                 ))),
                 NonZero::new(100).unwrap(),
@@ -172,8 +206,14 @@ fn bench_ge_experiment(c: &mut Criterion) {
                             SinglePoint::<u8>::new(),
                             Weighted::new((
                                 (RandomReset::<u8>::new(), NonZero::new(3u16).unwrap()),
-                                (SegmentDuplication::<u8>::new(0.2, 50), NonZero::new(1u16).unwrap()),
-                                (SegmentDeletion::<u8>::new(0.2, 3), NonZero::new(1u16).unwrap()),
+                                (
+                                    SegmentDuplication::<u8>::new(0.2, 50),
+                                    NonZero::new(1u16).unwrap(),
+                                ),
+                                (
+                                    SegmentDeletion::<u8>::new(0.2, 3),
+                                    NonZero::new(1u16).unwrap(),
+                                ),
                             )),
                         ))),
                         NonZero::new(100).unwrap(),
@@ -189,5 +229,104 @@ fn bench_ge_experiment(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, bench_ea_run, bench_experiment, bench_ge_run, bench_ge_experiment);
+// --- GE benchmarks (macro) ---
+
+fn bench_ge_macro_run(c: &mut Criterion) {
+    c.bench_function("ge_macro_run_100pop_50gen", |b| {
+        b.iter(|| {
+            let fitness = GeFitness::<MacroGrammar, u8, f64, _, MacroCountBuilder>::new(
+                MacroGrammar,
+                3,
+                |p: &TerminalCount| p.run(&()) as f64,
+                -1.0,
+            );
+            let mut ga = EvolutionaryAlgorithm::new(
+                RangedRandom::<u8>::new(5..20),
+                MaxGenerations::new(50),
+                fitness,
+                Fill::from_population_size(Pipeline::new((
+                    Combine::new((
+                        TournamentSelection::new(NonZero::new(3).unwrap()),
+                        TournamentSelection::new(NonZero::new(3).unwrap()),
+                    )),
+                    SinglePoint::<u8>::new(),
+                    Weighted::new((
+                        (RandomReset::<u8>::new(), NonZero::new(3u16).unwrap()),
+                        (
+                            SegmentDuplication::<u8>::new(0.2, 50),
+                            NonZero::new(1u16).unwrap(),
+                        ),
+                        (
+                            SegmentDeletion::<u8>::new(0.2, 3),
+                            NonZero::new(1u16).unwrap(),
+                        ),
+                    )),
+                ))),
+                NonZero::new(100).unwrap(),
+                SmallRng::seed_from_u64(42),
+                Maximize,
+            );
+            ga.run()
+        });
+    });
+}
+
+fn bench_ge_macro_experiment(c: &mut Criterion) {
+    c.bench_function("ge_macro_experiment_3_trials", |b| {
+        b.iter(|| {
+            let mut seed = 42u64;
+            Experiment::new(
+                move || {
+                    seed += 1;
+                    let fitness =
+                        GeFitness::<MacroGrammar, u8, f64, _, MacroCountBuilder>::new(
+                            MacroGrammar,
+                            3,
+                            |p: &TerminalCount| p.run(&()) as f64,
+                            -1.0,
+                        );
+                    EvolutionaryAlgorithm::new(
+                        RangedRandom::<u8>::new(5..20),
+                        MaxGenerations::new(50),
+                        fitness,
+                        Fill::from_population_size(Pipeline::new((
+                            Combine::new((
+                                TournamentSelection::new(NonZero::new(3).unwrap()),
+                                TournamentSelection::new(NonZero::new(3).unwrap()),
+                            )),
+                            SinglePoint::<u8>::new(),
+                            Weighted::new((
+                                (RandomReset::<u8>::new(), NonZero::new(3u16).unwrap()),
+                                (
+                                    SegmentDuplication::<u8>::new(0.2, 50),
+                                    NonZero::new(1u16).unwrap(),
+                                ),
+                                (
+                                    SegmentDeletion::<u8>::new(0.2, 3),
+                                    NonZero::new(1u16).unwrap(),
+                                ),
+                            )),
+                        ))),
+                        NonZero::new(100).unwrap(),
+                        SmallRng::seed_from_u64(seed),
+                        Maximize,
+                    )
+                },
+                3,
+                Standard::default,
+            )
+            .run()
+        });
+    });
+}
+
+criterion_group!(
+    benches,
+    bench_ea_run,
+    bench_experiment,
+    bench_ge_run,
+    bench_ge_experiment,
+    bench_ge_macro_run,
+    bench_ge_macro_experiment,
+);
 criterion_main!(benches);
