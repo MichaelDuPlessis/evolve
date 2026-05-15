@@ -105,7 +105,7 @@ where
         }
     }
 
-    /// Runs the algorithm until the termination condition is met and returns a [`RunResult`](collector::standard::RunResult).
+    /// Runs the algorithm until the termination condition is met and returns a [`RunResult`](crate::collector::standard::RunResult).
     pub fn run(&mut self) -> standard::RunResult<G, F>
     where
         F: Clone + PartialOrd,
