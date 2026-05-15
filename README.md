@@ -1,5 +1,9 @@
 # evolve
 
+[![Crates.io](https://img.shields.io/crates/v/evolve.svg)](https://crates.io/crates/evolve)
+[![Documentation](https://img.shields.io/docsrs/evolve)](https://docs.rs/evolve)
+[![License](https://img.shields.io/crates/l/evolve.svg)](LICENSE)
+
 A generic, composable genetic algorithm framework for Rust.
 
 > **Note:** This library is in rapid development. While breaking changes will be avoided where possible, there is no guarantee of API stability until 1.0.
