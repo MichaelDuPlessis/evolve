@@ -17,7 +17,7 @@ A generic, composable genetic algorithm framework for Rust.
 - Composable combinators for structuring the flow of the algorithm
 - `Maximize` and `Minimize` fitness comparators out of the box
 - Closures work as fitness evaluators and comparators via blanket trait impls
-- No dependencies beyond `rand` (optional `pooled` for parallel execution)
+- Minimal dependencies: `rand` and `vecpool` (optional `pooled` for parallel execution)
 
 ## Quick Start
 
@@ -108,7 +108,7 @@ Enable the `parallel` feature to run operators across multiple threads:
 
 ```toml
 [dependencies]
-evolve = { version = "0.2.0", features = ["parallel"] }
+evolve = { version = "0.3", features = ["parallel"] }
 ```
 
 Parallel operators distribute work across a thread pool using the `pooled` crate:
