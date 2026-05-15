@@ -1,4 +1,5 @@
 use rand::{Rng, seq::IndexedRandom};
+use vecpool::PoolVec;
 
 use crate::{
     core::{individual::Individual, offspring::Offspring},
@@ -25,29 +26,31 @@ use std::slice::ChunksExact;
 /// assert_eq!(pop.len(), 2);
 /// assert_eq!(*pop.best(&fe, &Maximize).fitness(&fe), 20);
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Population<G, F> {
-    individuals: Vec<Individual<G, F>>,
+    individuals: PoolVec<Individual<G, F>>,
 }
 
 impl<G, F> Population<G, F> {
     /// Create a new empty population.
     pub fn new() -> Self {
         Self {
-            individuals: Vec::new(),
+            individuals: PoolVec::new(),
         }
     }
 
     /// Create an empty population with a certain capacity.
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            individuals: Vec::with_capacity(capacity),
+            individuals: vecpool::with_capacity(capacity),
         }
     }
 
     /// Create a new population from a `Vec` of `Individuals`.
     pub fn from_individuals(individuals: Vec<Individual<G, F>>) -> Self {
-        Self { individuals }
+        Self {
+            individuals: PoolVec::from(individuals),
+        }
     }
 
     /// Extend a `Population` with another `Population` or a list of `Individuals`.
@@ -92,7 +95,7 @@ impl<G, F> Population<G, F> {
 
     /// Consumes the population and returns the inner Vec.
     pub fn into_vec(self) -> Vec<Individual<G, F>> {
-        self.individuals
+        self.individuals.into_vec()
     }
 
     /// Choose a random individual from the population.
@@ -127,7 +130,7 @@ impl<G, F> Population<G, F> {
 
     /// Merges another `Population` into one this one.
     pub fn merge(&mut self, population: Population<G, F>) {
-        self.individuals.extend(population.individuals);
+        self.individuals.extend(population.individuals.into_vec());
     }
 
     /// Add an `Offspring` to the population.
@@ -194,5 +197,13 @@ impl<G, F> FromIterator<Individual<G, F>> for Population<G, F> {
 impl<G, F> Default for Population<G, F> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<G: Clone, F: Clone> Clone for Population<G, F> {
+    fn clone(&self) -> Self {
+        Self {
+            individuals: self.individuals.iter().cloned().collect(),
+        }
     }
 }

@@ -30,7 +30,11 @@ impl<G, F> Offspring<G, F> {
     /// Converts this `Offspring` into a [`Population`].
     pub fn into_population(self) -> Population<G, F> {
         match self {
-            Offspring::Single(individual) => Population::from_individuals(vec![individual]),
+            Offspring::Single(individual) => {
+                let mut p = Population::new();
+                p.add(individual);
+                p
+            }
             Offspring::Multiple(population) => population,
         }
     }

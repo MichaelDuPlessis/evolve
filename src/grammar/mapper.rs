@@ -2,6 +2,7 @@
 
 use crate::grammar::grammar_def::GrammarDef;
 use crate::phenotype::{Event, PhenotypeBuilder};
+use vecpool::PoolVec;
 
 /// Trait bound for codon types. Converts a codon to a choice index.
 pub trait Codon: Clone + Copy {
@@ -45,8 +46,9 @@ pub(crate) fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
     max_wraps: usize,
     mut builder: B,
 ) -> Option<B::Output> {
-    let mut stack: Vec<G::Symbol> = vec![grammar.start()];
-    let mut end_rule_stack: Vec<usize> = Vec::new();
+    let mut stack: PoolVec<G::Symbol> = PoolVec::new();
+    stack.push(grammar.start());
+    let mut end_rule_stack: PoolVec<usize> = PoolVec::new();
     let mut codon_idx: usize = 0;
 
     while let Some(symbol) = stack.pop() {

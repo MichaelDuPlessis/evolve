@@ -40,7 +40,7 @@ where
         let chunk_size = self.target_size / num_chunks;
         let extra = self.target_size % num_chunks;
 
-        let inputs: Vec<(u64, usize)> = (0..num_chunks)
+        let inputs: vecpool::PoolVec<(u64, usize)> = (0..num_chunks)
             .map(|i| {
                 let size = chunk_size + if i < extra { 1 } else { 0 };
                 (ctx.rng().random::<u64>(), size)
