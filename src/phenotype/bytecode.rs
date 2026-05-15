@@ -60,9 +60,9 @@ impl<T> Bytecode<T> {
 impl<T: Instruction> Bytecode<T> {
     /// Executes the bytecode program with the given input, returning the final stack value.
     pub fn run(&self, input: &T::Input) -> T::Value {
-        let mut stack = Vec::new();
+        let mut stack: vecpool::PoolVec<T::Value> = vecpool::PoolVec::new();
         for instruction in &self.0 {
-            instruction.execute(&mut stack, input);
+            instruction.execute(&mut *stack, input);
         }
         stack.pop().unwrap_or_default()
     }
@@ -70,11 +70,11 @@ impl<T: Instruction> Bytecode<T> {
 
 /// Builder that collects terminals into a [`Bytecode`] program.
 #[derive(Debug)]
-pub struct BytecodeBuilder<T>(Vec<T>);
+pub struct BytecodeBuilder<T>(vecpool::PoolVec<T>);
 
 impl<T> Default for BytecodeBuilder<T> {
     fn default() -> Self {
-        Self(Vec::new())
+        Self(vecpool::PoolVec::new())
     }
 }
 
@@ -88,7 +88,7 @@ impl<T: Instruction> PhenotypeBuilder<T> for BytecodeBuilder<T> {
     }
 
     fn finish(self) -> Bytecode<T> {
-        Bytecode(self.0)
+        Bytecode(self.0.into_vec())
     }
 }
 

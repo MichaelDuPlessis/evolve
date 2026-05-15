@@ -1,5 +1,9 @@
 # evolve
 
+[![Crates.io](https://img.shields.io/crates/v/evolve.svg)](https://crates.io/crates/evolve)
+[![Documentation](https://img.shields.io/docsrs/evolve)](https://docs.rs/evolve)
+[![License](https://img.shields.io/crates/l/evolve.svg)](LICENSE)
+
 A generic, composable genetic algorithm framework for Rust.
 
 > **Note:** This library is in rapid development. While breaking changes will be avoided where possible, there is no guarantee of API stability until 1.0.
@@ -13,7 +17,7 @@ A generic, composable genetic algorithm framework for Rust.
 - Composable combinators for structuring the flow of the algorithm
 - `Maximize` and `Minimize` fitness comparators out of the box
 - Closures work as fitness evaluators and comparators via blanket trait impls
-- No dependencies beyond `rand` (optional `pooled` for parallel execution)
+- Minimal dependencies: `rand` and `vecpool` (optional `pooled` for parallel execution)
 
 ## Quick Start
 
@@ -104,7 +108,7 @@ Enable the `parallel` feature to run operators across multiple threads:
 
 ```toml
 [dependencies]
-evolve = { version = "0.2.0", features = ["parallel"] }
+evolve = { version = "0.3", features = ["parallel"] }
 ```
 
 Parallel operators distribute work across a thread pool using the `pooled` crate:

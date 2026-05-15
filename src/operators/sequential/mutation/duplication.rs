@@ -59,13 +59,35 @@ where
                 population.add(Individual::new(genome.clone()));
             } else {
                 let start = ctx.rng().random_range(0..=(len - seg_len));
-                let mut new_genome = Vec::with_capacity(len + seg_len);
+                let mut new_genome: vecpool::PoolVec<T> = vecpool::with_capacity(len + seg_len);
                 new_genome.extend_from_slice(&genome[..start + seg_len]);
                 new_genome.extend_from_slice(&genome[start..start + seg_len]);
                 new_genome.extend_from_slice(&genome[start + seg_len..]);
-                population.add(Individual::new(new_genome));
+                population.add(Individual::new(new_genome.into_vec()));
             }
         }
+
+        Offspring::Multiple(population)
+    }
+
+    fn transform(&self, state: State<Vec<T>, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<Vec<T>, F> {
+        let population: Population<Vec<T>, F> = state.into_population().into_iter()
+            .map(|ind| ind.mutate_genome(|genome| {
+                let len = genome.len();
+                if len == 0 {
+                    return;
+                }
+                let max_seg = ((len as f64 * self.max_segment_fraction).floor() as usize).max(1);
+                let seg_len = ctx.rng().random_range(1..=max_seg);
+                if len + seg_len > self.max_genome_len {
+                    return;
+                }
+                let start = ctx.rng().random_range(0..=(len - seg_len));
+                let mut segment: vecpool::PoolVec<T> = vecpool::with_capacity(seg_len);
+                segment.extend_from_slice(&genome[start..start + seg_len]);
+                genome.splice(start + seg_len..start + seg_len, segment.into_vec());
+            }))
+            .collect();
 
         Offspring::Multiple(population)
     }

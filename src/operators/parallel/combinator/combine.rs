@@ -37,7 +37,7 @@ macro_rules! impl_parallel_combine {
         {
             fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
                 let ops: &[O] = &self.operators;
-                let inputs: Vec<(u64, usize)> = (0..ops.len())
+                let inputs: vecpool::PoolVec<(u64, usize)> = (0..ops.len())
                     .map(|i| (ctx.rng().random::<u64>(), i))
                     .collect();
 

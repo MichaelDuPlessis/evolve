@@ -52,7 +52,7 @@ where
 {
     fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
         let individuals = state.population().as_slice();
-        let inputs: Vec<(u64, usize)> = (0..individuals.len())
+        let inputs: vecpool::PoolVec<(u64, usize)> = (0..individuals.len())
             .map(|i| (ctx.rng().random::<u64>(), i))
             .collect();
 

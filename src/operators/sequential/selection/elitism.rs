@@ -60,7 +60,7 @@ where
                     .clone(),
             )
         } else {
-            let mut refs: Vec<_> = state.population().iter().collect();
+            let mut refs: vecpool::PoolVec<_> = state.population().iter().collect();
             refs.select_nth_unstable_by(self.amount - 1, |a, b| {
                 if ctx.comparator().is_better(
                     a.fitness(ctx.fitness_evaluator()),

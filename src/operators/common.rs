@@ -27,17 +27,26 @@ pub(crate) fn single_point_crossover_vec<T: Clone>(
     rng: &mut impl Rng,
 ) -> (Vec<T>, Vec<T>) {
     if p1.len() < 2 || p2.len() < 2 {
-        return (p1.to_vec(), p2.to_vec());
+        let mut c1: vecpool::PoolVec<T> = vecpool::with_capacity(p1.len());
+        c1.extend_from_slice(p1);
+        let mut c2: vecpool::PoolVec<T> = vecpool::with_capacity(p2.len());
+        c2.extend_from_slice(p2);
+        return (c1.into_vec(), c2.into_vec());
     }
 
     let ratio: f64 = rng.random();
     let point1 = ((ratio * p1.len() as f64) as usize).clamp(1, p1.len() - 1);
     let point2 = ((ratio * p2.len() as f64) as usize).clamp(1, p2.len() - 1);
 
-    let child1 = [&p1[..point1], &p2[point2..]].concat();
-    let child2 = [&p2[..point2], &p1[point1..]].concat();
+    let mut child1: vecpool::PoolVec<T> = vecpool::with_capacity(point1 + p2.len() - point2);
+    child1.extend_from_slice(&p1[..point1]);
+    child1.extend_from_slice(&p2[point2..]);
 
-    (child1, child2)
+    let mut child2: vecpool::PoolVec<T> = vecpool::with_capacity(point2 + p1.len() - point1);
+    child2.extend_from_slice(&p2[..point2]);
+    child2.extend_from_slice(&p1[point1..]);
+
+    (child1.into_vec(), child2.into_vec())
 }
 
 /// Mutates a genome by replacing a random gene with a new random value.

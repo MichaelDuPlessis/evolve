@@ -46,7 +46,7 @@ where
 {
     fn apply(&self, state: &State<[T; N], F>, ctx: &mut Context<Fe, R, C>) -> Offspring<[T; N], F> {
         let individuals = state.population().as_slice();
-        let inputs: Vec<(u64, usize)> = individuals
+        let inputs: vecpool::PoolVec<(u64, usize)> = individuals
             .chunks_exact(2)
             .enumerate()
             .map(|(i, _)| (ctx.rng().random::<u64>(), i))
@@ -84,7 +84,7 @@ where
 {
     fn apply(&self, state: &State<Vec<T>, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<Vec<T>, F> {
         let individuals = state.population().as_slice();
-        let inputs: Vec<(u64, usize)> = individuals
+        let inputs: vecpool::PoolVec<(u64, usize)> = individuals
             .chunks_exact(2)
             .enumerate()
             .map(|(i, _)| (ctx.rng().random::<u64>(), i))

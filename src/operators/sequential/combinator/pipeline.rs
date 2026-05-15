@@ -82,7 +82,7 @@ macro_rules! impl_genetic_pipeline {
                 $(
                     let next_state = state.with_population(current_population);
 
-                    current_population = match $rest.apply(&next_state, ctx) {
+                    current_population = match $rest.transform(next_state, ctx) {
                         Offspring::Single(ind) => {
                             let mut p = Population::new();
                             p.add(ind);
@@ -114,8 +114,8 @@ where
 
         for operator in &self.0[1..] {
             let population = offspring.into_population();
-            let state = state.with_population(population);
-            offspring = operator.apply(&state, ctx);
+            let owned_state = state.with_population(population);
+            offspring = operator.transform(owned_state, ctx);
         }
 
         offspring
@@ -131,8 +131,8 @@ where
 
         for operator in &self.0[1..] {
             let population = offspring.into_population();
-            let state = state.with_population(population);
-            offspring = operator.apply(&state, ctx);
+            let owned_state = state.with_population(population);
+            offspring = operator.transform(owned_state, ctx);
         }
 
         offspring
@@ -148,8 +148,8 @@ where
 
         for operator in &self.0[1..] {
             let population = offspring.into_population();
-            let state = state.with_population(population);
-            offspring = operator.apply(&state, ctx);
+            let owned_state = state.with_population(population);
+            offspring = operator.transform(owned_state, ctx);
         }
 
         offspring

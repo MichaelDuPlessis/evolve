@@ -12,7 +12,7 @@ use crate::{
     operators::{GeneticOperator, common::random_reset_mutate},
     random::Randomizable,
 };
-use rand::Rng;
+use rand::{Rng, RngExt};
 use std::marker::PhantomData;
 
 /// This is a helper trait to get the code to compile since a T may one day implement AsMut<[T]>
@@ -70,6 +70,22 @@ where
                 )));
             }
 
+            Offspring::Multiple(population)
+        }
+    }
+
+    fn transform(&self, state: State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        let population: Population<G, F> = state.into_population().into_iter()
+            .map(|ind| ind.mutate_genome(|genome| {
+                let genes = genome.as_mut();
+                let gene_index = ctx.rng().random_range(0..genes.len());
+                genes[gene_index] = T::random(ctx.rng());
+            }))
+            .collect();
+
+        if population.len() == 1 {
+            Offspring::Single(population.into_iter().next().unwrap())
+        } else {
             Offspring::Multiple(population)
         }
     }

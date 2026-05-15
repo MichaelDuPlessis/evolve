@@ -55,12 +55,31 @@ where
             } else {
                 let seg_len = ctx.rng().random_range(1..=max_deletable);
                 let start = ctx.rng().random_range(0..=(len - seg_len));
-                let mut new_genome = Vec::with_capacity(len - seg_len);
+                let mut new_genome: vecpool::PoolVec<T> = vecpool::with_capacity(len - seg_len);
                 new_genome.extend_from_slice(&genome[..start]);
                 new_genome.extend_from_slice(&genome[start + seg_len..]);
-                population.add(Individual::new(new_genome));
+                population.add(Individual::new(new_genome.into_vec()));
             }
         }
+
+        Offspring::Multiple(population)
+    }
+
+    fn transform(&self, state: State<Vec<T>, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<Vec<T>, F> {
+        let population: Population<Vec<T>, F> = state.into_population().into_iter()
+            .map(|ind| ind.mutate_genome(|genome| {
+                let len = genome.len();
+                let max_by_fraction = (len as f64 * self.max_segment_fraction).floor() as usize;
+                let max_by_min_len = len.saturating_sub(self.min_genome_len);
+                let max_deletable = max_by_fraction.min(max_by_min_len);
+                if max_deletable < 1 {
+                    return;
+                }
+                let seg_len = ctx.rng().random_range(1..=max_deletable);
+                let start = ctx.rng().random_range(0..=(len - seg_len));
+                genome.drain(start..start + seg_len);
+            }))
+            .collect();
 
         Offspring::Multiple(population)
     }
