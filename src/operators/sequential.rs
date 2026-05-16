@@ -11,6 +11,7 @@ pub mod crossover;
 pub mod identity;
 pub mod mutation;
 pub mod selection;
+pub mod with_rate;
 
 #[cfg(test)]
 mod test;

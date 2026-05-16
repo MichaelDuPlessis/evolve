@@ -549,3 +549,49 @@ fn identity_transform_returns_population_unchanged() {
     assert_eq!(offspring.num_offspring(), 3);
     assert!(matches!(offspring, Offspring::Multiple(_)));
 }
+
+// ── WithRate ──
+
+#[test]
+fn with_rate_zero_passes_all_through() {
+    use crate::operators::sequential::with_rate::WithRate;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+    let op = WithRate::new(RandomReset::<i32>::new(), 0.0);
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(pop.len(), 3);
+    assert_eq!(*pop.as_slice()[0].genome(), [1, 2, 3, 4]);
+    assert_eq!(*pop.as_slice()[1].genome(), [5, 6, 7, 8]);
+    assert_eq!(*pop.as_slice()[2].genome(), [9, 10, 11, 12]);
+}
+
+#[test]
+fn with_rate_one_applies_to_all() {
+    use crate::operators::sequential::with_rate::WithRate;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+    let op = WithRate::new(RandomReset::<i32>::new(), 1.0);
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(pop.len(), 3);
+    // With rate 1.0, all individuals should be mutated (not all zeros)
+    for ind in &pop {
+        assert_ne!(*ind.genome(), [0, 0, 0, 0]);
+    }
+}
+
+#[test]
+#[should_panic]
+fn with_rate_panics_on_invalid() {
+    use crate::operators::sequential::with_rate::WithRate;
+    WithRate::new(RandomReset::<i32>::new(), 1.5);
+}
