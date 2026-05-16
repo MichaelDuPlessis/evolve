@@ -7,6 +7,7 @@ use crate::operators::GeneticOperator;
 use crate::operators::sequential::combinator::{Combine, Fill, Pipeline, Repeat, Weighted};
 use crate::operators::sequential::crossover::SinglePoint;
 use crate::operators::sequential::mutation::RandomReset;
+use crate::operators::sequential::identity::Identity;
 use crate::operators::sequential::selection::Elitism;
 use crate::operators::sequential::selection::TournamentSelection;
 use std::num::NonZero;
@@ -523,4 +524,28 @@ fn segment_deletion_skips_when_at_min_len() {
     let offspring = op.apply(&state, &mut ctx);
     let pop = offspring.into_population();
     assert_eq!(pop.as_slice()[0].genome().len(), 3);
+}
+
+// ── Identity ──
+
+#[test]
+fn identity_returns_population_unchanged() {
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let op = Identity;
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 2);
+    assert!(matches!(offspring, Offspring::Multiple(_)));
+}
+
+#[test]
+fn identity_transform_returns_population_unchanged() {
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let op = Identity;
+    let offspring = op.transform(state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 3);
+    assert!(matches!(offspring, Offspring::Multiple(_)));
 }

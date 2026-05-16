@@ -7,6 +7,8 @@
 
 pub mod combinator;
 pub mod crossover;
+/// Identity (no-op) operator.
+pub mod identity;
 pub mod mutation;
 pub mod selection;
 
