@@ -4,7 +4,7 @@ use crate::core::{
 };
 use crate::fitness::Maximize;
 use crate::operators::GeneticOperator;
-use crate::operators::sequential::combinator::{Combine, Fill, Pipeline, Repeat, Weighted};
+use crate::operators::sequential::combinator::{Combine, Fill, Pipeline, Proportional, Repeat, Weighted};
 use crate::operators::sequential::crossover::SinglePoint;
 use crate::operators::sequential::mutation::RandomReset;
 use crate::operators::sequential::identity::Identity;
@@ -737,4 +737,128 @@ fn roulette_wheel_selects_proportionally() {
         high_count > 80,
         "high fitness individual selected {high_count}/100 times"
     );
+}
+
+// ── Proportional ──
+
+#[test]
+fn proportional_output_matches_input_size() {
+    let state = make_state(&[[1, 2, 3, 4]; 12]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let ops = [
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(3u16).unwrap()),
+    ];
+    let op = Proportional::new(ops.as_slice());
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 12);
+}
+
+#[test]
+fn proportional_handles_remainder() {
+    // 7 individuals with weights 1:1 => 3 + 4 (last gets remainder)
+    let state = make_state(&[[1, 2, 3, 4]; 7]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let ops = [
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+    ];
+    let op = Proportional::new(ops.as_slice());
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 7);
+}
+
+#[test]
+fn proportional_single_operator() {
+    let state = make_state(&[[1, 2, 3, 4]; 5]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let ops = [(
+        RandomReset::<i32>::new(),
+        NonZero::new(3u16).unwrap(),
+    )];
+    let op = Proportional::new(ops.as_slice());
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 5);
+}
+
+#[test]
+fn proportional_slice_reference() {
+    let state = make_state(&[[1, 2, 3, 4]; 6]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let ops = vec![
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap()),
+    ];
+    let op = Proportional::new(&ops[..]);
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 6);
+}
+
+#[test]
+fn proportional_fixed_size() {
+    let state = make_state(&[[1, 2, 3, 4]; 4]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let ops = [
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap()),
+    ];
+    let op = Proportional::with_size(ops.as_slice(), 9);
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 9);
+}
+
+// ── Proportional with tuples ──
+
+#[test]
+fn proportional_tuple_two_operators() {
+    let state = make_state(&[[1, 2, 3, 4]; 12]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Proportional::new((
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap()),
+    ));
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 12);
+}
+
+#[test]
+fn proportional_tuple_with_size() {
+    let state = make_state(&[[1, 2, 3, 4]; 6]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Proportional::with_size((
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(3u16).unwrap()),
+    ), 20);
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 20);
+}
+
+#[test]
+fn proportional_tuple_three_operators() {
+    let state = make_state(&[[1, 2, 3, 4]; 9]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Proportional::new((
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+    ));
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 9);
 }

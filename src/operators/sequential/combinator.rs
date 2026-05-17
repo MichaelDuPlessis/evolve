@@ -8,15 +8,18 @@
 //! - [`Weighted`] — probabilistically selects one operator per invocation
 //! - [`Repeat`] — applies an operator N times
 //! - [`Fill`] — repeats an operator until a target population size is reached
+//! - [`Proportional`] — splits output proportionally across multiple operators
 
 mod combine;
-mod fill;
+pub mod fill;
 mod pipeline;
+mod proportional;
 mod repeat;
 mod weighted;
 
 pub use combine::Combine;
 pub use fill::Fill;
 pub use pipeline::Pipeline;
+pub use proportional::Proportional;
 pub use repeat::Repeat;
 pub use weighted::Weighted;

@@ -21,6 +21,13 @@ where
 #[derive(Debug, Clone, Copy)]
 pub struct FixedSize(usize);
 
+impl FixedSize {
+    /// Creates a new `FixedSize` with the given target.
+    pub(crate) fn new(size: usize) -> Self {
+        Self(size)
+    }
+}
+
 impl<G, F> GetSize<G, F> for FixedSize {
     fn get_size(&self, _: &State<G, F>) -> usize {
         self.0
@@ -29,6 +36,13 @@ impl<G, F> GetSize<G, F> for FixedSize {
 
 #[derive(Debug, Clone, Copy)]
 pub struct PopSize(());
+
+impl PopSize {
+    /// Creates a new `PopSize`.
+    pub(crate) fn new() -> Self {
+        Self(())
+    }
+}
 
 impl<G, F> GetSize<G, F> for PopSize {
     fn get_size(&self, state: &State<G, F>) -> usize {
@@ -72,7 +86,7 @@ impl<O> Fill<O, PopSize> {
     pub fn from_population_size(operator: O) -> Self {
         Self {
             operator,
-            size: PopSize(()),
+            size: PopSize::new(),
         }
     }
 }
@@ -82,7 +96,7 @@ impl<O> Fill<O, FixedSize> {
     pub fn from_fixed_size(operator: O, size: usize) -> Self {
         Self {
             operator,
-            size: FixedSize(size),
+            size: FixedSize::new(size),
         }
     }
 }
