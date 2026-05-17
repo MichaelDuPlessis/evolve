@@ -1125,3 +1125,52 @@ fn rank_selection_favors_best() {
         "best individual selected {best_count}/100 times"
     );
 }
+
+// ── Sus ──
+
+#[test]
+fn sus_selects_correct_count() {
+    use crate::operators::sequential::selection::Sus;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[i32; 4], i32> = vec![
+        Individual::from_parts([1, 0, 0, 0], 10),
+        Individual::from_parts([2, 0, 0, 0], 20),
+        Individual::from_parts([3, 0, 0, 0], 30),
+        Individual::from_parts([4, 0, 0, 0], 40),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Sus::new(NonZero::new(6).unwrap());
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 6);
+}
+
+#[test]
+fn sus_favors_higher_fitness() {
+    use crate::operators::sequential::selection::Sus;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[i32; 4], i32> = vec![
+        Individual::from_parts([1, 0, 0, 0], 1),
+        Individual::from_parts([9, 9, 9, 9], 99),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Sus::new(NonZero::new(100).unwrap());
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    let high_count = pop.iter().filter(|ind| *ind.genome() == [9, 9, 9, 9]).count();
+    // 99% of fitness belongs to [9,9,9,9], so it should get ~99 of 100 selections
+    assert!(high_count > 90, "high fitness selected {high_count}/100 times");
+}
