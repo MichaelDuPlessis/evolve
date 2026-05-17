@@ -11,7 +11,7 @@ use evolve::{
         combinator::{Combine, Fill, Pipeline, Weighted},
         crossover::SinglePoint,
         mutation::{RandomReset, deletion::SegmentDeletion, duplication::SegmentDuplication},
-        selection::TournamentSelection,
+        selection::Tournament,
     },
     phenotype::{Event, PhenotypeBuilder},
     termination::MaxGenerations,
@@ -92,8 +92,8 @@ fn bench_ea_run(c: &mut Criterion) {
                 |g: &[u8; 8]| g.iter().map(|&x| x as u32).sum::<u32>(),
                 Fill::from_population_size(Pipeline::new((
                     Combine::new((
-                        TournamentSelection::new(NonZero::new(3).unwrap()),
-                        TournamentSelection::new(NonZero::new(3).unwrap()),
+                        Tournament::new(NonZero::new(3).unwrap()),
+                        Tournament::new(NonZero::new(3).unwrap()),
                     )),
                     SinglePoint::<u8>::new(),
                     RandomReset::<u8>::new(),
@@ -120,8 +120,8 @@ fn bench_experiment(c: &mut Criterion) {
                         |g: &[u8; 8]| g.iter().map(|&x| x as u32).sum::<u32>(),
                         Fill::from_population_size(Pipeline::new((
                             Combine::new((
-                                TournamentSelection::new(NonZero::new(3).unwrap()),
-                                TournamentSelection::new(NonZero::new(3).unwrap()),
+                                Tournament::new(NonZero::new(3).unwrap()),
+                                Tournament::new(NonZero::new(3).unwrap()),
                             )),
                             SinglePoint::<u8>::new(),
                             RandomReset::<u8>::new(),
@@ -156,8 +156,8 @@ fn bench_ge_run(c: &mut Criterion) {
                 fitness,
                 Fill::from_population_size(Pipeline::new((
                     Combine::new((
-                        TournamentSelection::new(NonZero::new(3).unwrap()),
-                        TournamentSelection::new(NonZero::new(3).unwrap()),
+                        Tournament::new(NonZero::new(3).unwrap()),
+                        Tournament::new(NonZero::new(3).unwrap()),
                     )),
                     SinglePoint::<u8>::new(),
                     Weighted::new((
@@ -200,8 +200,8 @@ fn bench_ge_experiment(c: &mut Criterion) {
                         fitness,
                         Fill::from_population_size(Pipeline::new((
                             Combine::new((
-                                TournamentSelection::new(NonZero::new(3).unwrap()),
-                                TournamentSelection::new(NonZero::new(3).unwrap()),
+                                Tournament::new(NonZero::new(3).unwrap()),
+                                Tournament::new(NonZero::new(3).unwrap()),
                             )),
                             SinglePoint::<u8>::new(),
                             Weighted::new((
@@ -246,8 +246,8 @@ fn bench_ge_macro_run(c: &mut Criterion) {
                 fitness,
                 Fill::from_population_size(Pipeline::new((
                     Combine::new((
-                        TournamentSelection::new(NonZero::new(3).unwrap()),
-                        TournamentSelection::new(NonZero::new(3).unwrap()),
+                        Tournament::new(NonZero::new(3).unwrap()),
+                        Tournament::new(NonZero::new(3).unwrap()),
                     )),
                     SinglePoint::<u8>::new(),
                     Weighted::new((
@@ -291,8 +291,8 @@ fn bench_ge_macro_experiment(c: &mut Criterion) {
                         fitness,
                         Fill::from_population_size(Pipeline::new((
                             Combine::new((
-                                TournamentSelection::new(NonZero::new(3).unwrap()),
-                                TournamentSelection::new(NonZero::new(3).unwrap()),
+                                Tournament::new(NonZero::new(3).unwrap()),
+                                Tournament::new(NonZero::new(3).unwrap()),
                             )),
                             SinglePoint::<u8>::new(),
                             Weighted::new((

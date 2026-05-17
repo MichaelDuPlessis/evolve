@@ -2,6 +2,10 @@
 pub mod deletion;
 /// Segment duplication mutation operator.
 pub mod duplication;
+/// Gaussian mutation operator for continuous-valued genomes.
+pub mod gaussian;
+
+pub use gaussian::Gaussian;
 
 use crate::{
     core::{

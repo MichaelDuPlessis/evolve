@@ -10,7 +10,7 @@ use evolve::{
             combinator::{Combine, Fill, Pipeline},
             crossover::SinglePoint,
             mutation::{deletion::SegmentDeletion, duplication::SegmentDuplication, RandomReset},
-            selection::TournamentSelection,
+            selection::Tournament,
         },
     },
     phenotype::{Event, PhenotypeBuilder},
@@ -129,7 +129,7 @@ fn bench_selection(c: &mut Criterion) {
         let pop = make_population_array(&mut rng, 100);
         let state = State::new(pop, 0);
         let fe = fitness_array as fn(&[u8; 8]) -> u32;
-        let op = TournamentSelection::new(NonZero::new(3).unwrap());
+        let op = Tournament::new(NonZero::new(3).unwrap());
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
             let mut ctx = Context::new(&fe, &mut rng, &Maximize);
@@ -174,8 +174,8 @@ fn bench_combinators(c: &mut Criterion) {
         let fe = fitness_array as fn(&[u8; 8]) -> u32;
         let op = Fill::from_population_size(Pipeline::new((
             Combine::new((
-                TournamentSelection::new(NonZero::new(3).unwrap()),
-                TournamentSelection::new(NonZero::new(3).unwrap()),
+                Tournament::new(NonZero::new(3).unwrap()),
+                Tournament::new(NonZero::new(3).unwrap()),
             )),
             SinglePoint::<u8>::new(),
             RandomReset::<u8>::new(),
@@ -193,7 +193,7 @@ fn bench_combinators(c: &mut Criterion) {
         let state = State::new(pop, 0);
         let fe = fitness_array as fn(&[u8; 8]) -> u32;
         let op = Pipeline::new((
-            TournamentSelection::new(NonZero::new(3).unwrap()),
+            Tournament::new(NonZero::new(3).unwrap()),
             SinglePoint::<u8>::new(),
             RandomReset::<u8>::new(),
         ));

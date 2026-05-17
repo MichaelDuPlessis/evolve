@@ -9,7 +9,7 @@ use crate::operators::sequential::crossover::SinglePoint;
 use crate::operators::sequential::mutation::RandomReset;
 use crate::operators::sequential::identity::Identity;
 use crate::operators::sequential::selection::Elitism;
-use crate::operators::sequential::selection::TournamentSelection;
+use crate::operators::sequential::selection::Tournament;
 use std::num::NonZero;
 
 fn id(g: &[i32; 4]) -> i32 {
@@ -39,14 +39,14 @@ fn make_ctx(
     Context::new(&(id as fn(&[i32; 4]) -> i32), rng, &Maximize)
 }
 
-// ── TournamentSelection ──
+// ── Tournament ──
 
 #[test]
 fn tournament_selection_returns_single() {
     let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
-    let sel = TournamentSelection::new(NonZero::new(2).unwrap());
+    let sel = Tournament::new(NonZero::new(2).unwrap());
     assert_eq!(sel.apply(&state, &mut ctx).num_offspring(), 1);
 }
 
@@ -596,11 +596,11 @@ fn with_rate_panics_on_invalid() {
     WithRate::new(RandomReset::<i32>::new(), 1.5);
 }
 
-// ── UniformCrossover ──
+// ── Uniform ──
 
 #[test]
 fn uniform_crossover_fixed_produces_valid_offspring() {
-    use crate::operators::sequential::crossover::UniformCrossover;
+    use crate::operators::sequential::crossover::Uniform;
     use rand::SeedableRng;
     use rand::rngs::SmallRng;
 
@@ -609,7 +609,7 @@ fn uniform_crossover_fixed_produces_valid_offspring() {
     let state = make_state(&[p1, p2]);
     let mut rng = SmallRng::seed_from_u64(42);
     let mut ctx = make_ctx(&mut rng);
-    let op = UniformCrossover::<i32>::new();
+    let op = Uniform::<i32>::new();
     let pop = op.apply(&state, &mut ctx).into_population();
     assert_eq!(pop.len(), 2);
     for ind in &pop {
@@ -621,14 +621,14 @@ fn uniform_crossover_fixed_produces_valid_offspring() {
 
 #[test]
 fn uniform_crossover_vec_produces_valid_offspring() {
-    use crate::operators::sequential::crossover::UniformCrossover;
+    use crate::operators::sequential::crossover::Uniform;
     use rand::SeedableRng;
     use rand::rngs::SmallRng;
 
     let state = make_state_vec(&[vec![0, 0, 0, 0], vec![1, 1, 1, 1]]);
     let mut rng = SmallRng::seed_from_u64(42);
     let mut ctx = make_ctx_vec(&mut rng);
-    let op = UniformCrossover::<i32>::new();
+    let op = Uniform::<i32>::new();
     let pop = op.apply(&state, &mut ctx).into_population();
     assert_eq!(pop.len(), 2);
     for ind in &pop {
@@ -636,4 +636,70 @@ fn uniform_crossover_vec_produces_valid_offspring() {
             assert!(*gene == 0 || *gene == 1);
         }
     }
+}
+
+// ── Gaussian ──
+
+#[test]
+fn gaussian_mutation_modifies_genome() {
+    use crate::operators::sequential::mutation::Gaussian;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[f64; 4], f64> = vec![[0.0; 4], [0.0; 4], [0.0; 4]]
+        .into_iter()
+        .map(Individual::new)
+        .collect();
+    let state = State::new(pop, 0);
+
+    fn fe(g: &[f64; 4]) -> f64 {
+        g.iter().sum()
+    }
+
+    let mut rng = SmallRng::seed_from_u64(42);
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize);
+
+    let op = Gaussian::new(1.0);
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    assert!(result.iter().any(|ind| ind.genome().iter().any(|&g| g != 0.0)));
+}
+
+#[test]
+fn gaussian_mutation_transform_modifies_genome() {
+    use crate::operators::sequential::mutation::Gaussian;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[f64; 4], f64> = vec![[0.0; 4], [0.0; 4], [0.0; 4]]
+        .into_iter()
+        .map(Individual::new)
+        .collect();
+    let state = State::new(pop, 0);
+
+    fn fe(g: &[f64; 4]) -> f64 {
+        g.iter().sum()
+    }
+
+    let mut rng = SmallRng::seed_from_u64(42);
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize);
+
+    let op = Gaussian::new(1.0);
+    let offspring = op.transform(state, &mut ctx);
+    let result = offspring.into_population();
+    assert!(result.iter().any(|ind| ind.genome().iter().any(|&g| g != 0.0)));
 }

@@ -93,21 +93,21 @@ where
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::sequential::crossover::UniformCrossover;
+/// use evolve::operators::sequential::crossover::Uniform;
 ///
-/// let crossover = UniformCrossover::<u8>::new();
+/// let crossover = Uniform::<u8>::new();
 /// ```
 #[derive(Debug, Default, Clone, Copy)]
-pub struct UniformCrossover<T>(PhantomData<T>);
+pub struct Uniform<T>(PhantomData<T>);
 
-impl<T> UniformCrossover<T> {
-    /// Creates a new `UniformCrossover` operator.
+impl<T> Uniform<T> {
+    /// Creates a new `Uniform` operator.
     pub fn new() -> Self {
         Self(PhantomData)
     }
 }
 
-impl<T, F, Fe, R, C, const N: usize> GeneticOperator<[T; N], F, Fe, R, C> for UniformCrossover<T>
+impl<T, F, Fe, R, C, const N: usize> GeneticOperator<[T; N], F, Fe, R, C> for Uniform<T>
 where
     T: Clone,
     R: Rng,
@@ -130,7 +130,7 @@ where
     }
 }
 
-impl<T, F, Fe, R, C> GeneticOperator<Vec<T>, F, Fe, R, C> for UniformCrossover<T>
+impl<T, F, Fe, R, C> GeneticOperator<Vec<T>, F, Fe, R, C> for Uniform<T>
 where
     T: Clone,
     R: Rng,

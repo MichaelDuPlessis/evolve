@@ -207,7 +207,7 @@ use evolve::{
         combinator::{Combine, Fill, Pipeline},
         crossover::SinglePoint,
         mutation::RandomReset,
-        selection::TournamentSelection,
+        selection::Tournament,
     },
     termination::MaxGenerations,
 };
@@ -229,8 +229,8 @@ let mut ea = EvolutionaryAlgorithm::new(
     fitness,
     Fill::from_population_size(Pipeline::new((
         Combine::new((
-            TournamentSelection::new(NonZero::new(3).unwrap()),
-            TournamentSelection::new(NonZero::new(3).unwrap()),
+            Tournament::new(NonZero::new(3).unwrap()),
+            Tournament::new(NonZero::new(3).unwrap()),
         )),
         SinglePoint::<u8>::new(),
         RandomReset::<u8>::new(),

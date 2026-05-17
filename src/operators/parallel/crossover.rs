@@ -114,17 +114,17 @@ where
     }
 }
 
-/// Parallel version of [`UniformCrossover`](crate::operators::sequential::crossover::UniformCrossover).
+/// Parallel version of [`Uniform`](crate::operators::sequential::crossover::Uniform).
 ///
 /// Distributes pairs of individuals across pool workers for crossover.
 /// Each task gets its own RNG seeded from the main one.
 #[derive(Debug, Clone, Copy)]
-pub struct UniformCrossover<T> {
+pub struct Uniform<T> {
     _marker: PhantomData<T>,
 }
 
-impl<T> UniformCrossover<T> {
-    /// Creates a new parallel `UniformCrossover` operator.
+impl<T> Uniform<T> {
+    /// Creates a new parallel `Uniform` operator.
     pub fn new() -> Self {
         Self {
             _marker: PhantomData,
@@ -132,13 +132,13 @@ impl<T> UniformCrossover<T> {
     }
 }
 
-impl<T> Default for UniformCrossover<T> {
+impl<T> Default for Uniform<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T, F, Fe, R, C, const N: usize> GeneticOperator<[T; N], F, Fe, R, C> for UniformCrossover<T>
+impl<T, F, Fe, R, C, const N: usize> GeneticOperator<[T; N], F, Fe, R, C> for Uniform<T>
 where
     T: Clone + Send + Sync,
     F: Send,
@@ -176,7 +176,7 @@ where
     }
 }
 
-impl<T, F, Fe, R, C> GeneticOperator<Vec<T>, F, Fe, R, C> for UniformCrossover<T>
+impl<T, F, Fe, R, C> GeneticOperator<Vec<T>, F, Fe, R, C> for Uniform<T>
 where
     T: Clone + Send + Sync,
     F: Send,

@@ -7,7 +7,7 @@ use evolve::{
         combinator::{Combine, Fill, Pipeline, Weighted},
         crossover::SinglePoint,
         mutation::{RandomReset, deletion::SegmentDeletion, duplication::SegmentDuplication},
-        selection::TournamentSelection,
+        selection::Tournament,
     },
     phenotype::bytecode::{Bytecode, BytecodeBuilder, Instruction},
     phenotype::{Event, PhenotypeBuilder},
@@ -71,8 +71,8 @@ fn ge_runs_to_completion() {
         fitness,
         Fill::from_population_size(Pipeline::new((
             Combine::new((
-                TournamentSelection::new(nz(3)),
-                TournamentSelection::new(nz(3)),
+                Tournament::new(nz(3)),
+                Tournament::new(nz(3)),
             )),
             SinglePoint::<u8>::new(),
             RandomReset::<u8>::new(),
@@ -100,8 +100,8 @@ fn ge_with_segment_operators() {
         fitness,
         Fill::from_population_size(Pipeline::new((
             Combine::new((
-                TournamentSelection::new(nz(3)),
-                TournamentSelection::new(nz(3)),
+                Tournament::new(nz(3)),
+                Tournament::new(nz(3)),
             )),
             SinglePoint::<u8>::new(),
             Weighted::new((
@@ -134,8 +134,8 @@ fn ge_best_has_valid_phenotype() {
         fitness,
         Fill::from_population_size(Pipeline::new((
             Combine::new((
-                TournamentSelection::new(nz(3)),
-                TournamentSelection::new(nz(3)),
+                Tournament::new(nz(3)),
+                Tournament::new(nz(3)),
             )),
             SinglePoint::<u8>::new(),
             RandomReset::<u8>::new(),
@@ -216,8 +216,8 @@ fn ge_bytecode_integration() {
         fitness,
         Fill::from_population_size(Pipeline::new((
             Combine::new((
-                TournamentSelection::new(nz(3)),
-                TournamentSelection::new(nz(3)),
+                Tournament::new(nz(3)),
+                Tournament::new(nz(3)),
             )),
             SinglePoint::<u8>::new(),
             RandomReset::<u8>::new(),
@@ -256,8 +256,8 @@ fn ge_improves_fitness_over_generations() {
     let ops = || {
         Fill::from_population_size(Pipeline::new((
             Combine::new((
-                TournamentSelection::new(nz(3)),
-                TournamentSelection::new(nz(3)),
+                Tournament::new(nz(3)),
+                Tournament::new(nz(3)),
             )),
             SinglePoint::<u8>::new(),
             RandomReset::<u8>::new(),
@@ -315,8 +315,8 @@ fn ge_with_fixed_length_genome() {
         fitness,
         Fill::from_population_size(Pipeline::new((
             Combine::new((
-                TournamentSelection::new(nz(3)),
-                TournamentSelection::new(nz(3)),
+                Tournament::new(nz(3)),
+                Tournament::new(nz(3)),
             )),
             SinglePoint::<u8>::new(),
             RandomReset::<u8>::new(),
