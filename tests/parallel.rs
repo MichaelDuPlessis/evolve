@@ -552,3 +552,29 @@ fn parallel_creep_mutation() {
     let op = Creep::<u8>::new(5);
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 2);
 }
+
+#[test]
+fn parallel_gaussian_mutation() {
+    use evolve::operators::parallel::mutation::Gaussian;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[f64; 4]| g.iter().sum::<f64>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let pop: Population<[f64; 4], f64> = vec![
+        Individual::new([0.0; 4]),
+        Individual::new([0.0; 4]),
+        Individual::new([0.0; 4]),
+    ].into_iter().collect();
+    let state = State::new(pop, 0);
+
+    let op = Gaussian::new(1.0);
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 3);
+
+    // At least one gene should have changed
+    let result = offspring.into_population();
+    let any_changed = result.iter().any(|ind| ind.genome().iter().any(|&g| g != 0.0));
+    assert!(any_changed, "Gaussian mutation should change at least one gene");
+}

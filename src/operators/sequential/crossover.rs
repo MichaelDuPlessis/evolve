@@ -1,3 +1,10 @@
+//! Crossover operators.
+//!
+//! - [`SinglePoint`] — single-point crossover
+//! - [`Uniform`] — uniform (per-gene) crossover
+//! - [`TwoPoint`] — two-point crossover
+//! - [`Arithmetic`] — arithmetic blending for continuous genomes
+
 /// Single-point crossover operator.
 pub mod single_point;
 /// Uniform crossover operator.
