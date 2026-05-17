@@ -448,3 +448,63 @@ fn parallel_single_point_vec_crossover() {
         "Vec crossover should recombine parent genomes"
     );
 }
+
+// ── Parallel TwoPoint, Uniform, and Arithmetic crossover ──
+
+#[test]
+fn parallel_two_point_crossover() {
+    use evolve::operators::parallel::crossover::TwoPoint;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[0, 0, 0, 0], [255, 255, 255, 255], [1, 1, 1, 1], [2, 2, 2, 2]]);
+    let op = TwoPoint::<u8>::new();
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+#[test]
+fn parallel_uniform_crossover() {
+    use evolve::operators::parallel::crossover::Uniform;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[0, 0, 0, 0], [255, 255, 255, 255], [1, 1, 1, 1], [2, 2, 2, 2]]);
+    let op = Uniform::<u8>::new();
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+#[test]
+fn parallel_arithmetic_crossover() {
+    use evolve::operators::parallel::crossover::Arithmetic;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[f64; 4]| g.iter().sum::<f64>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let pop: Population<[f64; 4], f64> = vec![
+        Individual::new([0.0, 0.0, 0.0, 0.0]),
+        Individual::new([1.0, 1.0, 1.0, 1.0]),
+        Individual::new([2.0, 2.0, 2.0, 2.0]),
+        Individual::new([3.0, 3.0, 3.0, 3.0]),
+    ].into_iter().collect();
+    let state = State::new(pop, 0);
+
+    let op = Arithmetic::new();
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 4);
+
+    // Verify blending: children should be between parents
+    let result = offspring.into_population();
+    for ind in result.iter() {
+        for &g in ind.genome() {
+            assert!(g >= 0.0 && g <= 3.0, "blended gene {g} should be between parent values");
+        }
+    }
+}

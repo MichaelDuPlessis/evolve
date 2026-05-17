@@ -862,3 +862,125 @@ fn proportional_tuple_three_operators() {
     let offspring = op.apply(&state, &mut ctx);
     assert_eq!(offspring.into_population().len(), 9);
 }
+
+// ── TwoPoint ──
+
+#[test]
+fn two_point_crossover_fixed_produces_valid_offspring() {
+    use crate::operators::sequential::crossover::TwoPoint;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let p1 = [0i32, 0, 0, 0];
+    let p2 = [1i32, 1, 1, 1];
+    let state = make_state(&[p1, p2]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+    let op = TwoPoint::<i32>::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for gene in ind.genome() {
+            assert!(*gene == 0 || *gene == 1);
+        }
+    }
+}
+
+#[test]
+fn two_point_crossover_vec_produces_valid_offspring() {
+    use crate::operators::sequential::crossover::TwoPoint;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state_vec(&[vec![0, 0, 0, 0], vec![1, 1, 1, 1]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx_vec(&mut rng);
+    let op = TwoPoint::<i32>::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for gene in ind.genome() {
+            assert!(*gene == 0 || *gene == 1);
+        }
+    }
+}
+
+// ── Arithmetic ──
+
+#[test]
+fn arithmetic_crossover_f64_blends_parents() {
+    use crate::operators::sequential::crossover::Arithmetic;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[f64; 4], f64> = vec![
+        Individual::new([0.0, 0.0, 0.0, 0.0]),
+        Individual::new([1.0, 1.0, 1.0, 1.0]),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+
+    fn fe(g: &[f64; 4]) -> f64 {
+        g.iter().sum()
+    }
+
+    let mut rng = SmallRng::seed_from_u64(42);
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize);
+
+    let op = Arithmetic::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for &gene in ind.genome() {
+            assert!(gene >= 0.0 && gene <= 1.0, "gene {gene} not in [0, 1]");
+        }
+    }
+}
+
+#[test]
+fn arithmetic_crossover_f32_produces_valid_offspring() {
+    use crate::operators::sequential::crossover::Arithmetic;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[f32; 4], f32> = vec![
+        Individual::new([0.0f32, 2.0, 4.0, 6.0]),
+        Individual::new([1.0f32, 3.0, 5.0, 7.0]),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+
+    fn fe(g: &[f32; 4]) -> f32 {
+        g.iter().sum()
+    }
+
+    let mut rng = SmallRng::seed_from_u64(99);
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(fe as fn(&[f32; 4]) -> f32), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(fe as fn(&[f32; 4]) -> f32), &mut rng, &Maximize);
+
+    let op = Arithmetic::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for (i, &gene) in ind.genome().iter().enumerate() {
+            let lo = [0.0f32, 2.0, 4.0, 6.0][i];
+            let hi = [1.0f32, 3.0, 5.0, 7.0][i];
+            assert!(gene >= lo && gene <= hi, "gene {gene} not in [{lo}, {hi}]");
+        }
+    }
+}
