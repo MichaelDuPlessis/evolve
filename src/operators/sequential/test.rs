@@ -703,3 +703,38 @@ fn gaussian_mutation_transform_modifies_genome() {
     let result = offspring.into_population();
     assert!(result.iter().any(|ind| ind.genome().iter().any(|&g| g != 0.0)));
 }
+
+// ── RouletteWheel ──
+
+#[test]
+fn roulette_wheel_selects_proportionally() {
+    use crate::operators::sequential::selection::RouletteWheel;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    // Individual with fitness 99 vs fitness 1 — should be selected ~99% of the time
+    let pop: Population<[i32; 4], i32> = vec![
+        Individual::from_parts([1, 0, 0, 0], 1),
+        Individual::from_parts([9, 9, 9, 9], 99),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = RouletteWheel;
+    let mut high_count = 0;
+    for _ in 0..100 {
+        let offspring = op.apply(&state, &mut ctx);
+        if let Offspring::Single(ind) = offspring {
+            if *ind.genome() == [9, 9, 9, 9] {
+                high_count += 1;
+            }
+        }
+    }
+    assert!(
+        high_count > 80,
+        "high fitness individual selected {high_count}/100 times"
+    );
+}
