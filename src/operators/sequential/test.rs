@@ -1089,3 +1089,39 @@ fn creep_mutation_transform() {
     let result = offspring.into_population();
     assert_eq!(result.len(), 2);
 }
+
+// ── Rank ──
+
+#[test]
+fn rank_selection_favors_best() {
+    use crate::operators::sequential::selection::Rank;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    // Individual with fitness 1 vs fitness 100 — rank selection should still favor the better one
+    let pop: Population<[i32; 4], i32> = vec![
+        Individual::from_parts([1, 0, 0, 0], 1),
+        Individual::from_parts([9, 9, 9, 9], 100),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Rank;
+    let mut best_count = 0;
+    for _ in 0..100 {
+        let offspring = op.apply(&state, &mut ctx);
+        if let Offspring::Single(ind) = offspring {
+            if *ind.genome() == [9, 9, 9, 9] {
+                best_count += 1;
+            }
+        }
+    }
+    // With rank weights 2:1, best should be selected ~67% of the time
+    assert!(
+        best_count > 50,
+        "best individual selected {best_count}/100 times"
+    );
+}
