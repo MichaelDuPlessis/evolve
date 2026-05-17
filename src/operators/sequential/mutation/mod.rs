@@ -4,8 +4,11 @@ pub mod deletion;
 pub mod duplication;
 /// Gaussian mutation operator for continuous-valued genomes.
 pub mod gaussian;
+/// Gene swap mutation operator.
+pub mod swap;
 
 pub use gaussian::Gaussian;
+pub use swap::Swap;
 
 use crate::{
     core::{

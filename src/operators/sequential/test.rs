@@ -984,3 +984,47 @@ fn arithmetic_crossover_f32_produces_valid_offspring() {
         }
     }
 }
+
+// ── Swap ──
+
+#[test]
+fn swap_mutation_preserves_genes() {
+    use crate::operators::sequential::mutation::Swap;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[1, 2, 3, 4]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Swap::<i32>::new();
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    let genome = result.as_slice()[0].genome();
+    // Same genes, possibly different order
+    let mut sorted = *genome;
+    sorted.sort();
+    assert_eq!(sorted, [1, 2, 3, 4]);
+}
+
+#[test]
+fn swap_mutation_transform() {
+    use crate::operators::sequential::mutation::Swap;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[10, 20, 30, 40], [50, 60, 70, 80]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Swap::<i32>::new();
+    let offspring = op.transform(state, &mut ctx);
+    let result = offspring.into_population();
+    assert_eq!(result.len(), 2);
+    // Each genome should still contain the same values
+    for ind in result.iter() {
+        let mut sorted = *ind.genome();
+        sorted.sort();
+        assert!(sorted == [10, 20, 30, 40] || sorted == [50, 60, 70, 80]);
+    }
+}

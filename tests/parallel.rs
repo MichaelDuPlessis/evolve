@@ -508,3 +508,18 @@ fn parallel_arithmetic_crossover() {
         }
     }
 }
+
+#[test]
+fn parallel_swap_mutation() {
+    use evolve::operators::parallel::mutation::Swap;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
+    let op = Swap::<u8>::new();
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 3);
+}
