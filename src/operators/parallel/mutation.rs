@@ -1,3 +1,5 @@
+/// Parallel creep mutation.
+pub mod creep;
 /// Parallel segment inversion mutation.
 pub mod inversion;
 /// Parallel random reset mutation.
@@ -5,6 +7,7 @@ pub mod random_reset;
 /// Parallel swap mutation.
 pub mod swap;
 
+pub use creep::Creep;
 pub use inversion::Inversion;
 pub use random_reset::RandomReset;
 pub use swap::Swap;

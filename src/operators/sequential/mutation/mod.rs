@@ -1,3 +1,5 @@
+/// Creep mutation operator.
+pub mod creep;
 /// Segment deletion mutation operator.
 pub mod deletion;
 /// Segment duplication mutation operator.
@@ -9,6 +11,7 @@ pub mod inversion;
 /// Gene swap mutation operator.
 pub mod swap;
 
+pub use creep::Creep;
 pub use gaussian::Gaussian;
 pub use inversion::Inversion;
 pub use swap::Swap;

@@ -1046,3 +1046,46 @@ fn inversion_mutation_preserves_genes() {
     sorted.sort();
     assert_eq!(sorted, [1, 2, 3, 4]);
 }
+
+// ── Creep ──
+
+#[test]
+fn creep_mutation_changes_one_gene() {
+    use crate::operators::sequential::mutation::Creep;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[100, 100, 100, 100]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Creep::<i32>::new(5);
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    let genome = result.as_slice()[0].genome();
+    // Exactly one gene should differ (by at most 5)
+    let diffs: Vec<_> = genome
+        .iter()
+        .zip([100i32; 4].iter())
+        .filter(|(a, b)| a != b)
+        .collect();
+    assert_eq!(diffs.len(), 1);
+    let diff = (*diffs[0].0 - *diffs[0].1).abs();
+    assert!(diff <= 5);
+}
+
+#[test]
+fn creep_mutation_transform() {
+    use crate::operators::sequential::mutation::Creep;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[100, 100, 100, 100], [200, 200, 200, 200]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Creep::<i32>::new(5);
+    let offspring = op.transform(state, &mut ctx);
+    let result = offspring.into_population();
+    assert_eq!(result.len(), 2);
+}

@@ -538,3 +538,17 @@ fn parallel_inversion_mutation() {
     let offspring = op.apply(&state, &mut ctx);
     assert_eq!(offspring.num_offspring(), 3);
 }
+
+#[test]
+fn parallel_creep_mutation() {
+    use evolve::operators::parallel::mutation::Creep;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[100, 100, 100, 100], [200, 200, 200, 200]]);
+    let op = Creep::<u8>::new(5);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 2);
+}
