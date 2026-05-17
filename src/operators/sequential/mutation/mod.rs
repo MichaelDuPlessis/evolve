@@ -4,10 +4,13 @@ pub mod deletion;
 pub mod duplication;
 /// Gaussian mutation operator for continuous-valued genomes.
 pub mod gaussian;
+/// Segment inversion mutation operator.
+pub mod inversion;
 /// Gene swap mutation operator.
 pub mod swap;
 
 pub use gaussian::Gaussian;
+pub use inversion::Inversion;
 pub use swap::Swap;
 
 use crate::{
