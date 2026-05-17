@@ -9,8 +9,10 @@
 //! - [`Repeat`] — applies an operator N times
 //! - [`Fill`] — repeats an operator until a target population size is reached
 //! - [`Proportional`] — splits output proportionally across multiple operators
+//! - [`Conditional`] — applies one of two operators based on a predicate
 
 mod combine;
+mod conditional;
 pub mod fill;
 mod pipeline;
 mod proportional;
@@ -18,6 +20,7 @@ mod repeat;
 mod weighted;
 
 pub use combine::Combine;
+pub use conditional::Conditional;
 pub use fill::Fill;
 pub use pipeline::Pipeline;
 pub use proportional::Proportional;

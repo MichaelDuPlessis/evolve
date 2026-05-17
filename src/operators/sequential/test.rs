@@ -1174,3 +1174,64 @@ fn sus_favors_higher_fitness() {
     // 99% of fitness belongs to [9,9,9,9], so it should get ~99 of 100 selections
     assert!(high_count > 90, "high fitness selected {high_count}/100 times");
 }
+
+// ── Conditional ──
+
+#[test]
+fn conditional_applies_a_when_true() {
+    use crate::operators::sequential::combinator::Conditional;
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    // Predicate always true → applies RandomReset (changes genomes)
+    let op = Conditional::new(
+        RandomReset::<i32>::new(),
+        Identity,
+        |_: &State<[i32; 4], i32>| true,
+    );
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 2);
+}
+
+#[test]
+fn conditional_applies_b_when_false() {
+    use crate::operators::sequential::combinator::Conditional;
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    // Predicate always false → applies Identity (preserves genomes)
+    let op = Conditional::new(
+        RandomReset::<i32>::new(),
+        Identity,
+        |_: &State<[i32; 4], i32>| false,
+    );
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(*pop.as_slice()[0].genome(), [1, 2, 3, 4]);
+    assert_eq!(*pop.as_slice()[1].genome(), [5, 6, 7, 8]);
+}
+
+#[test]
+fn conditional_uses_generation() {
+    use crate::operators::sequential::combinator::Conditional;
+
+    // Generation 5 → predicate checks generation >= 10
+    let pop = make_state(&[[1, 2, 3, 4]]).into_population();
+    let state = State::new(pop, 5);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Conditional::new(
+        RandomReset::<i32>::new(),
+        Identity,
+        |s: &State<[i32; 4], i32>| s.generation() >= 10,
+    );
+    // Generation 5 < 10, so Identity is applied
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(*pop.as_slice()[0].genome(), [1, 2, 3, 4]);
+}
