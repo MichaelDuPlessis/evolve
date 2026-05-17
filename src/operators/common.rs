@@ -49,6 +49,45 @@ pub(crate) fn single_point_crossover_vec<T: Clone>(
     (child1.into_vec(), child2.into_vec())
 }
 
+/// Performs uniform crossover on two fixed-length genomes.
+pub(crate) fn uniform_crossover<T: Clone, const N: usize>(
+    p1: &[T; N],
+    p2: &[T; N],
+    rng: &mut impl Rng,
+) -> ([T; N], [T; N]) {
+    let mut child1 = p1.clone();
+    let mut child2 = p2.clone();
+
+    for i in 0..N {
+        if rng.random::<bool>() {
+            child1[i].clone_from(&p2[i]);
+            child2[i].clone_from(&p1[i]);
+        }
+    }
+
+    (child1, child2)
+}
+
+/// Performs uniform crossover on two variable-length genomes.
+pub(crate) fn uniform_crossover_vec<T: Clone>(
+    p1: &[T],
+    p2: &[T],
+    rng: &mut impl Rng,
+) -> (Vec<T>, Vec<T>) {
+    let min_len = p1.len().min(p2.len());
+    let mut child1 = p1.to_vec();
+    let mut child2 = p2.to_vec();
+
+    for i in 0..min_len {
+        if rng.random::<bool>() {
+            child1[i].clone_from(&p2[i]);
+            child2[i].clone_from(&p1[i]);
+        }
+    }
+
+    (child1, child2)
+}
+
 /// Mutates a genome by replacing a random gene with a new random value.
 pub(crate) fn random_reset_mutate<G, T, R>(genome: &G, rng: &mut R) -> G
 where

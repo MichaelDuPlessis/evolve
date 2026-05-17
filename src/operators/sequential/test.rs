@@ -595,3 +595,45 @@ fn with_rate_panics_on_invalid() {
     use crate::operators::sequential::with_rate::WithRate;
     WithRate::new(RandomReset::<i32>::new(), 1.5);
 }
+
+// ── UniformCrossover ──
+
+#[test]
+fn uniform_crossover_fixed_produces_valid_offspring() {
+    use crate::operators::sequential::crossover::UniformCrossover;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let p1 = [0i32, 0, 0, 0];
+    let p2 = [1i32, 1, 1, 1];
+    let state = make_state(&[p1, p2]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+    let op = UniformCrossover::<i32>::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for gene in ind.genome() {
+            assert!(*gene == 0 || *gene == 1);
+        }
+    }
+}
+
+#[test]
+fn uniform_crossover_vec_produces_valid_offspring() {
+    use crate::operators::sequential::crossover::UniformCrossover;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state_vec(&[vec![0, 0, 0, 0], vec![1, 1, 1, 1]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx_vec(&mut rng);
+    let op = UniformCrossover::<i32>::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for gene in ind.genome() {
+            assert!(*gene == 0 || *gene == 1);
+        }
+    }
+}

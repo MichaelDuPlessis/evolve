@@ -5,7 +5,10 @@ use crate::{
     },
     operators::{
         GeneticOperator,
-        common::{single_point_crossover, single_point_crossover_vec},
+        common::{
+            single_point_crossover, single_point_crossover_vec, uniform_crossover,
+            uniform_crossover_vec,
+        },
     },
 };
 use rand::{Rng, RngExt, SeedableRng};
@@ -94,6 +97,106 @@ where
             let mut rng = R::seed_from_u64(*seed);
             let base = idx * 2;
             let (c1, c2) = single_point_crossover_vec(
+                individuals[base].genome(),
+                individuals[base + 1].genome(),
+                &mut rng,
+            );
+            (Individual::new(c1), Individual::new(c2))
+        });
+
+        let mut population = Population::with_capacity(inputs.len() * 2);
+        for r in results {
+            let (c1, c2) = r.expect("pool task panicked");
+            population.add(c1);
+            population.add(c2);
+        }
+        Offspring::Multiple(population)
+    }
+}
+
+/// Parallel version of [`UniformCrossover`](crate::operators::sequential::crossover::UniformCrossover).
+///
+/// Distributes pairs of individuals across pool workers for crossover.
+/// Each task gets its own RNG seeded from the main one.
+#[derive(Debug, Clone, Copy)]
+pub struct UniformCrossover<T> {
+    _marker: PhantomData<T>,
+}
+
+impl<T> UniformCrossover<T> {
+    /// Creates a new parallel `UniformCrossover` operator.
+    pub fn new() -> Self {
+        Self {
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T> Default for UniformCrossover<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T, F, Fe, R, C, const N: usize> GeneticOperator<[T; N], F, Fe, R, C> for UniformCrossover<T>
+where
+    T: Clone + Send + Sync,
+    F: Send,
+    R: Rng + SeedableRng,
+    Fe: Sync,
+    C: Sync,
+    Individual<[T; N], F>: Sync,
+{
+    fn apply(&self, state: &State<[T; N], F>, ctx: &mut Context<Fe, R, C>) -> Offspring<[T; N], F> {
+        let individuals = state.population().as_slice();
+        let inputs: vecpool::PoolVec<(u64, usize)> = individuals
+            .chunks_exact(2)
+            .enumerate()
+            .map(|(i, _)| (ctx.rng().random::<u64>(), i))
+            .collect();
+
+        let results = ctx.pool().map(&inputs, |(seed, idx)| {
+            let mut rng = R::seed_from_u64(*seed);
+            let base = idx * 2;
+            let (c1, c2) = uniform_crossover(
+                individuals[base].genome(),
+                individuals[base + 1].genome(),
+                &mut rng,
+            );
+            (Individual::new(c1), Individual::new(c2))
+        });
+
+        let mut population = Population::with_capacity(inputs.len() * 2);
+        for r in results {
+            let (c1, c2) = r.expect("pool task panicked");
+            population.add(c1);
+            population.add(c2);
+        }
+        Offspring::Multiple(population)
+    }
+}
+
+impl<T, F, Fe, R, C> GeneticOperator<Vec<T>, F, Fe, R, C> for UniformCrossover<T>
+where
+    T: Clone + Send + Sync,
+    F: Send,
+    R: Rng + SeedableRng,
+    Fe: Sync,
+    C: Sync,
+    Individual<Vec<T>, F>: Sync,
+{
+    fn apply(&self, state: &State<Vec<T>, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<Vec<T>, F> {
+        let individuals = state.population().as_slice();
+        let inputs: vecpool::PoolVec<(u64, usize)> = individuals
+            .chunks_exact(2)
+            .enumerate()
+            .map(|(i, _)| (ctx.rng().random::<u64>(), i))
+            .collect();
+
+        let results = ctx.pool().map(&inputs, |(seed, idx)| {
+            let mut rng = R::seed_from_u64(*seed);
+            let base = idx * 2;
+            let (c1, c2) = uniform_crossover_vec(
                 individuals[base].genome(),
                 individuals[base + 1].genome(),
                 &mut rng,
