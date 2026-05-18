@@ -7,10 +7,14 @@ use evolve::{
     operators::{
         GeneticOperator,
         sequential::{
-            combinator::{Combine, Fill, Pipeline},
-            crossover::SinglePoint,
-            mutation::{deletion::SegmentDeletion, duplication::SegmentDuplication, RandomReset},
-            selection::Tournament,
+            combinator::{Combine, Fill, Pipeline, Proportional},
+            crossover::{Arithmetic, SinglePoint, TwoPoint, Uniform},
+            mutation::{
+                Creep, Gaussian, Inversion, Scramble, Swap,
+                deletion::SegmentDeletion, duplication::SegmentDuplication, RandomReset,
+            },
+            selection::{Rank, RouletteWheel, Sus, Tournament},
+            with_rate::WithRate,
         },
     },
     phenotype::{Event, PhenotypeBuilder},
@@ -73,6 +77,48 @@ fn bench_crossover(c: &mut Criterion) {
         });
     });
 
+    group.bench_function("uniform_array", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop = make_population_array(&mut rng, 100);
+        let state = State::new(pop, 0);
+        let fe = fitness_array as fn(&[u8; 8]) -> u32;
+        let op = Uniform::<u8>::new();
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("two_point_array", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop = make_population_array(&mut rng, 100);
+        let state = State::new(pop, 0);
+        let fe = fitness_array as fn(&[u8; 8]) -> u32;
+        let op = TwoPoint::<u8>::new();
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("arithmetic_f64", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        use evolve::random::Randomizable;
+        let pop: Population<[f64; 8], f64> = (0..100)
+            .map(|_| Individual::new(<[f64; 8]>::random(&mut rng)))
+            .collect();
+        let state = State::new(pop, 0);
+        let fe = |g: &[f64; 8]| g.iter().sum::<f64>();
+        let op = Arithmetic::new();
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
     group.finish();
 }
 
@@ -118,6 +164,74 @@ fn bench_mutation(c: &mut Criterion) {
         });
     });
 
+    group.bench_function("gaussian_f64", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        use evolve::random::Randomizable;
+        let pop: Population<[f64; 8], f64> = (0..100)
+            .map(|_| Individual::new(<[f64; 8]>::random(&mut rng)))
+            .collect();
+        let state = State::new(pop, 0);
+        let fe = |g: &[f64; 8]| g.iter().sum::<f64>();
+        let op = Gaussian::new(0.1);
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("swap_array", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop = make_population_array(&mut rng, 100);
+        let state = State::new(pop, 0);
+        let fe = fitness_array as fn(&[u8; 8]) -> u32;
+        let op = Swap::<u8>::new();
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("inversion_array", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop = make_population_array(&mut rng, 100);
+        let state = State::new(pop, 0);
+        let fe = fitness_array as fn(&[u8; 8]) -> u32;
+        let op = Inversion::<u8>::new();
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("creep_array", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop = make_population_array(&mut rng, 100);
+        let state = State::new(pop, 0);
+        let fe = fitness_array as fn(&[u8; 8]) -> u32;
+        let op = Creep::<u8>::new(5);
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("scramble_array", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop = make_population_array(&mut rng, 100);
+        let state = State::new(pop, 0);
+        let fe = fitness_array as fn(&[u8; 8]) -> u32;
+        let op = Scramble::<u8>::new();
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
     group.finish();
 }
 
@@ -130,6 +244,57 @@ fn bench_selection(c: &mut Criterion) {
         let state = State::new(pop, 0);
         let fe = fitness_array as fn(&[u8; 8]) -> u32;
         let op = Tournament::new(NonZero::new(3).unwrap());
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("roulette_wheel", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop: Population<[u8; 8], f64> = (0..100)
+            .map(|_| {
+                use evolve::random::Randomizable;
+                let g = <[u8; 8]>::random(&mut rng);
+                Individual::from_parts(g, g.iter().map(|&x| x as f64).sum())
+            })
+            .collect();
+        let state = State::new(pop, 0);
+        let fe = |g: &[u8; 8]| g.iter().map(|&x| x as f64).sum::<f64>();
+        let op = RouletteWheel;
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("rank", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop = make_population_array(&mut rng, 100);
+        let state = State::new(pop, 0);
+        let fe = fitness_array as fn(&[u8; 8]) -> u32;
+        let op = Rank;
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("sus_50", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop: Population<[u8; 8], f64> = (0..100)
+            .map(|_| {
+                use evolve::random::Randomizable;
+                let g = <[u8; 8]>::random(&mut rng);
+                Individual::from_parts(g, g.iter().map(|&x| x as f64).sum())
+            })
+            .collect();
+        let state = State::new(pop, 0);
+        let fe = |g: &[u8; 8]| g.iter().map(|&x| x as f64).sum::<f64>();
+        let op = Sus::new(NonZero::new(50).unwrap());
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
             let mut ctx = Context::new(&fe, &mut rng, &Maximize);
@@ -197,6 +362,36 @@ fn bench_combinators(c: &mut Criterion) {
             SinglePoint::<u8>::new(),
             RandomReset::<u8>::new(),
         ));
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("with_rate", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop = make_population_array(&mut rng, 100);
+        let state = State::new(pop, 0);
+        let fe = fitness_array as fn(&[u8; 8]) -> u32;
+        let op = WithRate::new(RandomReset::<u8>::new(), 0.1);
+        b.iter(|| {
+            let mut rng = SmallRng::seed_from_u64(42);
+            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            op.apply(&state, &mut ctx)
+        });
+    });
+
+    group.bench_function("proportional", |b| {
+        let mut rng = SmallRng::seed_from_u64(42);
+        let pop = make_population_array(&mut rng, 100);
+        let state = State::new(pop, 0);
+        let fe = fitness_array as fn(&[u8; 8]) -> u32;
+        let ops = [
+            (RandomReset::<u8>::new(), NonZero::new(2u16).unwrap()),
+            (RandomReset::<u8>::new(), NonZero::new(1u16).unwrap()),
+        ];
+        let op = Proportional::new(&ops[..]);
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
             let mut ctx = Context::new(&fe, &mut rng, &Maximize);
