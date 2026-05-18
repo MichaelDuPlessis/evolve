@@ -6,6 +6,8 @@ pub mod gaussian;
 pub mod inversion;
 /// Parallel random reset mutation.
 pub mod random_reset;
+/// Parallel segment scramble mutation.
+pub mod scramble;
 /// Parallel swap mutation.
 pub mod swap;
 
@@ -13,6 +15,7 @@ pub use creep::Creep;
 pub use gaussian::Gaussian;
 pub use inversion::Inversion;
 pub use random_reset::RandomReset;
+pub use scramble::Scramble;
 pub use swap::Swap;
 
 /// Helper trait — see sequential mutation module.

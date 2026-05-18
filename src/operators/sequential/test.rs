@@ -1047,6 +1047,26 @@ fn inversion_mutation_preserves_genes() {
     assert_eq!(sorted, [1, 2, 3, 4]);
 }
 
+// ── Scramble ──
+
+#[test]
+fn scramble_mutation_preserves_genes() {
+    use crate::operators::sequential::mutation::Scramble;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[1, 2, 3, 4]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Scramble::<i32>::new();
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    let mut sorted = *result.as_slice()[0].genome();
+    sorted.sort();
+    assert_eq!(sorted, [1, 2, 3, 4]);
+}
+
 // ── Creep ──
 
 #[test]

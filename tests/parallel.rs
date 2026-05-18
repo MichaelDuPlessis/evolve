@@ -540,6 +540,20 @@ fn parallel_inversion_mutation() {
 }
 
 #[test]
+fn parallel_scramble_mutation() {
+    use evolve::operators::parallel::mutation::Scramble;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
+    let op = Scramble::<u8>::new();
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 3);
+}
+
+#[test]
 fn parallel_creep_mutation() {
     use evolve::operators::parallel::mutation::Creep;
 

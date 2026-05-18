@@ -4,6 +4,7 @@
 //! - [`Gaussian`] — add Gaussian noise to a continuous gene
 //! - [`Swap`] — swap two random genes
 //! - [`Inversion`] — reverse a random segment
+//! - [`Scramble`] — shuffle a random segment
 //! - [`Creep`] — add a small random offset to a discrete gene
 //! - [`SegmentDuplication`] — duplicate a random segment
 //! - [`SegmentDeletion`] — delete a random segment
@@ -18,6 +19,8 @@ pub mod duplication;
 pub mod gaussian;
 /// Segment inversion mutation operator.
 pub mod inversion;
+/// Segment scramble mutation operator.
+pub mod scramble;
 /// Gene swap mutation operator.
 pub mod swap;
 
@@ -26,6 +29,7 @@ pub use deletion::SegmentDeletion;
 pub use duplication::SegmentDuplication;
 pub use gaussian::Gaussian;
 pub use inversion::Inversion;
+pub use scramble::Scramble;
 pub use swap::Swap;
 
 use crate::{
