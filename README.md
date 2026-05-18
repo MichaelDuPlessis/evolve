@@ -40,6 +40,7 @@ A generic, composable genetic algorithm framework for Rust.
 - **Creep** — add a small random offset (discrete genomes)
 - **Swap** — swap two random genes (permutation problems)
 - **Inversion** — reverse a random segment (permutation problems)
+- **Scramble** — shuffle a random segment (permutation problems)
 - **SegmentDuplication** — duplicate a random segment (variable-length)
 - **SegmentDeletion** — delete a random segment (variable-length)
 
