@@ -13,12 +13,26 @@ use rand::{Rng, RngExt, SeedableRng};
 #[derive(Debug, Clone, Copy)]
 pub struct Gaussian {
     std_dev: f64,
+    min: Option<f64>,
+    max: Option<f64>,
 }
 
 impl Gaussian {
     /// Creates a new parallel `Gaussian` mutation with the given standard deviation.
     pub fn new(std_dev: f64) -> Self {
-        Self { std_dev }
+        Self { std_dev, min: None, max: None }
+    }
+
+    /// Sets the lower bound. Genes are clamped to this minimum after mutation.
+    pub fn min(mut self, min: f64) -> Self {
+        self.min = Some(min);
+        self
+    }
+
+    /// Sets the upper bound. Genes are clamped to this maximum after mutation.
+    pub fn max(mut self, max: f64) -> Self {
+        self.max = Some(max);
+        self
     }
 }
 
@@ -43,6 +57,8 @@ macro_rules! impl_parallel_gaussian {
             fn apply(&self, state: &State<[$float; N], F>, ctx: &mut Context<Fe, R, C>) -> Offspring<[$float; N], F> {
                 let individuals = state.population().as_slice();
                 let std_dev = self.std_dev;
+                let min = self.min;
+                let max = self.max;
                 let inputs: vecpool::PoolVec<(u64, usize)> = (0..individuals.len())
                     .map(|i| (ctx.rng().random::<u64>(), i))
                     .collect();
@@ -52,6 +68,8 @@ macro_rules! impl_parallel_gaussian {
                     let mut genome = *individuals[*idx].genome();
                     let gene_idx = rng.random_range(0..N);
                     genome[gene_idx] += $cast(box_muller(&mut rng) * std_dev);
+                    if let Some(lo) = min { genome[gene_idx] = genome[gene_idx].max(lo as $float); }
+                    if let Some(hi) = max { genome[gene_idx] = genome[gene_idx].min(hi as $float); }
                     Individual::new(genome)
                 });
 
@@ -75,6 +93,8 @@ macro_rules! impl_parallel_gaussian {
             fn apply(&self, state: &State<Vec<$float>, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<Vec<$float>, F> {
                 let individuals = state.population().as_slice();
                 let std_dev = self.std_dev;
+                let min = self.min;
+                let max = self.max;
                 let inputs: vecpool::PoolVec<(u64, usize)> = (0..individuals.len())
                     .map(|i| (ctx.rng().random::<u64>(), i))
                     .collect();
@@ -84,6 +104,8 @@ macro_rules! impl_parallel_gaussian {
                     let mut genome = individuals[*idx].genome().clone();
                     let gene_idx = rng.random_range(0..genome.len());
                     genome[gene_idx] += $cast(box_muller(&mut rng) * std_dev);
+                    if let Some(lo) = min { genome[gene_idx] = genome[gene_idx].max(lo as $float); }
+                    if let Some(hi) = max { genome[gene_idx] = genome[gene_idx].min(hi as $float); }
                     Individual::new(genome)
                 });
 

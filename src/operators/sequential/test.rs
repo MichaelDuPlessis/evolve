@@ -1235,3 +1235,63 @@ fn conditional_uses_generation() {
     let pop = offspring.into_population();
     assert_eq!(*pop.as_slice()[0].genome(), [1, 2, 3, 4]);
 }
+
+// ── Gaussian bounds ──
+
+#[test]
+fn gaussian_mutation_respects_bounds() {
+    use crate::operators::sequential::mutation::Gaussian;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[f64; 4], f64> = vec![[0.9, 0.9, 0.9, 0.9]; 10]
+        .into_iter()
+        .map(|g| Individual::new(g))
+        .collect();
+    let state = State::new(pop, 0);
+
+    fn fe(g: &[f64; 4]) -> f64 {
+        g.iter().sum()
+    }
+
+    let mut rng = SmallRng::seed_from_u64(42);
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize);
+
+    let op = Gaussian::new(1.0).min(-1.0).max(1.0);
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    for ind in result.iter() {
+        for &g in ind.genome() {
+            assert!(g >= -1.0 && g <= 1.0, "gene {g} out of bounds");
+        }
+    }
+}
+
+// ── Creep bounds ──
+
+#[test]
+fn creep_mutation_respects_bounds() {
+    use crate::operators::sequential::mutation::Creep;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[50, 50, 50, 50]; 10]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Creep::<i32>::new(100).min(0).max(60);
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    for ind in result.iter() {
+        for &g in ind.genome() {
+            assert!(g >= 0 && g <= 60, "gene {g} out of bounds [0, 60]");
+        }
+    }
+}
