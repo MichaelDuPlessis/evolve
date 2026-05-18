@@ -14,12 +14,12 @@ use crate::{
 /// use evolve::operators::sequential::combinator::Pipeline;
 /// use evolve::operators::sequential::crossover::SinglePoint;
 /// use evolve::operators::sequential::mutation::RandomReset;
-/// use evolve::operators::sequential::selection::TournamentSelection;
+/// use evolve::operators::sequential::selection::Tournament;
 /// use std::num::NonZero;
 ///
 /// // Select → Crossover → Mutate
 /// let op = Pipeline::new((
-///     TournamentSelection::new(NonZero::new(3).unwrap()),
+///     Tournament::new(NonZero::new(3).unwrap()),
 ///     SinglePoint::<u8>::new(),
 ///     RandomReset::<u8>::new(),
 /// ));

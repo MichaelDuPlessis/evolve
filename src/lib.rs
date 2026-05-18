@@ -65,7 +65,7 @@
 //!     operators::sequential::combinator::{Combine, Fill, Pipeline},
 //!     operators::sequential::crossover::SinglePoint,
 //!     operators::sequential::mutation::RandomReset,
-//!     operators::sequential::selection::TournamentSelection,
+//!     operators::sequential::selection::Tournament,
 //!     termination::MaxGenerations,
 //! };
 //! use std::num::NonZero;
@@ -73,8 +73,8 @@
 //! // Select two parents → crossover → mutate, repeated until the population is full
 //! let operators = Fill::from_population_size(Pipeline::new((
 //!     Combine::new((
-//!         TournamentSelection::new(NonZero::new(3).unwrap()),
-//!         TournamentSelection::new(NonZero::new(3).unwrap()),
+//!         Tournament::new(NonZero::new(3).unwrap()),
+//!         Tournament::new(NonZero::new(3).unwrap()),
 //!     )),
 //!     SinglePoint::new(),
 //!     RandomReset::new(),

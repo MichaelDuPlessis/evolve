@@ -1,7 +1,36 @@
+//! Mutation operators.
+//!
+//! - [`RandomReset`] — replace a random gene with a new random value
+//! - [`Gaussian`] — add Gaussian noise to a continuous gene
+//! - [`Swap`] — swap two random genes
+//! - [`Inversion`] — reverse a random segment
+//! - [`Scramble`] — shuffle a random segment
+//! - [`Creep`] — add a small random offset to a discrete gene
+//! - [`SegmentDuplication`] — duplicate a random segment
+//! - [`SegmentDeletion`] — delete a random segment
+
+/// Creep mutation operator.
+pub mod creep;
 /// Segment deletion mutation operator.
 pub mod deletion;
 /// Segment duplication mutation operator.
 pub mod duplication;
+/// Gaussian mutation operator for continuous-valued genomes.
+pub mod gaussian;
+/// Segment inversion mutation operator.
+pub mod inversion;
+/// Segment scramble mutation operator.
+pub mod scramble;
+/// Gene swap mutation operator.
+pub mod swap;
+
+pub use creep::Creep;
+pub use deletion::SegmentDeletion;
+pub use duplication::SegmentDuplication;
+pub use gaussian::Gaussian;
+pub use inversion::Inversion;
+pub use scramble::Scramble;
+pub use swap::Swap;
 
 use crate::{
     core::{

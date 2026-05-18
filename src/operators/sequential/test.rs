@@ -4,11 +4,12 @@ use crate::core::{
 };
 use crate::fitness::Maximize;
 use crate::operators::GeneticOperator;
-use crate::operators::sequential::combinator::{Combine, Fill, Pipeline, Repeat, Weighted};
+use crate::operators::sequential::combinator::{Combine, Fill, Pipeline, Proportional, Repeat, Weighted};
 use crate::operators::sequential::crossover::SinglePoint;
 use crate::operators::sequential::mutation::RandomReset;
+use crate::operators::sequential::identity::Identity;
 use crate::operators::sequential::selection::Elitism;
-use crate::operators::sequential::selection::TournamentSelection;
+use crate::operators::sequential::selection::Tournament;
 use std::num::NonZero;
 
 fn id(g: &[i32; 4]) -> i32 {
@@ -38,14 +39,14 @@ fn make_ctx(
     Context::new(&(id as fn(&[i32; 4]) -> i32), rng, &Maximize)
 }
 
-// ── TournamentSelection ──
+// ── Tournament ──
 
 #[test]
 fn tournament_selection_returns_single() {
     let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
-    let sel = TournamentSelection::new(NonZero::new(2).unwrap());
+    let sel = Tournament::new(NonZero::new(2).unwrap());
     assert_eq!(sel.apply(&state, &mut ctx).num_offspring(), 1);
 }
 
@@ -523,4 +524,794 @@ fn segment_deletion_skips_when_at_min_len() {
     let offspring = op.apply(&state, &mut ctx);
     let pop = offspring.into_population();
     assert_eq!(pop.as_slice()[0].genome().len(), 3);
+}
+
+// ── Identity ──
+
+#[test]
+fn identity_returns_population_unchanged() {
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let op = Identity;
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 2);
+    assert!(matches!(offspring, Offspring::Multiple(_)));
+}
+
+#[test]
+fn identity_transform_returns_population_unchanged() {
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+    let op = Identity;
+    let offspring = op.transform(state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 3);
+    assert!(matches!(offspring, Offspring::Multiple(_)));
+}
+
+// ── WithRate ──
+
+#[test]
+fn with_rate_zero_passes_all_through() {
+    use crate::operators::sequential::with_rate::WithRate;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+    let op = WithRate::new(RandomReset::<i32>::new(), 0.0);
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(pop.len(), 3);
+    assert_eq!(*pop.as_slice()[0].genome(), [1, 2, 3, 4]);
+    assert_eq!(*pop.as_slice()[1].genome(), [5, 6, 7, 8]);
+    assert_eq!(*pop.as_slice()[2].genome(), [9, 10, 11, 12]);
+}
+
+#[test]
+fn with_rate_one_applies_to_all() {
+    use crate::operators::sequential::with_rate::WithRate;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+    let op = WithRate::new(RandomReset::<i32>::new(), 1.0);
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(pop.len(), 3);
+    // With rate 1.0, all individuals should be mutated (not all zeros)
+    for ind in &pop {
+        assert_ne!(*ind.genome(), [0, 0, 0, 0]);
+    }
+}
+
+#[test]
+#[should_panic]
+fn with_rate_panics_on_invalid() {
+    use crate::operators::sequential::with_rate::WithRate;
+    WithRate::new(RandomReset::<i32>::new(), 1.5);
+}
+
+// ── Uniform ──
+
+#[test]
+fn uniform_crossover_fixed_produces_valid_offspring() {
+    use crate::operators::sequential::crossover::Uniform;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let p1 = [0i32, 0, 0, 0];
+    let p2 = [1i32, 1, 1, 1];
+    let state = make_state(&[p1, p2]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+    let op = Uniform::<i32>::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for gene in ind.genome() {
+            assert!(*gene == 0 || *gene == 1);
+        }
+    }
+}
+
+#[test]
+fn uniform_crossover_vec_produces_valid_offspring() {
+    use crate::operators::sequential::crossover::Uniform;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state_vec(&[vec![0, 0, 0, 0], vec![1, 1, 1, 1]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx_vec(&mut rng);
+    let op = Uniform::<i32>::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for gene in ind.genome() {
+            assert!(*gene == 0 || *gene == 1);
+        }
+    }
+}
+
+// ── Gaussian ──
+
+#[test]
+fn gaussian_mutation_modifies_genome() {
+    use crate::operators::sequential::mutation::Gaussian;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[f64; 4], f64> = vec![[0.0; 4], [0.0; 4], [0.0; 4]]
+        .into_iter()
+        .map(Individual::new)
+        .collect();
+    let state = State::new(pop, 0);
+
+    fn fe(g: &[f64; 4]) -> f64 {
+        g.iter().sum()
+    }
+
+    let mut rng = SmallRng::seed_from_u64(42);
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize);
+
+    let op = Gaussian::new(1.0);
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    assert!(result.iter().any(|ind| ind.genome().iter().any(|&g| g != 0.0)));
+}
+
+#[test]
+fn gaussian_mutation_transform_modifies_genome() {
+    use crate::operators::sequential::mutation::Gaussian;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[f64; 4], f64> = vec![[0.0; 4], [0.0; 4], [0.0; 4]]
+        .into_iter()
+        .map(Individual::new)
+        .collect();
+    let state = State::new(pop, 0);
+
+    fn fe(g: &[f64; 4]) -> f64 {
+        g.iter().sum()
+    }
+
+    let mut rng = SmallRng::seed_from_u64(42);
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize);
+
+    let op = Gaussian::new(1.0);
+    let offspring = op.transform(state, &mut ctx);
+    let result = offspring.into_population();
+    assert!(result.iter().any(|ind| ind.genome().iter().any(|&g| g != 0.0)));
+}
+
+// ── RouletteWheel ──
+
+#[test]
+fn roulette_wheel_selects_proportionally() {
+    use crate::operators::sequential::selection::RouletteWheel;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    // Individual with fitness 99 vs fitness 1 — should be selected ~99% of the time
+    let pop: Population<[i32; 4], i32> = vec![
+        Individual::from_parts([1, 0, 0, 0], 1),
+        Individual::from_parts([9, 9, 9, 9], 99),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = RouletteWheel;
+    let mut high_count = 0;
+    for _ in 0..100 {
+        let offspring = op.apply(&state, &mut ctx);
+        if let Offspring::Single(ind) = offspring {
+            if *ind.genome() == [9, 9, 9, 9] {
+                high_count += 1;
+            }
+        }
+    }
+    assert!(
+        high_count > 80,
+        "high fitness individual selected {high_count}/100 times"
+    );
+}
+
+// ── Proportional ──
+
+#[test]
+fn proportional_output_matches_input_size() {
+    let state = make_state(&[[1, 2, 3, 4]; 12]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let ops = [
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(3u16).unwrap()),
+    ];
+    let op = Proportional::new(ops.as_slice());
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 12);
+}
+
+#[test]
+fn proportional_handles_remainder() {
+    // 7 individuals with weights 1:1 => 3 + 4 (last gets remainder)
+    let state = make_state(&[[1, 2, 3, 4]; 7]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let ops = [
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+    ];
+    let op = Proportional::new(ops.as_slice());
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 7);
+}
+
+#[test]
+fn proportional_single_operator() {
+    let state = make_state(&[[1, 2, 3, 4]; 5]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let ops = [(
+        RandomReset::<i32>::new(),
+        NonZero::new(3u16).unwrap(),
+    )];
+    let op = Proportional::new(ops.as_slice());
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 5);
+}
+
+#[test]
+fn proportional_slice_reference() {
+    let state = make_state(&[[1, 2, 3, 4]; 6]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let ops = vec![
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap()),
+    ];
+    let op = Proportional::new(&ops[..]);
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 6);
+}
+
+#[test]
+fn proportional_fixed_size() {
+    let state = make_state(&[[1, 2, 3, 4]; 4]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let ops = [
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap()),
+    ];
+    let op = Proportional::with_size(ops.as_slice(), 9);
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 9);
+}
+
+// ── Proportional with tuples ──
+
+#[test]
+fn proportional_tuple_two_operators() {
+    let state = make_state(&[[1, 2, 3, 4]; 12]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Proportional::new((
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap()),
+    ));
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 12);
+}
+
+#[test]
+fn proportional_tuple_with_size() {
+    let state = make_state(&[[1, 2, 3, 4]; 6]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Proportional::with_size((
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(3u16).unwrap()),
+    ), 20);
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 20);
+}
+
+#[test]
+fn proportional_tuple_three_operators() {
+    let state = make_state(&[[1, 2, 3, 4]; 9]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Proportional::new((
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+    ));
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.into_population().len(), 9);
+}
+
+// ── TwoPoint ──
+
+#[test]
+fn two_point_crossover_fixed_produces_valid_offspring() {
+    use crate::operators::sequential::crossover::TwoPoint;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let p1 = [0i32, 0, 0, 0];
+    let p2 = [1i32, 1, 1, 1];
+    let state = make_state(&[p1, p2]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+    let op = TwoPoint::<i32>::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for gene in ind.genome() {
+            assert!(*gene == 0 || *gene == 1);
+        }
+    }
+}
+
+#[test]
+fn two_point_crossover_vec_produces_valid_offspring() {
+    use crate::operators::sequential::crossover::TwoPoint;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state_vec(&[vec![0, 0, 0, 0], vec![1, 1, 1, 1]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx_vec(&mut rng);
+    let op = TwoPoint::<i32>::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for gene in ind.genome() {
+            assert!(*gene == 0 || *gene == 1);
+        }
+    }
+}
+
+// ── Arithmetic ──
+
+#[test]
+fn arithmetic_crossover_f64_blends_parents() {
+    use crate::operators::sequential::crossover::Arithmetic;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[f64; 4], f64> = vec![
+        Individual::new([0.0, 0.0, 0.0, 0.0]),
+        Individual::new([1.0, 1.0, 1.0, 1.0]),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+
+    fn fe(g: &[f64; 4]) -> f64 {
+        g.iter().sum()
+    }
+
+    let mut rng = SmallRng::seed_from_u64(42);
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize);
+
+    let op = Arithmetic::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for &gene in ind.genome() {
+            assert!(gene >= 0.0 && gene <= 1.0, "gene {gene} not in [0, 1]");
+        }
+    }
+}
+
+#[test]
+fn arithmetic_crossover_f32_produces_valid_offspring() {
+    use crate::operators::sequential::crossover::Arithmetic;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[f32; 4], f32> = vec![
+        Individual::new([0.0f32, 2.0, 4.0, 6.0]),
+        Individual::new([1.0f32, 3.0, 5.0, 7.0]),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+
+    fn fe(g: &[f32; 4]) -> f32 {
+        g.iter().sum()
+    }
+
+    let mut rng = SmallRng::seed_from_u64(99);
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(fe as fn(&[f32; 4]) -> f32), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(fe as fn(&[f32; 4]) -> f32), &mut rng, &Maximize);
+
+    let op = Arithmetic::new();
+    let pop = op.apply(&state, &mut ctx).into_population();
+    assert_eq!(pop.len(), 2);
+    for ind in &pop {
+        for (i, &gene) in ind.genome().iter().enumerate() {
+            let lo = [0.0f32, 2.0, 4.0, 6.0][i];
+            let hi = [1.0f32, 3.0, 5.0, 7.0][i];
+            assert!(gene >= lo && gene <= hi, "gene {gene} not in [{lo}, {hi}]");
+        }
+    }
+}
+
+// ── Swap ──
+
+#[test]
+fn swap_mutation_preserves_genes() {
+    use crate::operators::sequential::mutation::Swap;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[1, 2, 3, 4]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Swap::<i32>::new();
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    let genome = result.as_slice()[0].genome();
+    // Same genes, possibly different order
+    let mut sorted = *genome;
+    sorted.sort();
+    assert_eq!(sorted, [1, 2, 3, 4]);
+}
+
+#[test]
+fn swap_mutation_transform() {
+    use crate::operators::sequential::mutation::Swap;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[10, 20, 30, 40], [50, 60, 70, 80]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Swap::<i32>::new();
+    let offspring = op.transform(state, &mut ctx);
+    let result = offspring.into_population();
+    assert_eq!(result.len(), 2);
+    // Each genome should still contain the same values
+    for ind in result.iter() {
+        let mut sorted = *ind.genome();
+        sorted.sort();
+        assert!(sorted == [10, 20, 30, 40] || sorted == [50, 60, 70, 80]);
+    }
+}
+
+#[test]
+fn inversion_mutation_preserves_genes() {
+    use crate::operators::sequential::mutation::Inversion;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[1, 2, 3, 4]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Inversion::<i32>::new();
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    let mut sorted = *result.as_slice()[0].genome();
+    sorted.sort();
+    assert_eq!(sorted, [1, 2, 3, 4]);
+}
+
+// ── Scramble ──
+
+#[test]
+fn scramble_mutation_preserves_genes() {
+    use crate::operators::sequential::mutation::Scramble;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[1, 2, 3, 4]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Scramble::<i32>::new();
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    let mut sorted = *result.as_slice()[0].genome();
+    sorted.sort();
+    assert_eq!(sorted, [1, 2, 3, 4]);
+}
+
+// ── Creep ──
+
+#[test]
+fn creep_mutation_changes_one_gene() {
+    use crate::operators::sequential::mutation::Creep;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[100, 100, 100, 100]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Creep::<i32>::new(5);
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    let genome = result.as_slice()[0].genome();
+    // Exactly one gene should differ (by at most 5)
+    let diffs: Vec<_> = genome
+        .iter()
+        .zip([100i32; 4].iter())
+        .filter(|(a, b)| a != b)
+        .collect();
+    assert_eq!(diffs.len(), 1);
+    let diff = (*diffs[0].0 - *diffs[0].1).abs();
+    assert!(diff <= 5);
+}
+
+#[test]
+fn creep_mutation_transform() {
+    use crate::operators::sequential::mutation::Creep;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[100, 100, 100, 100], [200, 200, 200, 200]]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Creep::<i32>::new(5);
+    let offspring = op.transform(state, &mut ctx);
+    let result = offspring.into_population();
+    assert_eq!(result.len(), 2);
+}
+
+// ── Rank ──
+
+#[test]
+fn rank_selection_favors_best() {
+    use crate::operators::sequential::selection::Rank;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    // Individual with fitness 1 vs fitness 100 — rank selection should still favor the better one
+    let pop: Population<[i32; 4], i32> = vec![
+        Individual::from_parts([1, 0, 0, 0], 1),
+        Individual::from_parts([9, 9, 9, 9], 100),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Rank;
+    let mut best_count = 0;
+    for _ in 0..100 {
+        let offspring = op.apply(&state, &mut ctx);
+        if let Offspring::Single(ind) = offspring {
+            if *ind.genome() == [9, 9, 9, 9] {
+                best_count += 1;
+            }
+        }
+    }
+    // With rank weights 2:1, best should be selected ~67% of the time
+    assert!(
+        best_count > 50,
+        "best individual selected {best_count}/100 times"
+    );
+}
+
+// ── Sus ──
+
+#[test]
+fn sus_selects_correct_count() {
+    use crate::operators::sequential::selection::Sus;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[i32; 4], i32> = vec![
+        Individual::from_parts([1, 0, 0, 0], 10),
+        Individual::from_parts([2, 0, 0, 0], 20),
+        Individual::from_parts([3, 0, 0, 0], 30),
+        Individual::from_parts([4, 0, 0, 0], 40),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Sus::new(NonZero::new(6).unwrap());
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 6);
+}
+
+#[test]
+fn sus_favors_higher_fitness() {
+    use crate::operators::sequential::selection::Sus;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[i32; 4], i32> = vec![
+        Individual::from_parts([1, 0, 0, 0], 1),
+        Individual::from_parts([9, 9, 9, 9], 99),
+    ]
+    .into_iter()
+    .collect();
+    let state = State::new(pop, 0);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Sus::new(NonZero::new(100).unwrap());
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    let high_count = pop.iter().filter(|ind| *ind.genome() == [9, 9, 9, 9]).count();
+    // 99% of fitness belongs to [9,9,9,9], so it should get ~99 of 100 selections
+    assert!(high_count > 90, "high fitness selected {high_count}/100 times");
+}
+
+// ── Conditional ──
+
+#[test]
+fn conditional_applies_a_when_true() {
+    use crate::operators::sequential::combinator::Conditional;
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    // Predicate always true → applies RandomReset (changes genomes)
+    let op = Conditional::new(
+        RandomReset::<i32>::new(),
+        Identity,
+        |_: &State<[i32; 4], i32>| true,
+    );
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 2);
+}
+
+#[test]
+fn conditional_applies_b_when_false() {
+    use crate::operators::sequential::combinator::Conditional;
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8]]);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    // Predicate always false → applies Identity (preserves genomes)
+    let op = Conditional::new(
+        RandomReset::<i32>::new(),
+        Identity,
+        |_: &State<[i32; 4], i32>| false,
+    );
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(*pop.as_slice()[0].genome(), [1, 2, 3, 4]);
+    assert_eq!(*pop.as_slice()[1].genome(), [5, 6, 7, 8]);
+}
+
+#[test]
+fn conditional_uses_generation() {
+    use crate::operators::sequential::combinator::Conditional;
+
+    // Generation 5 → predicate checks generation >= 10
+    let pop = make_state(&[[1, 2, 3, 4]]).into_population();
+    let state = State::new(pop, 5);
+    let mut rng = rand::rng();
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Conditional::new(
+        RandomReset::<i32>::new(),
+        Identity,
+        |s: &State<[i32; 4], i32>| s.generation() >= 10,
+    );
+    // Generation 5 < 10, so Identity is applied
+    let offspring = op.apply(&state, &mut ctx);
+    let pop = offspring.into_population();
+    assert_eq!(*pop.as_slice()[0].genome(), [1, 2, 3, 4]);
+}
+
+// ── Gaussian bounds ──
+
+#[test]
+fn gaussian_mutation_respects_bounds() {
+    use crate::operators::sequential::mutation::Gaussian;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let pop: Population<[f64; 4], f64> = vec![[0.9, 0.9, 0.9, 0.9]; 10]
+        .into_iter()
+        .map(|g| Individual::new(g))
+        .collect();
+    let state = State::new(pop, 0);
+
+    fn fe(g: &[f64; 4]) -> f64 {
+        g.iter().sum()
+    }
+
+    let mut rng = SmallRng::seed_from_u64(42);
+    #[cfg(feature = "parallel")]
+    let mut ctx = {
+        use std::sync::LazyLock;
+        static RT: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(1));
+        Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize, &RT)
+    };
+    #[cfg(not(feature = "parallel"))]
+    let mut ctx = Context::new(&(fe as fn(&[f64; 4]) -> f64), &mut rng, &Maximize);
+
+    let op = Gaussian::new(1.0).min(-1.0).max(1.0);
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    for ind in result.iter() {
+        for &g in ind.genome() {
+            assert!(g >= -1.0 && g <= 1.0, "gene {g} out of bounds");
+        }
+    }
+}
+
+// ── Creep bounds ──
+
+#[test]
+fn creep_mutation_respects_bounds() {
+    use crate::operators::sequential::mutation::Creep;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    let state = make_state(&[[50, 50, 50, 50]; 10]);
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = make_ctx(&mut rng);
+
+    let op = Creep::<i32>::new(100).min(0).max(60);
+    let offspring = op.apply(&state, &mut ctx);
+    let result = offspring.into_population();
+    for ind in result.iter() {
+        for &g in ind.genome() {
+            assert!(g >= 0 && g <= 60, "gene {g} out of bounds [0, 60]");
+        }
+    }
 }

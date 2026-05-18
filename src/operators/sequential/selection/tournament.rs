@@ -14,18 +14,18 @@ use std::num::NonZero;
 /// # Examples
 ///
 /// ```
-/// use evolve::operators::sequential::selection::TournamentSelection;
+/// use evolve::operators::sequential::selection::Tournament;
 /// use std::num::NonZero;
 ///
-/// let selection = TournamentSelection::new(NonZero::new(3).unwrap());
+/// let selection = Tournament::new(NonZero::new(3).unwrap());
 /// ```
 #[derive(Debug)]
-pub struct TournamentSelection {
+pub struct Tournament {
     tournament_size: usize,
 }
 
-impl TournamentSelection {
-    /// Creates a new `TournamentSelection` with the given tournament size.
+impl Tournament {
+    /// Creates a new `Tournament` with the given tournament size.
     pub fn new(tournament_size: NonZero<usize>) -> Self {
         Self {
             tournament_size: tournament_size.get(),
@@ -33,7 +33,7 @@ impl TournamentSelection {
     }
 }
 
-impl<G, F, R, Fe, C> GeneticOperator<G, F, Fe, R, C> for TournamentSelection
+impl<G, F, R, Fe, C> GeneticOperator<G, F, Fe, R, C> for Tournament
 where
     G: Clone,
     F: PartialOrd + Clone,

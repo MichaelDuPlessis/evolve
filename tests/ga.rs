@@ -8,7 +8,7 @@ use evolve::{
         combinator::{Combine, Fill, Pipeline, Repeat, Weighted},
         crossover::SinglePoint,
         mutation::RandomReset,
-        selection::TournamentSelection,
+        selection::Tournament,
     },
     termination::MaxGenerations,
 };
@@ -71,7 +71,7 @@ fn build_with_pipeline() {
         MaxGenerations::new(1),
         |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>(),
         Fill::from_population_size(Pipeline::new((
-            TournamentSelection::new(nz(3)),
+            Tournament::new(nz(3)),
             SinglePoint::new(),
             RandomReset::new(),
         ))),
@@ -144,8 +144,8 @@ fn maximize_improves_over_generations() {
 
     let ops = Fill::from_population_size(Pipeline::new((
         Combine::new((
-            TournamentSelection::new(nz(3)),
-            TournamentSelection::new(nz(3)),
+            Tournament::new(nz(3)),
+            Tournament::new(nz(3)),
         )),
         SinglePoint::new(),
         RandomReset::new(),
@@ -163,8 +163,8 @@ fn maximize_improves_over_generations() {
 
     let ops = Fill::from_population_size(Pipeline::new((
         Combine::new((
-            TournamentSelection::new(nz(3)),
-            TournamentSelection::new(nz(3)),
+            Tournament::new(nz(3)),
+            Tournament::new(nz(3)),
         )),
         SinglePoint::new(),
         RandomReset::new(),
@@ -230,8 +230,8 @@ fn full_pipeline_runs_to_completion() {
         fitness_fn,
         Fill::from_population_size(Pipeline::new((
             Combine::new((
-                TournamentSelection::new(nz(3)),
-                TournamentSelection::new(nz(3)),
+                Tournament::new(nz(3)),
+                Tournament::new(nz(3)),
             )),
             SinglePoint::new(),
             RandomReset::new(),
@@ -289,8 +289,8 @@ fn weighted_pipeline_with_selection_and_mutation() {
             (
                 Pipeline::new((
                     Combine::new((
-                        TournamentSelection::new(nz(3)),
-                        TournamentSelection::new(nz(3)),
+                        Tournament::new(nz(3)),
+                        Tournament::new(nz(3)),
                     )),
                     SinglePoint::new(),
                     RandomReset::new(),
@@ -422,8 +422,8 @@ fn builder_with_pipeline() {
         .fitness(|g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>())
         .operators(Fill::from_population_size(Pipeline::new((
             Combine::new((
-                TournamentSelection::new(nz(3)),
-                TournamentSelection::new(nz(3)),
+                Tournament::new(nz(3)),
+                Tournament::new(nz(3)),
             )),
             SinglePoint::new(),
             RandomReset::new(),
@@ -463,8 +463,8 @@ fn ga_with_variable_length_genome() {
         fitness_fn,
         Fill::from_population_size(Pipeline::new((
             Combine::new((
-                TournamentSelection::new(nz(3)),
-                TournamentSelection::new(nz(3)),
+                Tournament::new(nz(3)),
+                Tournament::new(nz(3)),
             )),
             SinglePoint::<u8>::new(),
             RandomReset::<u8>::new(),

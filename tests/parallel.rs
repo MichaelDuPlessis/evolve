@@ -448,3 +448,147 @@ fn parallel_single_point_vec_crossover() {
         "Vec crossover should recombine parent genomes"
     );
 }
+
+// ── Parallel TwoPoint, Uniform, and Arithmetic crossover ──
+
+#[test]
+fn parallel_two_point_crossover() {
+    use evolve::operators::parallel::crossover::TwoPoint;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[0, 0, 0, 0], [255, 255, 255, 255], [1, 1, 1, 1], [2, 2, 2, 2]]);
+    let op = TwoPoint::<u8>::new();
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+#[test]
+fn parallel_uniform_crossover() {
+    use evolve::operators::parallel::crossover::Uniform;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[0, 0, 0, 0], [255, 255, 255, 255], [1, 1, 1, 1], [2, 2, 2, 2]]);
+    let op = Uniform::<u8>::new();
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
+}
+
+#[test]
+fn parallel_arithmetic_crossover() {
+    use evolve::operators::parallel::crossover::Arithmetic;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[f64; 4]| g.iter().sum::<f64>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let pop: Population<[f64; 4], f64> = vec![
+        Individual::new([0.0, 0.0, 0.0, 0.0]),
+        Individual::new([1.0, 1.0, 1.0, 1.0]),
+        Individual::new([2.0, 2.0, 2.0, 2.0]),
+        Individual::new([3.0, 3.0, 3.0, 3.0]),
+    ].into_iter().collect();
+    let state = State::new(pop, 0);
+
+    let op = Arithmetic::new();
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 4);
+
+    // Verify blending: children should be between parents
+    let result = offspring.into_population();
+    for ind in result.iter() {
+        for &g in ind.genome() {
+            assert!(g >= 0.0 && g <= 3.0, "blended gene {g} should be between parent values");
+        }
+    }
+}
+
+#[test]
+fn parallel_swap_mutation() {
+    use evolve::operators::parallel::mutation::Swap;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
+    let op = Swap::<u8>::new();
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 3);
+}
+
+#[test]
+fn parallel_inversion_mutation() {
+    use evolve::operators::parallel::mutation::Inversion;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
+    let op = Inversion::<u8>::new();
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 3);
+}
+
+#[test]
+fn parallel_scramble_mutation() {
+    use evolve::operators::parallel::mutation::Scramble;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]);
+    let op = Scramble::<u8>::new();
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 3);
+}
+
+#[test]
+fn parallel_creep_mutation() {
+    use evolve::operators::parallel::mutation::Creep;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let state = make_state(&[[100, 100, 100, 100], [200, 200, 200, 200]]);
+    let op = Creep::<u8>::new(5);
+    assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 2);
+}
+
+#[test]
+fn parallel_gaussian_mutation() {
+    use evolve::operators::parallel::mutation::Gaussian;
+
+    let runtime = pooled::Runtime::new(2);
+    let fe = |g: &[f64; 4]| g.iter().sum::<f64>();
+    let mut rng = SmallRng::seed_from_u64(42);
+    let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
+
+    let pop: Population<[f64; 4], f64> = vec![
+        Individual::new([0.0; 4]),
+        Individual::new([0.0; 4]),
+        Individual::new([0.0; 4]),
+    ].into_iter().collect();
+    let state = State::new(pop, 0);
+
+    let op = Gaussian::new(1.0);
+    let offspring = op.apply(&state, &mut ctx);
+    assert_eq!(offspring.num_offspring(), 3);
+
+    // At least one gene should have changed
+    let result = offspring.into_population();
+    let any_changed = result.iter().any(|ind| ind.genome().iter().any(|&g| g != 0.0));
+    assert!(any_changed, "Gaussian mutation should change at least one gene");
+}

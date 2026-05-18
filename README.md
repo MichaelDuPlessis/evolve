@@ -19,6 +19,44 @@ A generic, composable genetic algorithm framework for Rust.
 - Closures work as fitness evaluators and comparators via blanket trait impls
 - Minimal dependencies: `rand` and `vecpool` (optional `pooled` for parallel execution)
 
+## Available Operators
+
+### Selection
+- **Tournament** — tournament selection with replacement
+- **Elitism** — preserve the best N individuals
+- **RouletteWheel** — fitness-proportionate selection
+- **Rank** — rank-based selection (avoids premature convergence)
+- **Sus** — stochastic universal sampling (low-variance fitness-proportionate)
+
+### Crossover
+- **SinglePoint** — single-point crossover
+- **TwoPoint** — two-point crossover
+- **Uniform** — per-gene random parent selection
+- **Arithmetic** — numeric blending for continuous genomes (f32/f64)
+
+### Mutation
+- **RandomReset** — replace a random gene with a new random value
+- **Gaussian** — add Gaussian noise (continuous genomes)
+- **Creep** — add a small random offset (discrete genomes)
+- **Swap** — swap two random genes (permutation problems)
+- **Inversion** — reverse a random segment (permutation problems)
+- **Scramble** — shuffle a random segment (permutation problems)
+- **SegmentDuplication** — duplicate a random segment (variable-length)
+- **SegmentDeletion** — delete a random segment (variable-length)
+
+### Combinators
+- **Pipeline** — chain operators sequentially
+- **Fill** — repeat an operator until target population size
+- **Combine** — run operators on same input, merge outputs
+- **Weighted** — probabilistically select one operator per call
+- **Repeat** — apply an operator N times
+- **Proportional** — split output proportionally across operators
+- **Conditional** — apply operator A or B based on a predicate
+
+### Utility
+- **Identity** — no-op pass-through
+- **WithRate** — apply an operator per-individual with a given probability
+
 ## Quick Start
 
 ```rust
@@ -207,7 +245,7 @@ use evolve::{
         combinator::{Combine, Fill, Pipeline},
         crossover::SinglePoint,
         mutation::RandomReset,
-        selection::TournamentSelection,
+        selection::Tournament,
     },
     termination::MaxGenerations,
 };
@@ -229,8 +267,8 @@ let mut ea = EvolutionaryAlgorithm::new(
     fitness,
     Fill::from_population_size(Pipeline::new((
         Combine::new((
-            TournamentSelection::new(NonZero::new(3).unwrap()),
-            TournamentSelection::new(NonZero::new(3).unwrap()),
+            Tournament::new(NonZero::new(3).unwrap()),
+            Tournament::new(NonZero::new(3).unwrap()),
         )),
         SinglePoint::<u8>::new(),
         RandomReset::<u8>::new(),
