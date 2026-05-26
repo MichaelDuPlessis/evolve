@@ -236,6 +236,8 @@ dependencies = [
  "evolve-derive",
  "pooled",
  "rand",
+ "serde",
+ "serde_json",
  "vecpool",
 ]
 

@@ -9,6 +9,7 @@ use crate::{
 /// Passed to [`GeneticOperator::apply`] so
 /// operators can read the current population and generation number.
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct State<G, F> {
     population: Population<G, F>,
     generation: usize,
@@ -59,3 +60,5 @@ impl<G, F> State<G, F> {
         self.population
     }
 }
+
+
