@@ -85,3 +85,38 @@ impl<G, F> Individual<G, F> {
         Self::new(genome)
     }
 }
+
+#[cfg(feature = "serde")]
+impl<G, F> serde::Serialize for Individual<G, F>
+where
+    G: serde::Serialize,
+    F: serde::Serialize,
+{
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeStruct;
+        let mut s = serializer.serialize_struct("Individual", 2)?;
+        s.serialize_field("genome", &self.genome)?;
+        s.serialize_field("fitness", &self.try_fitness())?;
+        s.end()
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, G, F> serde::Deserialize<'de> for Individual<G, F>
+where
+    G: serde::Deserialize<'de>,
+    F: serde::Deserialize<'de>,
+{
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(serde::Deserialize)]
+        struct Data<G, F> {
+            genome: G,
+            fitness: Option<F>,
+        }
+        let data = Data::<G, F>::deserialize(deserializer)?;
+        Ok(match data.fitness {
+            Some(f) => Self::from_parts(data.genome, f),
+            None => Self::new(data.genome),
+        })
+    }
+}

@@ -19,6 +19,7 @@ use crate::core::{individual::Individual, population::Population};
 /// assert_eq!(pop.len(), 1);
 /// ```
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Offspring<G, F> {
     /// A single individual produced by the operator.
     Single(Individual<G, F>),
@@ -47,3 +48,5 @@ impl<G, F> Offspring<G, F> {
         }
     }
 }
+
+

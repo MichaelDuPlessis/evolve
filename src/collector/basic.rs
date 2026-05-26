@@ -45,6 +45,7 @@ impl Basic {
 
 /// The result of a completed algorithm run.
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RunResult<G, F> {
     population: Population<G, F>,
     generations: usize,
@@ -77,6 +78,8 @@ impl<G, F, Fe, C> Collector<G, F, Fe, C> for Basic {
         }
     }
 }
+
+
 
 #[cfg(test)]
 mod test {

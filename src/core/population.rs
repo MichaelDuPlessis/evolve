@@ -207,3 +207,26 @@ impl<G: Clone, F: Clone> Clone for Population<G, F> {
         }
     }
 }
+
+#[cfg(feature = "serde")]
+impl<G, F> serde::Serialize for Population<G, F>
+where
+    G: serde::Serialize,
+    F: serde::Serialize,
+{
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_seq(self.iter())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, G, F> serde::Deserialize<'de> for Population<G, F>
+where
+    G: serde::Deserialize<'de>,
+    F: serde::Deserialize<'de>,
+{
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let individuals = Vec::<Individual<G, F>>::deserialize(deserializer)?;
+        Ok(Self::from_individuals(individuals))
+    }
+}

@@ -56,6 +56,7 @@ impl<F> Default for Standard<F> {
 
 /// The final result of an algorithm run collected by [`Standard`].
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct RunResult<G, F> {
     population: Population<G, F>,
     generations: usize,
@@ -111,6 +112,7 @@ impl<G, F> RunResult<G, F> {
 
 /// A view into a single generation's recorded data.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct GenerationRecord<'a, F> {
     best_fitness: &'a F,
     duration: Duration,
