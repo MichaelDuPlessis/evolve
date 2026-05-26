@@ -18,6 +18,7 @@ A generic, composable genetic algorithm framework for Rust.
 - `Maximize` and `Minimize` fitness comparators out of the box
 - Closures work as fitness evaluators and comparators via blanket trait impls
 - Minimal dependencies: `rand` and `vecpool` (optional `pooled` for parallel execution)
+- Optional `serde` support for serializing populations and results
 
 ## Available Operators
 
@@ -251,7 +252,7 @@ use evolve::{
 };
 use std::num::NonZero;
 
-let fitness = GeFitness::<MyGrammar, u8, f64, _, BytecodeBuilder<Sym>>::new(
+let fitness = GeFitness::<MyGrammar, u8, f64, _, BytecodeBuilder<Sym>, _>::new(
     MyGrammar,
     3,
     |program: &Bytecode<Sym>| {
@@ -284,6 +285,31 @@ let result = ea.run();
 ### Variable-length operators
 
 GE benefits from variable-length genomes. Use `RangedRandom` for initialization (produces genomes of random length within a range) and the variable-length mutation operators `SegmentDuplication` and `SegmentDeletion` to explore different codon lengths during evolution.
+
+### Custom mappers
+
+The `Mapper` trait allows custom strategies for mapping codon sequences to phenotypes. `StandardMapper` is the default (used automatically by `GeFitness::new()`). Use `GeFitness::with_mapper()` to plug in a custom implementation:
+
+```rust
+use evolve::mapper::{Mapper, StandardMapper};
+use evolve::grammar::GrammarDef;
+use evolve::phenotype::PhenotypeBuilder;
+use evolve::codon::Codon;
+
+struct MyMapper;
+
+impl Mapper for MyMapper {
+    fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
+        &self, grammar: &G, codons: &[C], builder: B,
+    ) -> Option<B::Output> {
+        // Custom mapping logic
+        StandardMapper::new(3).map(grammar, codons, builder)
+    }
+}
+
+// Use with GeFitness:
+// let fitness = GeFitness::with_mapper(grammar, MyMapper, |program| { ... }, penalty);
+```
 
 ## Collectors
 
@@ -353,6 +379,23 @@ let results = Experiment::new(
 for (i, r) in results.iter().enumerate() {
     println!("Run {}: {} gens, {:?}", i, r.generations(), r.total_duration());
 }
+```
+
+## Serde Support
+
+Enable the `serde` feature to derive `Serialize` and `Deserialize` for core types (`Individual`, `Population`, `State`, `Offspring`) and collector results (`basic::RunResult`, `standard::RunResult`):
+
+```toml
+[dependencies]
+evolve = { version = "0.3", features = ["serde"] }
+```
+
+```rust
+use serde_json;
+
+let result = ea.run();
+let json = serde_json::to_string(result.population()).unwrap();
+println!("{json}");
 ```
 
 ## Contributing
