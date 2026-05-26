@@ -3,6 +3,8 @@
 pub mod grammar_def;
 pub mod mapper;
 
+pub use mapper::{Codon, Mapper, StandardMapper};
+
 use std::collections::HashMap;
 use std::hash::Hash;
 

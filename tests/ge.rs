@@ -58,12 +58,10 @@ fn arithmetic_grammar() -> Grammar<&'static str> {
 
 #[test]
 fn ge_runs_to_completion() {
-    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
-        arithmetic_grammar(),
-        3,
-        |p: &TerminalCount| p.run(&()) as f64,
-        -1.0,
-    );
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(arithmetic_grammar(),
+    3,
+    |p: &TerminalCount| p.run(&()) as f64,
+    -1.0,);
 
     let mut ga = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..20),
@@ -87,12 +85,10 @@ fn ge_runs_to_completion() {
 
 #[test]
 fn ge_with_segment_operators() {
-    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
-        arithmetic_grammar(),
-        3,
-        |p: &TerminalCount| p.run(&()) as f64,
-        -1.0,
-    );
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(arithmetic_grammar(),
+    3,
+    |p: &TerminalCount| p.run(&()) as f64,
+    -1.0,);
 
     let mut ga = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..20),
@@ -121,12 +117,10 @@ fn ge_with_segment_operators() {
 #[test]
 fn ge_best_has_valid_phenotype() {
     let grammar = arithmetic_grammar();
-    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
-        grammar.clone(),
-        3,
-        |p: &TerminalCount| p.run(&()) as f64,
-        -1.0,
-    );
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(grammar.clone(),
+    3,
+    |p: &TerminalCount| p.run(&()) as f64,
+    -1.0,);
 
     let mut ga = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..20),
@@ -147,12 +141,10 @@ fn ge_best_has_valid_phenotype() {
 
     let result = ga.run();
 
-    let fe = GeFitness::<_, u8, f64, _, CountBuilder>::new(
-        grammar.clone(),
-        3,
-        |p: &TerminalCount| p.run(&()) as f64,
-        -1.0,
-    );
+    let fe = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(grammar.clone(),
+    3,
+    |p: &TerminalCount| p.run(&()) as f64,
+    -1.0,);
 
     let best = result.population().best(&fe, &Maximize);
     let fitness = fe.evaluate(best.genome());
@@ -203,12 +195,10 @@ fn op_grammar() -> Grammar<Op> {
 fn ge_bytecode_integration() {
     let grammar = op_grammar();
 
-    let fitness = GeFitness::<_, u8, i32, _, BytecodeBuilder<Op>>::new(
-        grammar.clone(),
-        2,
-        |p: &Bytecode<Op>| p.run(&()),
-        i32::MIN,
-    );
+    let fitness = GeFitness::<_, u8, i32, _, BytecodeBuilder<Op>, _>::new(grammar.clone(),
+    2,
+    |p: &Bytecode<Op>| p.run(&()),
+    i32::MIN,);
 
     let mut ga = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(5..15),
@@ -229,12 +219,10 @@ fn ge_bytecode_integration() {
 
     let result = ga.run();
 
-    let fe = GeFitness::<_, u8, i32, _, BytecodeBuilder<Op>>::new(
-        grammar.clone(),
-        2,
-        |p: &Bytecode<Op>| p.run(&()),
-        i32::MIN,
-    );
+    let fe = GeFitness::<_, u8, i32, _, BytecodeBuilder<Op>, _>::new(grammar.clone(),
+    2,
+    |p: &Bytecode<Op>| p.run(&()),
+    i32::MIN,);
 
     let best = result.population().best(&fe, &Maximize);
     let fitness = fe.evaluate(best.genome());
@@ -251,7 +239,7 @@ fn ge_improves_fitness_over_generations() {
     let fitness_fn = |p: &TerminalCount| p.run(&()) as f64;
 
     let make_fitness =
-        || GeFitness::<_, u8, f64, _, CountBuilder>::new(arithmetic_grammar(), 3, fitness_fn, -1.0);
+        || GeFitness::<_, u8, f64, _, CountBuilder, _>::new(arithmetic_grammar(), 3, fitness_fn, -1.0);
 
     let ops = || {
         Fill::from_population_size(Pipeline::new((
@@ -302,12 +290,10 @@ fn ge_improves_fitness_over_generations() {
 
 #[test]
 fn ge_with_fixed_length_genome() {
-    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
-        arithmetic_grammar(),
-        3,
-        |p: &TerminalCount| p.run(&()) as f64,
-        -1.0,
-    );
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(arithmetic_grammar(),
+    3,
+    |p: &TerminalCount| p.run(&()) as f64,
+    -1.0,);
 
     let mut ea = EvolutionaryAlgorithm::new(
         RangedRandom::<u8>::new(20..21),

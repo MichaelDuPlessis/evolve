@@ -181,12 +181,10 @@ fn phenotype_run_subtraction() {
 fn ge_fitness_produces_valid_phenotype() {
     // Codons: [1, 0] → Expr picks prod 1 (Val), Val picks prod 0 (X)
     // Result: StackMachine([X]), run(2.0) = 2.0
-    let ge = GeFitness::<_, u8, f64, _, StackBuilder>::new(
-        MathGrammar,
-        3,
-        |p: &StackMachine| p.run(&2.0),
-        -999.0,
-    );
+    let ge = GeFitness::<_, u8, f64, _, StackBuilder, _>::new(MathGrammar,
+    3,
+    |p: &StackMachine| p.run(&2.0),
+    -999.0,);
     assert_eq!(ge.evaluate(&vec![1u8, 0]), 2.0);
 }
 
@@ -220,24 +218,20 @@ fn ge_fitness_complex_expression() {
     //     Val → 1%2=1: [One]
     //   Op → 0%2=0: [Add]
     // Terminals in order: X, One, Add → StackMachine([X, One, Add]) → x + 1
-    let ge = GeFitness::<_, u8, f64, _, StackBuilder>::new(
-        MathGrammar,
-        3,
-        |p: &StackMachine| p.run(&5.0),
-        -999.0,
-    );
+    let ge = GeFitness::<_, u8, f64, _, StackBuilder, _>::new(MathGrammar,
+    3,
+    |p: &StackMachine| p.run(&5.0),
+    -999.0,);
     assert_eq!(ge.evaluate(&vec![0u8, 1, 0, 1, 1, 0]), 6.0); // x + 1 = 5 + 1 = 6
 }
 
 #[test]
 fn ge_fitness_invalid_returns_penalty() {
     // All-recursive codons with 0 wraps should exhaust
-    let ge = GeFitness::<_, u8, f64, _, StackBuilder>::new(
-        MathGrammar,
-        0,
-        |p: &StackMachine| p.run(&1.0),
-        -999.0,
-    );
+    let ge = GeFitness::<_, u8, f64, _, StackBuilder, _>::new(MathGrammar,
+    0,
+    |p: &StackMachine| p.run(&1.0),
+    -999.0,);
     // Single codon 0 picks recursive [Expr, Expr, Op] repeatedly
     assert_eq!(ge.evaluate(&vec![0u8]), -999.0);
 }
