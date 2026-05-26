@@ -1,7 +1,7 @@
 //! Collectors for gathering results from algorithm runs.
 //!
 //! The [`Collector`] trait provides hooks that are called at each stage of a
-//! genetic algorithm run, and a [`finalize`](Collector::finalize) method to
+//! algorithm run, and a [`finalize`](Collector::finalize) method to
 //! produce a final result.
 
 pub mod basic;

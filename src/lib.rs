@@ -1,8 +1,8 @@
 //! # evolve
 //!
-//! A generic, composable genetic algorithm framework for Rust.
+//! A generic, composable framework for genetic algorithms and grammatical evolution in Rust.
 //!
-//! `evolve` provides the building blocks to assemble genetic algorithms from reusable,
+//! `evolve` provides the building blocks to assemble genetic algorithms and grammatical evolution systems from reusable,
 //! type-safe components. Operators are composed using combinators — chain them into
 //! pipelines, weight them probabilistically, or repeat them to fill a population —
 //! all with zero-cost abstractions.
@@ -54,7 +54,7 @@
 //! ## Composing Operators
 //!
 //! The real power of `evolve` comes from composing operators using combinators.
-//! A typical genetic algorithm pipeline selects parents, crosses them over, and
+//! A typical pipeline selects parents, crosses them over, and
 //! mutates the offspring:
 //!
 //! ```

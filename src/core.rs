@@ -1,4 +1,4 @@
-//! Core types that make up the genetic algorithm.
+//! Core types that make up the evolutionary algorithm.
 //!
 //! - [`Individual`](individual::Individual) — a genome paired with its fitness value
 //! - [`Population`](population::Population) — a collection of individuals
