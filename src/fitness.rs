@@ -110,7 +110,7 @@ where
 use std::marker::PhantomData;
 
 use crate::grammar::grammar_def::GrammarDef;
-use crate::grammar::mapper::{Codon, map};
+use crate::grammar::mapper::{Codon, Mapper, StandardMapper};
 use crate::phenotype::PhenotypeBuilder;
 
 /// A fitness evaluator for grammatical evolution.
@@ -150,30 +150,28 @@ use crate::phenotype::PhenotypeBuilder;
 ///     .start("s")
 ///     .build();
 ///
-/// let ge = GeFitness::<_, u8, _, _, LenBuilder>::new(grammar, 3, |p: &Len| p.run(&()), 0);
+/// let ge = GeFitness::<_, u8, _, _, LenBuilder, _>::new(grammar, 3, |p: &Len| p.run(&()), 0);
 /// assert_eq!(ge.evaluate(&vec![0u8]), 2);  // production 0 has 2 terminals
 /// assert_eq!(ge.evaluate(&vec![1u8]), 1);  // production 1 has 1 terminal
 /// ```
 #[derive(Debug)]
-pub struct GeFitness<G, C, F, E, B> {
+pub struct GeFitness<G, C, F, E, B, M> {
     grammar: G,
-    max_wraps: usize,
+    mapper: M,
     evaluator: E,
     penalty: F,
     _marker: PhantomData<(C, B)>,
 }
 
-impl<G, C, F, E, B> GeFitness<G, C, F, E, B> {
-    /// Creates a GE fitness evaluator.
-    ///
-    /// - `grammar` — the grammar to map through
-    /// - `max_wraps` — maximum codon wraps before declaring invalid
-    /// - `evaluator` — receives the phenotype and returns a fitness score
-    /// - `penalty` — fitness for individuals that fail to map
-    pub fn new(grammar: G, max_wraps: usize, evaluator: E, penalty: F) -> Self {
+/// Type alias for GeFitness using the standard mapper.
+pub type StandardGeFitness<G, C, F, E, B> = GeFitness<G, C, F, E, B, StandardMapper>;
+
+impl<G, C, F, E, B, M> GeFitness<G, C, F, E, B, M> {
+    /// Creates a GE fitness evaluator with a custom mapper.
+    pub fn with_mapper(grammar: G, mapper: M, evaluator: E, penalty: F) -> Self {
         Self {
             grammar,
-            max_wraps,
+            mapper,
             evaluator,
             penalty,
             _marker: PhantomData,
@@ -189,12 +187,25 @@ impl<G, C, F, E, B> GeFitness<G, C, F, E, B> {
         G::Terminal: Clone,
         C: Codon,
         B: PhenotypeBuilder<G::Terminal> + Default,
+        M: Mapper,
     {
-        map(&self.grammar, genome, self.max_wraps, B::default())
+        self.mapper.map(&self.grammar, genome, B::default())
     }
 }
 
-impl<G, C, F, E, B> FitnessEvaluator<Vec<C>, F> for GeFitness<G, C, F, E, B>
+impl<G, C, F, E, B> GeFitness<G, C, F, E, B, StandardMapper> {
+    /// Creates a GE fitness evaluator using the standard mapper.
+    ///
+    /// - `grammar` — the grammar to map through
+    /// - `max_wraps` — maximum codon wraps before declaring invalid
+    /// - `evaluator` — receives the phenotype and returns a fitness score
+    /// - `penalty` — fitness for individuals that fail to map
+    pub fn new(grammar: G, max_wraps: usize, evaluator: E, penalty: F) -> Self {
+        Self::with_mapper(grammar, StandardMapper::new(max_wraps), evaluator, penalty)
+    }
+}
+
+impl<G, C, F, E, B, M> FitnessEvaluator<Vec<C>, F> for GeFitness<G, C, F, E, B, M>
 where
     G: GrammarDef,
     G::Terminal: Clone,
@@ -202,9 +213,10 @@ where
     F: Clone,
     B: PhenotypeBuilder<G::Terminal> + Default,
     E: Fn(&B::Output) -> F,
+    M: Mapper,
 {
     fn evaluate(&self, genome: &Vec<C>) -> F {
-        match map(&self.grammar, genome, self.max_wraps, B::default()) {
+        match self.mapper.map(&self.grammar, genome, B::default()) {
             Some(phenotype) => (self.evaluator)(&phenotype),
             None => self.penalty.clone(),
         }
@@ -248,7 +260,7 @@ mod ge_fitness_tests {
 
     #[test]
     fn valid_mapping_calls_evaluator() {
-        let fitness = GeFitness::<_, u8, f64, _, ProgramBuilder>::new(
+        let fitness = GeFitness::<_, u8, f64, _, ProgramBuilder, _>::new(
             simple_grammar(),
             0,
             |p: &Program| p.run(&()).len() as f64,
@@ -267,7 +279,7 @@ mod ge_fitness_tests {
             .start("expr")
             .build();
 
-        let fitness = GeFitness::<_, u8, f64, _, ProgramBuilder>::new(
+        let fitness = GeFitness::<_, u8, f64, _, ProgramBuilder, _>::new(
             g,
             0,
             |p: &Program| p.run(&()).len() as f64,

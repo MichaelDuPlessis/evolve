@@ -376,12 +376,10 @@ fn parallel_ge_runs_to_completion() {
         .start("expr")
         .build();
 
-    let fitness = GeFitness::<_, u8, f64, _, CountBuilder>::new(
-        grammar,
-        3,
-        |p: &TerminalCount| p.run(&()) as f64,
-        -1.0,
-    );
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(grammar,
+    3,
+    |p: &TerminalCount| p.run(&()) as f64,
+    -1.0,);
 
     let mut ga = EvolutionaryAlgorithm::builder(nz(100))
         .initializer(RangedRandom::<u8>::new(5..20))
@@ -395,18 +393,16 @@ fn parallel_ge_runs_to_completion() {
 
     let result = ga.run();
 
-    let fe = GeFitness::<_, u8, f64, _, CountBuilder>::new(
-        Grammar::builder()
-            .rule("expr", &[&["expr", "op", "expr"], &["var"], &["const"]])
-            .rule("op", &[&["+"], &["-"], &["*"]])
-            .rule("var", &[&["x"], &["y"]])
-            .rule("const", &[&["1"], &["2"]])
-            .start("expr")
-            .build(),
-        3,
-        |p: &TerminalCount| p.run(&()) as f64,
-        -1.0,
-    );
+    let fe = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(Grammar::builder()
+        .rule("expr", &[&["expr", "op", "expr"], &["var"], &["const"]])
+        .rule("op", &[&["+"], &["-"], &["*"]])
+        .rule("var", &[&["x"], &["y"]])
+        .rule("const", &[&["1"], &["2"]])
+        .start("expr")
+        .build(),
+    3,
+    |p: &TerminalCount| p.run(&()) as f64,
+    -1.0,);
 
     let best_fitness = fe.evaluate(result.population().best(&fe, &Maximize).genome());
     assert!(

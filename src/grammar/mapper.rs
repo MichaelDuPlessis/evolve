@@ -36,63 +36,90 @@ impl Codon for usize {
     }
 }
 
-/// Maps a codon sequence through a grammar using a [`PhenotypeBuilder`].
-///
-/// Returns `None` if codons are exhausted after `max_wraps` wraps before all
-/// non-terminals are expanded.
-pub(crate) fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
-    grammar: &G,
-    codons: &[C],
-    max_wraps: usize,
-    mut builder: B,
-) -> Option<B::Output> {
-    let mut stack: PoolVec<G::Symbol> = PoolVec::new();
-    stack.push(grammar.start());
-    let mut end_rule_stack: PoolVec<usize> = PoolVec::new();
-    let mut codon_idx: usize = 0;
+/// Trait for codon-to-phenotype mapping strategies.
+pub trait Mapper {
+    /// Maps a codon sequence through a grammar into a phenotype.
+    ///
+    /// Returns `None` if the mapping fails (e.g., codons exhausted).
+    fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
+        &self,
+        grammar: &G,
+        codons: &[C],
+        builder: B,
+    ) -> Option<B::Output>;
+}
 
-    while let Some(symbol) = stack.pop() {
-        if grammar.is_terminal(symbol) {
-            builder.push(Event::Terminal(grammar.terminal_value(symbol)));
-        } else {
-            let n = grammar.num_productions(symbol);
-            let choice = if n == 1 {
-                0
-            } else {
-                if codons.is_empty() {
-                    return None;
-                }
-                let current_wrap = codon_idx / codons.len();
-                if current_wrap > max_wraps {
-                    return None;
-                }
-                let c = codons[codon_idx % codons.len()].as_usize() % n;
-                codon_idx += 1;
-                c
-            };
+/// The standard GE mapping algorithm: stack-based derivation with codon
+/// modulo selection, single-production optimization, and wrapping.
+#[derive(Debug, Clone, Copy)]
+pub struct StandardMapper {
+    /// Maximum number of times the codon sequence may wrap before
+    /// declaring the mapping invalid.
+    pub max_wraps: usize,
+}
 
-            builder.push(Event::BeginRule);
-            let prod = grammar.production(symbol, choice);
-            for &s in prod.iter().rev() {
-                stack.push(s);
-            }
-            end_rule_stack.push(prod.len());
-            continue;
-        }
-
-        // After processing a terminal, decrement parent counters.
-        while let Some(count) = end_rule_stack.last_mut() {
-            *count -= 1;
-            if *count == 0 {
-                end_rule_stack.pop();
-                builder.push(Event::EndRule);
-            } else {
-                break;
-            }
-        }
+impl StandardMapper {
+    /// Creates a new `StandardMapper` with the given maximum wrap count.
+    pub fn new(max_wraps: usize) -> Self {
+        Self { max_wraps }
     }
+}
 
-    Some(builder.finish())
+impl Mapper for StandardMapper {
+    fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
+        &self,
+        grammar: &G,
+        codons: &[C],
+        mut builder: B,
+    ) -> Option<B::Output> {
+        let mut stack: PoolVec<G::Symbol> = PoolVec::new();
+        stack.push(grammar.start());
+        let mut end_rule_stack: PoolVec<usize> = PoolVec::new();
+        let mut codon_idx: usize = 0;
+
+        while let Some(symbol) = stack.pop() {
+            if grammar.is_terminal(symbol) {
+                builder.push(Event::Terminal(grammar.terminal_value(symbol)));
+            } else {
+                let n = grammar.num_productions(symbol);
+                let choice = if n == 1 {
+                    0
+                } else {
+                    if codons.is_empty() {
+                        return None;
+                    }
+                    let current_wrap = codon_idx / codons.len();
+                    if current_wrap > self.max_wraps {
+                        return None;
+                    }
+                    let c = codons[codon_idx % codons.len()].as_usize() % n;
+                    codon_idx += 1;
+                    c
+                };
+
+                builder.push(Event::BeginRule);
+                let prod = grammar.production(symbol, choice);
+                for &s in prod.iter().rev() {
+                    stack.push(s);
+                }
+                end_rule_stack.push(prod.len());
+                continue;
+            }
+
+            // After processing a terminal, decrement parent counters.
+            while let Some(count) = end_rule_stack.last_mut() {
+                *count -= 1;
+                if *count == 0 {
+                    end_rule_stack.pop();
+                    builder.push(Event::EndRule);
+                } else {
+                    break;
+                }
+            }
+        }
+
+        Some(builder.finish())
+    }
 }
 
 #[cfg(test)]
@@ -129,21 +156,21 @@ mod test {
     #[test]
     fn simple_terminal() {
         let g = expr_grammar();
-        let result = map(&g, &[1u8], 0, ProgramBuilder::default());
+        let result = StandardMapper::new(0).map(&g, &[1u8], ProgramBuilder::default());
         assert_eq!(result.unwrap().0, "x");
     }
 
     #[test]
     fn recursive_expansion() {
         let g = expr_grammar();
-        let result = map(&g, &[0u8, 1, 0, 2], 0, ProgramBuilder::default());
+        let result = StandardMapper::new(0).map(&g, &[0u8, 1, 0, 2], ProgramBuilder::default());
         assert_eq!(result.unwrap().0, "x+1");
     }
 
     #[test]
     fn wrapping() {
         let g = expr_grammar();
-        let result = map(&g, &[0u8], 1, ProgramBuilder::default());
+        let result = StandardMapper::new(1).map(&g, &[0u8], ProgramBuilder::default());
         assert_eq!(result, None);
     }
 
@@ -155,7 +182,7 @@ mod test {
             .start("s")
             .build();
 
-        let result = map(&g, &[0u8], 0, ProgramBuilder::default());
+        let result = StandardMapper::new(0).map(&g, &[0u8], ProgramBuilder::default());
         assert_eq!(result.unwrap().0, "hi");
     }
 
@@ -166,7 +193,7 @@ mod test {
             .start("s")
             .build();
 
-        let result = map(&g, &[0u8], 0, ProgramBuilder::default());
+        let result = StandardMapper::new(0).map(&g, &[0u8], ProgramBuilder::default());
         assert_eq!(result.unwrap().0, "hello");
     }
 
@@ -177,7 +204,7 @@ mod test {
             .start("s")
             .build();
 
-        let result = map(&g, &[] as &[u8], 0, ProgramBuilder::default());
+        let result = StandardMapper::new(0).map(&g, &[] as &[u8], ProgramBuilder::default());
         assert_eq!(result, None);
     }
 
@@ -189,11 +216,11 @@ mod test {
             .build();
 
         // u8::MAX (255) % 3 == 0 → picks "a"
-        let result = map(&g, &[u8::MAX], 0, ProgramBuilder::default());
+        let result = StandardMapper::new(0).map(&g, &[u8::MAX], ProgramBuilder::default());
         assert_eq!(result.unwrap().0, "a");
 
         // 254 % 3 == 2 → picks "c"
-        let result = map(&g, &[254u8], 0, ProgramBuilder::default());
+        let result = StandardMapper::new(0).map(&g, &[254u8], ProgramBuilder::default());
         assert_eq!(result.unwrap().0, "c");
     }
 
@@ -220,7 +247,7 @@ mod test {
             .start("expr")
             .build();
 
-        let result = map(&grammar, &[0u8], 0, TermListBuilder::default());
+        let result = StandardMapper::new(0).map(&grammar, &[0u8], TermListBuilder::default());
         assert_eq!(result.unwrap().0, vec!["x"]);
     }
 }
