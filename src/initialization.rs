@@ -3,6 +3,8 @@
 //! Defines the [`Initializer`] trait and provides [`Random`], which generates
 //! a population of random genomes.
 
+use std::sync::Arc;
+
 use crate::{
     core::{context::Context, individual::Individual, population::Population},
     fitness::FitnessEvaluator,
@@ -45,6 +47,34 @@ where
         population_size: NonZero<usize>,
         ctx: &mut Context<Fe, R, C>,
     ) -> Population<G, F>;
+}
+
+impl<G, F, Fe, R, C, O> Initializer<G, F, Fe, R, C> for Box<O>
+where
+    Fe: FitnessEvaluator<G, F>,
+    O: Initializer<G, F, Fe, R, C>,
+{
+    fn initialize(
+        &self,
+        population_size: NonZero<usize>,
+        ctx: &mut Context<Fe, R, C>,
+    ) -> Population<G, F> {
+        (**self).initialize(population_size, ctx)
+    }
+}
+
+impl<G, F, Fe, R, C, O> Initializer<G, F, Fe, R, C> for Arc<O>
+where
+    Fe: FitnessEvaluator<G, F>,
+    O: Initializer<G, F, Fe, R, C>,
+{
+    fn initialize(
+        &self,
+        population_size: NonZero<usize>,
+        ctx: &mut Context<Fe, R, C>,
+    ) -> Population<G, F> {
+        (**self).initialize(population_size, ctx)
+    }
 }
 
 /// An [`Initializer`] that creates a population of random genomes.

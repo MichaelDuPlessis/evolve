@@ -3,6 +3,8 @@
 //! Defines the [`TerminationCondition`] trait and provides [`MaxGenerations`],
 //! which stops the algorithm after a set number of generations.
 
+use std::sync::Arc;
+
 use crate::core::state::State;
 
 /// Determines when the algorithm should stop running.
@@ -23,6 +25,24 @@ use crate::core::state::State;
 pub trait TerminationCondition<G, F> {
     /// Returns `true` if the algorithm should stop.
     fn should_terminate(&self, state: &State<G, F>) -> bool;
+}
+
+impl<G, F, O> TerminationCondition<G, F> for Box<O>
+where
+    O: TerminationCondition<G, F>,
+{
+    fn should_terminate(&self, state: &State<G, F>) -> bool {
+        (**self).should_terminate(state)
+    }
+}
+
+impl<G, F, O> TerminationCondition<G, F> for Arc<O>
+where
+    O: TerminationCondition<G, F>,
+{
+    fn should_terminate(&self, state: &State<G, F>) -> bool {
+        (**self).should_terminate(state)
+    }
 }
 
 /// Terminates the algorithm once the generation count reaches the given limit.

@@ -2,6 +2,8 @@
 //!
 //! - [`sequential`] — single-threaded operators and combinators
 
+use std::sync::Arc;
+
 use crate::core::{context::Context, offspring::Offspring, state::State};
 
 pub(crate) mod common;
@@ -115,6 +117,32 @@ where
 }
 
 impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for &mut O
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        (**self).apply(state, ctx)
+    }
+
+    fn transform(&self, state: State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        (**self).transform(state, ctx)
+    }
+}
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Box<O>
+where
+    O: GeneticOperator<G, F, Fe, R, C>,
+{
+    fn apply(&self, state: &State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        (**self).apply(state, ctx)
+    }
+
+    fn transform(&self, state: State<G, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<G, F> {
+        (**self).transform(state, ctx)
+    }
+}
+
+impl<G, F, Fe, R, C, O> GeneticOperator<G, F, Fe, R, C> for Arc<O>
 where
     O: GeneticOperator<G, F, Fe, R, C>,
 {

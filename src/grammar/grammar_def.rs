@@ -1,5 +1,7 @@
 //! The [`GrammarDef`] trait abstracting grammar access for the mapper.
 
+use std::sync::Arc;
+
 use crate::grammar::{Grammar, Symbol};
 
 /// Trait abstracting grammar access for the mapper.
@@ -45,6 +47,56 @@ pub trait GrammarDef {
 
     /// Returns the terminal value for a terminal symbol.
     fn terminal_value(&self, symbol: Self::Symbol) -> Self::Terminal;
+}
+
+impl<G: GrammarDef> GrammarDef for Box<G> {
+    type Symbol = G::Symbol;
+    type Terminal = G::Terminal;
+
+    fn start(&self) -> Self::Symbol {
+        (**self).start()
+    }
+
+    fn num_productions(&self, symbol: Self::Symbol) -> usize {
+        (**self).num_productions(symbol)
+    }
+
+    fn production(&self, symbol: Self::Symbol, index: usize) -> &[Self::Symbol] {
+        (**self).production(symbol, index)
+    }
+
+    fn is_terminal(&self, symbol: Self::Symbol) -> bool {
+        (**self).is_terminal(symbol)
+    }
+
+    fn terminal_value(&self, symbol: Self::Symbol) -> Self::Terminal {
+        (**self).terminal_value(symbol)
+    }
+}
+
+impl<G: GrammarDef> GrammarDef for Arc<G> {
+    type Symbol = G::Symbol;
+    type Terminal = G::Terminal;
+
+    fn start(&self) -> Self::Symbol {
+        (**self).start()
+    }
+
+    fn num_productions(&self, symbol: Self::Symbol) -> usize {
+        (**self).num_productions(symbol)
+    }
+
+    fn production(&self, symbol: Self::Symbol, index: usize) -> &[Self::Symbol] {
+        (**self).production(symbol, index)
+    }
+
+    fn is_terminal(&self, symbol: Self::Symbol) -> bool {
+        (**self).is_terminal(symbol)
+    }
+
+    fn terminal_value(&self, symbol: Self::Symbol) -> Self::Terminal {
+        (**self).terminal_value(symbol)
+    }
 }
 
 impl<T: Clone> GrammarDef for Grammar<T> {
