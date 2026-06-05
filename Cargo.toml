@@ -11,7 +11,7 @@ keywords = ["genetic-algorithm", "evolutionary", "optimization", "metaheuristic"
 categories = ["artificial-intelligence", "algorithms"]
 
 [workspace]
-members = ["evolve-derive"]
+members = ["evolve-derive", "evolve-py"]
 
 [features]
 parallel = ["dep:pooled"]

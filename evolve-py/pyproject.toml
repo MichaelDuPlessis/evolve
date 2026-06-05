@@ -1,0 +1,16 @@
+[build-system]
+requires = ["maturin>=1.8,<2"]
+build-backend = "maturin"
+
+[project]
+name = "evolve-rs"
+requires-python = ">=3.9"
+description = "High-performance evolutionary algorithms in Python, powered by Rust"
+license = { text = "MIT" }
+dependencies = []
+
+[tool.maturin]
+python-source = "python"
+module-name = "evolve_rs._evolve"
+features = []
+bindings = "pyo3"
