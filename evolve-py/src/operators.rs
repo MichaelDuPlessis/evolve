@@ -66,6 +66,7 @@ impl GeneticOperator<Vec<u8>, f64, PyFitnessCallback, SmallRng, PyComparator> fo
     }
 }
 
+/// Tournament selection — picks the best individual from a random sample of `tournament_size`.
 #[pyclass(name = "Tournament")]
 pub struct PyTournament {
     tournament_size: usize,
@@ -73,35 +74,40 @@ pub struct PyTournament {
 
 #[pymethods]
 impl PyTournament {
+    /// Create a tournament selector with the given sample size.
     #[new]
     fn new(tournament_size: usize) -> Self {
         Self { tournament_size }
     }
 }
 
+/// Single-point crossover — splits two parents at a random index and swaps the tails.
 #[pyclass(name = "SinglePoint")]
 pub struct PySinglePoint;
 
 #[pymethods]
 impl PySinglePoint {
+    /// Create a single-point crossover operator.
     #[new]
     fn new() -> Self {
         Self
     }
 }
 
+/// Random-reset mutation — replaces a randomly chosen gene with a new random u8 value.
 #[pyclass(name = "RandomReset")]
 pub struct PyRandomReset;
 
 #[pymethods]
 impl PyRandomReset {
+    /// Create a random-reset mutation operator.
     #[new]
     fn new() -> Self {
         Self
     }
 }
 
-/// Stores the Python operator object; Rust tree built lazily in `extract_op`.
+/// Repeat the inner operator until the population reaches its target size.
 #[pyclass(name = "Fill")]
 pub struct PyFill {
     operator: PyObject,
@@ -109,13 +115,14 @@ pub struct PyFill {
 
 #[pymethods]
 impl PyFill {
+    /// Create a fill operator that wraps `operator` and repeats it to fill the population.
     #[new]
     fn new(operator: PyObject) -> Self {
         Self { operator }
     }
 }
 
-/// Stores the Python operator object and fixed size; Rust tree built lazily in `extract_op`.
+/// Repeat the inner operator until exactly `size` individuals are produced.
 #[pyclass(name = "FillFixed")]
 pub struct PyFillFixed {
     operator: PyObject,
@@ -124,13 +131,14 @@ pub struct PyFillFixed {
 
 #[pymethods]
 impl PyFillFixed {
+    /// Create a fill operator that produces exactly `size` individuals using `operator`.
     #[new]
     fn new(operator: PyObject, size: usize) -> Self {
         Self { operator, size }
     }
 }
 
-/// Stores the Python list of operators; Rust tree built lazily in `extract_op`.
+/// Chain operators sequentially: each operator's output is passed as input to the next.
 #[pyclass(name = "Pipeline")]
 pub struct PyPipeline {
     operators: Py<PyList>,
@@ -138,13 +146,14 @@ pub struct PyPipeline {
 
 #[pymethods]
 impl PyPipeline {
+    /// Create a pipeline from a list of operators applied in order.
     #[new]
     fn new(operators: Py<PyList>) -> Self {
         Self { operators }
     }
 }
 
-/// Stores the Python list of operators; Rust tree built lazily in `extract_op`.
+/// Run all operators on the same input population and merge their offspring.
 #[pyclass(name = "Combine")]
 pub struct PyCombine {
     operators: Py<PyList>,
@@ -152,6 +161,7 @@ pub struct PyCombine {
 
 #[pymethods]
 impl PyCombine {
+    /// Create a combine operator from a list of operators whose outputs are merged.
     #[new]
     fn new(operators: Py<PyList>) -> Self {
         Self { operators }

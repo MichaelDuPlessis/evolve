@@ -1,7 +1,7 @@
 use evolve::termination::MaxGenerations;
 use pyo3::prelude::*;
 
-/// Python-facing termination condition: stop after N generations.
+/// Stop the algorithm after a fixed number of generations.
 #[pyclass(name = "MaxGenerations")]
 pub struct PyMaxGenerations {
     pub inner: MaxGenerations,
@@ -9,6 +9,7 @@ pub struct PyMaxGenerations {
 
 #[pymethods]
 impl PyMaxGenerations {
+    /// Create a termination condition that stops after `generations` generations.
     #[new]
     fn new(generations: usize) -> Self {
         Self {

@@ -24,6 +24,7 @@ type EaU8 = EvolutionaryAlgorithm<
     PyComparator,
 >;
 
+/// Evolutionary algorithm runner. Compose with an initializer, operators, fitness function, and termination condition.
 #[pyclass(name = "EvolutionaryAlgorithm")]
 pub struct PyEvolutionaryAlgorithm {
     inner: EaU8,
@@ -34,6 +35,7 @@ pub struct PyEvolutionaryAlgorithm {
 
 #[pymethods]
 impl PyEvolutionaryAlgorithm {
+    /// Create a new `EvolutionaryAlgorithm`. `comparator` defaults to `Maximize`; `seed` defaults to a random seed.
     #[new]
     #[pyo3(signature = (initializer, operators, fitness, termination, population_size, comparator=None, seed=None))]
     fn new(
@@ -93,6 +95,7 @@ impl PyEvolutionaryAlgorithm {
         })
     }
 
+    /// Run the algorithm to termination and return a `RunResult` with the final population and statistics.
     fn run(&mut self, py: Python<'_>) -> PyResult<PyRunResult> {
         let run_result = py.allow_threads(|| self.inner.run());
 

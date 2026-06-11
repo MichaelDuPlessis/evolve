@@ -1,6 +1,6 @@
 use pyo3::prelude::*;
 
-/// A single evaluated individual exposed to Python.
+/// A single evaluated individual. Access `genome` (list of ints) and `fitness` (float).
 #[pyclass(name = "Individual")]
 pub struct PyIndividual {
     genome: Vec<u8>,
@@ -10,8 +10,8 @@ pub struct PyIndividual {
 #[pymethods]
 impl PyIndividual {
     #[getter]
-    fn genome(&self) -> Vec<u8> {
-        self.genome.clone()
+    fn genome(&self) -> Vec<u32> {
+        self.genome.iter().map(|&b| b as u32).collect()
     }
 
     #[getter]
@@ -26,7 +26,7 @@ impl PyIndividual {
     }
 }
 
-/// The result of an EA run exposed to Python.
+/// The result of an EA run. Contains the final population, best individual, and per-generation statistics.
 #[pyclass(name = "RunResult")]
 pub struct PyRunResult {
     population: Vec<PyIndividual>,
@@ -67,6 +67,7 @@ impl PyRunResult {
         self.generation_durations_secs.clone()
     }
 
+    /// Return the best individual found across all generations.
     fn best(&self) -> PyIndividual {
         PyIndividual::new(self.best_individual.genome.clone(), self.best_individual.fitness)
     }

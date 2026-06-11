@@ -1,22 +1,24 @@
 use evolve::fitness::{FitnessComparator, Maximize as RsMaximize, Minimize as RsMinimize};
 use pyo3::prelude::*;
 
-/// Python-facing `Maximize` comparator singleton.
+/// Comparator that treats higher fitness as better (default).
 #[pyclass(frozen)]
 pub struct Maximize;
 
 #[pymethods]
 impl Maximize {
+    /// Create a Maximize comparator.
     #[new]
     fn new() -> Self { Self }
 }
 
-/// Python-facing `Minimize` comparator singleton.
+/// Comparator that treats lower fitness as better.
 #[pyclass(frozen)]
 pub struct Minimize;
 
 #[pymethods]
 impl Minimize {
+    /// Create a Minimize comparator.
     #[new]
     fn new() -> Self { Self }
 }

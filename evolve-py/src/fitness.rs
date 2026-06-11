@@ -17,7 +17,7 @@ impl PyFitnessCallback {
 impl FitnessEvaluator<Vec<u8>, f64> for PyFitnessCallback {
     fn evaluate(&self, genome: &Vec<u8>) -> f64 {
         Python::with_gil(|py| {
-            let py_genome: Vec<u8> = genome.clone();
+            let py_genome: Vec<u32> = genome.iter().map(|&b| b as u32).collect();
             self.func
                 .bind(py)
                 .call1((py_genome,))
