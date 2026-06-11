@@ -4,6 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "evolve-rs"
+version = "0.1.0"
 requires-python = ">=3.9"
 description = "High-performance evolutionary algorithms in Python, powered by Rust"
 license = { text = "MIT" }

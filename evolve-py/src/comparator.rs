@@ -5,9 +5,21 @@ use pyo3::prelude::*;
 #[pyclass(frozen)]
 pub struct Maximize;
 
+#[pymethods]
+impl Maximize {
+    #[new]
+    fn new() -> Self { Self }
+}
+
 /// Python-facing `Minimize` comparator singleton.
 #[pyclass(frozen)]
 pub struct Minimize;
+
+#[pymethods]
+impl Minimize {
+    #[new]
+    fn new() -> Self { Self }
+}
 
 /// Internal enum used as the concrete `FitnessComparator<f64>` type.
 pub enum PyComparator {
