@@ -398,6 +398,26 @@ let json = serde_json::to_string(result.population()).unwrap();
 println!("{json}");
 ```
 
+## Python Bindings
+
+Python bindings are available as [`evolve-rs`](https://pypi.org/project/evolve-rs/) on PyPI. See [`evolve-py/README.md`](evolve-py/README.md) for full details.
+
+```python
+from evolve_rs import EvolutionaryAlgorithm, MaxGenerations
+from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
+from evolve_rs.initializers import RangedRandom
+
+ea = EvolutionaryAlgorithm(
+    initializer=RangedRandom(20, 20),
+    operators=Fill(Pipeline([Combine([Tournament(3), Tournament(3)]), SinglePoint(), RandomReset()])),
+    fitness=lambda genome: float(sum(g > 127 for g in genome)),
+    termination=MaxGenerations(200),
+    population_size=100,
+)
+result = ea.run()
+print(result.best().fitness)
+```
+
 ## Contributing
 
 Contributions are welcome! Feel free to open an issue for bug reports, feature requests, or questions. Pull requests are also appreciated.
