@@ -15,6 +15,13 @@ use evolve::{
             selection::{Elitism, Rank, RouletteWheel, Sus, Tournament},
             with_rate::WithRate,
         },
+        parallel::{
+            combinator::Fill as ParFill,
+            mutation::{
+                Creep as ParCreep, Gaussian as ParGaussian, Inversion as ParInversion,
+                RandomReset as ParRandomReset, Scramble as ParScramble, Swap as ParSwap,
+            },
+        },
     },
 };
 use pyo3::prelude::*;
@@ -54,6 +61,13 @@ macro_rules! define_int_operator_enum {
             Identity(Identity),
             WithRate(WithRate<Box<$name>>),
             PythonCallback(Py<PyAny>),
+            // Parallel operators
+            ParallelFill(ParFill<Box<$name>>),
+            ParallelRandomReset(ParRandomReset<$t>),
+            ParallelSwap(ParSwap<$t>),
+            ParallelInversion(ParInversion<$t>),
+            ParallelScramble(ParScramble<$t>),
+            ParallelCreep(ParCreep<$t>),
         }
 
         impl GeneticOperator<Vec<$t>, f64, PyFitnessCallback, SmallRng, PyComparator> for $name {
@@ -88,6 +102,12 @@ macro_rules! define_int_operator_enum {
                     Self::Identity(op) => op.apply(state, ctx),
                     Self::WithRate(op) => op.apply(state, ctx),
                     Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, state),
+                    Self::ParallelFill(op) => op.apply(state, ctx),
+                    Self::ParallelRandomReset(op) => op.apply(state, ctx),
+                    Self::ParallelSwap(op) => op.apply(state, ctx),
+                    Self::ParallelInversion(op) => op.apply(state, ctx),
+                    Self::ParallelScramble(op) => op.apply(state, ctx),
+                    Self::ParallelCreep(op) => op.apply(state, ctx),
                 }
             }
 
@@ -122,6 +142,12 @@ macro_rules! define_int_operator_enum {
                     Self::Identity(op) => op.transform(state, ctx),
                     Self::WithRate(op) => op.transform(state, ctx),
                     Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, &state),
+                    Self::ParallelFill(op) => op.transform(state, ctx),
+                    Self::ParallelRandomReset(op) => op.transform(state, ctx),
+                    Self::ParallelSwap(op) => op.transform(state, ctx),
+                    Self::ParallelInversion(op) => op.transform(state, ctx),
+                    Self::ParallelScramble(op) => op.transform(state, ctx),
+                    Self::ParallelCreep(op) => op.transform(state, ctx),
                 }
             }
         }
@@ -158,6 +184,13 @@ macro_rules! define_float_operator_enum {
             Identity(Identity),
             WithRate(WithRate<Box<$name>>),
             PythonCallback(Py<PyAny>),
+            // Parallel operators
+            ParallelFill(ParFill<Box<$name>>),
+            ParallelRandomReset(ParRandomReset<$t>),
+            ParallelSwap(ParSwap<$t>),
+            ParallelInversion(ParInversion<$t>),
+            ParallelScramble(ParScramble<$t>),
+            ParallelGaussian(ParGaussian),
         }
 
         impl GeneticOperator<Vec<$t>, f64, PyFitnessCallback, SmallRng, PyComparator> for $name {
@@ -193,6 +226,12 @@ macro_rules! define_float_operator_enum {
                     Self::Identity(op) => op.apply(state, ctx),
                     Self::WithRate(op) => op.apply(state, ctx),
                     Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, state),
+                    Self::ParallelFill(op) => op.apply(state, ctx),
+                    Self::ParallelRandomReset(op) => op.apply(state, ctx),
+                    Self::ParallelSwap(op) => op.apply(state, ctx),
+                    Self::ParallelInversion(op) => op.apply(state, ctx),
+                    Self::ParallelScramble(op) => op.apply(state, ctx),
+                    Self::ParallelGaussian(op) => op.apply(state, ctx),
                 }
             }
 
@@ -228,6 +267,12 @@ macro_rules! define_float_operator_enum {
                     Self::Identity(op) => op.transform(state, ctx),
                     Self::WithRate(op) => op.transform(state, ctx),
                     Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, &state),
+                    Self::ParallelFill(op) => op.transform(state, ctx),
+                    Self::ParallelRandomReset(op) => op.transform(state, ctx),
+                    Self::ParallelSwap(op) => op.transform(state, ctx),
+                    Self::ParallelInversion(op) => op.transform(state, ctx),
+                    Self::ParallelScramble(op) => op.transform(state, ctx),
+                    Self::ParallelGaussian(op) => op.transform(state, ctx),
                 }
             }
         }
@@ -626,6 +671,87 @@ impl PyWithRate {
     fn new(operator: PyObject, rate: f64) -> Self { Self { operator, rate } }
 }
 
+// ── Parallel operator Python wrappers ────────────────────────────────────────
+
+/// Parallel version of Fill. Distributes offspring generation across threads.
+#[pyclass(name = "ParallelFill")]
+pub struct PyParallelFill {
+    pub operator: PyObject,
+    pub target_size: usize,
+}
+
+#[pymethods]
+impl PyParallelFill {
+    #[new]
+    fn new(operator: PyObject, target_size: usize) -> Self {
+        Self { operator, target_size }
+    }
+}
+
+/// Parallel version of RandomReset mutation.
+#[pyclass(name = "ParallelRandomReset")]
+pub struct PyParallelRandomReset;
+
+#[pymethods]
+impl PyParallelRandomReset {
+    #[new]
+    fn new() -> Self { Self }
+}
+
+/// Parallel version of Swap mutation.
+#[pyclass(name = "ParallelSwap")]
+pub struct PyParallelSwap;
+
+#[pymethods]
+impl PyParallelSwap {
+    #[new]
+    fn new() -> Self { Self }
+}
+
+/// Parallel version of Inversion mutation.
+#[pyclass(name = "ParallelInversion")]
+pub struct PyParallelInversion;
+
+#[pymethods]
+impl PyParallelInversion {
+    #[new]
+    fn new() -> Self { Self }
+}
+
+/// Parallel version of Scramble mutation.
+#[pyclass(name = "ParallelScramble")]
+pub struct PyParallelScramble;
+
+#[pymethods]
+impl PyParallelScramble {
+    #[new]
+    fn new() -> Self { Self }
+}
+
+/// Parallel version of Creep mutation (integer dtypes only).
+#[pyclass(name = "ParallelCreep")]
+pub struct PyParallelCreep {
+    pub step: i64,
+}
+
+#[pymethods]
+impl PyParallelCreep {
+    #[new]
+    fn new(step: i64) -> Self { Self { step } }
+}
+
+/// Parallel version of Gaussian mutation (float dtypes only).
+#[pyclass(name = "ParallelGaussian")]
+pub struct PyParallelGaussian {
+    pub std_dev: f64,
+}
+
+#[pymethods]
+impl PyParallelGaussian {
+    #[new]
+    fn new(std_dev: f64) -> Self { Self { std_dev } }
+}
+
 // ── extract_op_* functions (one per dtype) ────────────────────────────────────
 
 /// Macro that generates an `extract_op_*` function for an integer dtype.
@@ -768,6 +894,33 @@ macro_rules! extract_int_op {
                 let wr = cell.borrow();
                 let inner = $fn_name(wr.operator.bind(obj.py()))?;
                 return Ok($enum_name::WithRate(WithRate::new(Box::new(inner), wr.rate)));
+            }
+            // Parallel operators
+            if let Ok(cell) = obj.downcast::<PyParallelFill>() {
+                let fill = cell.borrow();
+                let inner = $fn_name(fill.operator.bind(obj.py()))?;
+                return Ok($enum_name::ParallelFill(ParFill::new(Box::new(inner), fill.target_size)));
+            }
+            if obj.downcast::<PyParallelRandomReset>().is_ok() {
+                return Ok($enum_name::ParallelRandomReset(ParRandomReset::new()));
+            }
+            if obj.downcast::<PyParallelSwap>().is_ok() {
+                return Ok($enum_name::ParallelSwap(ParSwap::new()));
+            }
+            if obj.downcast::<PyParallelInversion>().is_ok() {
+                return Ok($enum_name::ParallelInversion(ParInversion::new()));
+            }
+            if obj.downcast::<PyParallelScramble>().is_ok() {
+                return Ok($enum_name::ParallelScramble(ParScramble::new()));
+            }
+            if let Ok(cell) = obj.downcast::<PyParallelCreep>() {
+                let op = cell.borrow();
+                return Ok($enum_name::ParallelCreep(ParCreep::new($creep_cast(op.step))));
+            }
+            if obj.downcast::<PyParallelGaussian>().is_ok() {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "ParallelGaussian is only supported for f32/f64 dtypes",
+                ));
             }
             // Python callable fallback
             if obj.is_callable() {
@@ -916,6 +1069,33 @@ macro_rules! extract_float_op {
                 let wr = cell.borrow();
                 let inner = $fn_name(wr.operator.bind(obj.py()))?;
                 return Ok($enum_name::WithRate(WithRate::new(Box::new(inner), wr.rate)));
+            }
+            // Parallel operators
+            if let Ok(cell) = obj.downcast::<PyParallelFill>() {
+                let fill = cell.borrow();
+                let inner = $fn_name(fill.operator.bind(obj.py()))?;
+                return Ok($enum_name::ParallelFill(ParFill::new(Box::new(inner), fill.target_size)));
+            }
+            if obj.downcast::<PyParallelRandomReset>().is_ok() {
+                return Ok($enum_name::ParallelRandomReset(ParRandomReset::new()));
+            }
+            if obj.downcast::<PyParallelSwap>().is_ok() {
+                return Ok($enum_name::ParallelSwap(ParSwap::new()));
+            }
+            if obj.downcast::<PyParallelInversion>().is_ok() {
+                return Ok($enum_name::ParallelInversion(ParInversion::new()));
+            }
+            if obj.downcast::<PyParallelScramble>().is_ok() {
+                return Ok($enum_name::ParallelScramble(ParScramble::new()));
+            }
+            if obj.downcast::<PyParallelCreep>().is_ok() {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "ParallelCreep is only supported for integer dtypes",
+                ));
+            }
+            if let Ok(cell) = obj.downcast::<PyParallelGaussian>() {
+                let op = cell.borrow();
+                return Ok($enum_name::ParallelGaussian(ParGaussian::new(op.std_dev)));
             }
             // Python callable fallback
             if obj.is_callable() {

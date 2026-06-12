@@ -1,4 +1,5 @@
 mod algorithm;
+mod collector;
 mod comparator;
 mod experiment;
 mod fitness;
@@ -19,6 +20,8 @@ use operators::{
     PyInversion, PyPipeline, PyProportional, PyRandomReset, PyRank, PyRepeat, PyRouletteWheel,
     PyScramble, PySegmentDeletion, PySegmentDuplication, PySinglePoint, PySus, PySwap,
     PyTournament, PyTwoPoint, PyUniform, PyWeighted, PyWithRate,
+    PyParallelFill, PyParallelRandomReset, PyParallelSwap, PyParallelInversion,
+    PyParallelScramble, PyParallelCreep, PyParallelGaussian,
 };
 use pyo3::prelude::*;
 use result::{PyIndividual, PyRunResult};
@@ -61,6 +64,14 @@ fn _evolve(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyRepeat>()?;
     m.add_class::<PyIdentity>()?;
     m.add_class::<PyWithRate>()?;
+    // Parallel operators
+    m.add_class::<PyParallelFill>()?;
+    m.add_class::<PyParallelRandomReset>()?;
+    m.add_class::<PyParallelSwap>()?;
+    m.add_class::<PyParallelInversion>()?;
+    m.add_class::<PyParallelScramble>()?;
+    m.add_class::<PyParallelCreep>()?;
+    m.add_class::<PyParallelGaussian>()?;
     // Grammar / GE
     m.add_class::<PyGrammar>()?;
     m.add_class::<PyGrammarBuilder>()?;

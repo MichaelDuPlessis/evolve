@@ -8,6 +8,7 @@ use pyo3::prelude::*;
 use rand::{SeedableRng, rngs::SmallRng};
 
 use crate::{
+    collector::PyCollectorWrapper,
     comparator::{Maximize, Minimize, PyComparator},
     fitness::PyFitnessCallback,
     initializer::{PyRangedRandom, PyRandom},
@@ -48,8 +49,9 @@ impl PyEvolutionaryAlgorithm {
             None => PyComparator::Maximize,
             Some(obj) if obj.downcast::<Maximize>().is_ok() => PyComparator::Maximize,
             Some(obj) if obj.downcast::<Minimize>().is_ok() => PyComparator::Minimize,
+            Some(obj) if obj.is_callable() => PyComparator::PythonCallback(obj.clone().unbind()),
             Some(_) => return Err(pyo3::exceptions::PyTypeError::new_err(
-                "comparator must be Maximize() or Minimize()",
+                "comparator must be Maximize(), Minimize(), or a callable(a, b) -> bool",
             )),
         };
 
@@ -87,6 +89,23 @@ impl PyEvolutionaryAlgorithm {
             EaInner::F32(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<f32>(py, r, fe, cmp) }
             EaInner::F64(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<f64>(py, r, fe, cmp) }
         }
+    }
+
+    fn run_with(&mut self, py: Python<'_>, collector: Py<PyAny>) -> PyResult<PyObject> {
+        let wrapper = PyCollectorWrapper::new(collector.clone_ref(py));
+        let result: Py<PyAny> = match &mut self.inner {
+            EaInner::U8(ea)  => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::U16(ea) => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::U32(ea) => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::U64(ea) => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::I8(ea)  => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::I16(ea) => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::I32(ea) => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::I64(ea) => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::F32(ea) => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::F64(ea) => py.allow_threads(|| ea.run_with(wrapper)),
+        };
+        Ok(result.into_pyobject(py)?.into())
     }
 }
 

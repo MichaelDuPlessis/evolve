@@ -18,6 +18,7 @@ from evolve_rs._evolve import (
 
 from evolve_rs import operators
 from evolve_rs import initializers
+from evolve_rs import parallel
 
 __all__ = [
     "EvolutionaryAlgorithm",
@@ -35,4 +36,5 @@ __all__ = [
     "GeFitness",
     "operators",
     "initializers",
+    "parallel",
 ]

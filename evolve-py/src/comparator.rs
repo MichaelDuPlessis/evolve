@@ -24,10 +24,20 @@ impl Minimize {
 }
 
 /// Internal enum used as the concrete `FitnessComparator<f64>` type.
-#[derive(Clone)]
 pub enum PyComparator {
     Maximize,
     Minimize,
+    PythonCallback(Py<PyAny>),
+}
+
+impl Clone for PyComparator {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Maximize => Self::Maximize,
+            Self::Minimize => Self::Minimize,
+            Self::PythonCallback(cb) => Self::PythonCallback(Python::with_gil(|py| cb.clone_ref(py))),
+        }
+    }
 }
 
 impl FitnessComparator<f64> for PyComparator {
@@ -35,6 +45,15 @@ impl FitnessComparator<f64> for PyComparator {
         match self {
             Self::Maximize => RsMaximize.is_better(f1, f2),
             Self::Minimize => RsMinimize.is_better(f1, f2),
+            Self::PythonCallback(cb) => {
+                Python::with_gil(|py| {
+                    cb.bind(py)
+                        .call1((*f1, *f2))
+                        .expect("comparator callable raised an exception")
+                        .extract::<bool>()
+                        .expect("comparator callable must return a bool")
+                })
+            }
         }
     }
 }
