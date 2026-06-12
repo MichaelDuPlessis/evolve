@@ -1,6 +1,8 @@
 mod algorithm;
 mod comparator;
+mod experiment;
 mod fitness;
+mod grammar;
 mod initializer;
 mod operators;
 mod result;
@@ -8,7 +10,9 @@ mod termination;
 mod types;
 
 use algorithm::PyEvolutionaryAlgorithm;
+use experiment::PyExperiment;
 use comparator::{Maximize, Minimize};
+use grammar::{PyGeFitness, PyGrammar, PyGrammarBuilder, PyStandardMapper};
 use initializer::{PyRangedRandom, PyRandom};
 use operators::{
     PyArithmetic, PyCombine, PyCreep, PyElitism, PyFill, PyFillFixed, PyGaussian, PyIdentity,
@@ -57,9 +61,15 @@ fn _evolve(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyRepeat>()?;
     m.add_class::<PyIdentity>()?;
     m.add_class::<PyWithRate>()?;
+    // Grammar / GE
+    m.add_class::<PyGrammar>()?;
+    m.add_class::<PyGrammarBuilder>()?;
+    m.add_class::<PyStandardMapper>()?;
+    m.add_class::<PyGeFitness>()?;
     // Core
     m.add_class::<PyEvolutionaryAlgorithm>()?;
     m.add_class::<PyRunResult>()?;
     m.add_class::<PyIndividual>()?;
+    m.add_class::<PyExperiment>()?;
     Ok(())
 }
