@@ -2,7 +2,6 @@ use std::num::NonZero;
 
 use evolve::{
     algorithm::EvolutionaryAlgorithm,
-    fitness::FitnessComparator,
     initialization::RangedRandom,
 };
 use pyo3::prelude::*;
@@ -17,8 +16,8 @@ use crate::{
         extract_op_i8, extract_op_u16, extract_op_u32, extract_op_u64, extract_op_u8,
     },
     result::{PyIndividual, PyRunResult, genome_to_pyobject},
-    termination::PyMaxGenerations,
-    types::{Dtype, EaInner},
+    termination::{extract_termination, PyTermination},
+    types::{Dtype, EaInner, PyInitializer},
 };
 
 /// Evolutionary algorithm runner.
@@ -37,7 +36,7 @@ impl PyEvolutionaryAlgorithm {
         initializer: &Bound<'_, PyAny>,
         operators: &Bound<'_, PyAny>,
         fitness: Py<PyAny>,
-        termination: &PyMaxGenerations,
+        termination: &Bound<'_, PyAny>,
         population_size: usize,
         comparator: Option<&Bound<'_, PyAny>>,
         seed: Option<u64>,
@@ -64,20 +63,12 @@ impl PyEvolutionaryAlgorithm {
         let fe2 = PyFitnessCallback::new(fe_clone);
         let cmp_clone = cmp.clone();
 
-        // Extract dtype and length range from the initializer
-        let (dtype, min_len, max_len) = if let Ok(cell) = initializer.downcast::<PyRangedRandom>() {
-            let init = cell.borrow();
-            (init.dtype, init.min_len, init.max_len)
-        } else if let Ok(cell) = initializer.downcast::<PyRandom>() {
-            let init = cell.borrow();
-            (init.dtype, init.genome_length, init.genome_length)
-        } else {
-            return Err(pyo3::exceptions::PyTypeError::new_err(
-                "initializer must be RangedRandom or Random",
-            ));
-        };
+        let term = extract_termination(termination)?;
 
-        let inner = build_ea_inner(operators, fe1, termination, pop_size, rng, cmp, dtype, min_len, max_len)?;
+        // Extract dtype and initializer from the initializer argument
+        let (dtype, py_initializer) = extract_initializer(initializer)?;
+
+        let inner = build_ea_inner(operators, fe1, term, pop_size, rng, cmp, dtype, py_initializer)?;
         Ok(Self { inner, fitness_evaluator: fe2, comparator: cmp_clone })
     }
 
@@ -99,6 +90,36 @@ impl PyEvolutionaryAlgorithm {
     }
 }
 
+/// Enum to pass initializer data through to build_ea_inner without monomorphizing early.
+enum InitializerData {
+    RangedRandom { min_len: usize, max_len: usize },
+    PythonCallback(Py<PyAny>),
+}
+
+fn extract_initializer(initializer: &Bound<'_, PyAny>) -> PyResult<(Dtype, InitializerData)> {
+    if let Ok(cell) = initializer.downcast::<PyRangedRandom>() {
+        let init = cell.borrow();
+        return Ok((init.dtype, InitializerData::RangedRandom { min_len: init.min_len, max_len: init.max_len }));
+    }
+    if let Ok(cell) = initializer.downcast::<PyRandom>() {
+        let init = cell.borrow();
+        return Ok((init.dtype, InitializerData::RangedRandom { min_len: init.genome_length, max_len: init.genome_length }));
+    }
+    if initializer.is_callable() {
+        // Callable initializer: default to u8 unless the object exposes a dtype attribute
+        let dtype = if let Ok(attr) = initializer.getattr("dtype") {
+            let s: String = attr.extract()?;
+            Dtype::parse(&s)?
+        } else {
+            Dtype::U8
+        };
+        return Ok((dtype, InitializerData::PythonCallback(initializer.clone().unbind())));
+    }
+    Err(pyo3::exceptions::PyTypeError::new_err(
+        "initializer must be RangedRandom, Random, or a callable(population_size) -> list[list[...]]",
+    ))
+}
+
 fn convert_result<T>(
     py: Python<'_>,
     run_result: evolve::collector::standard::RunResult<Vec<T>, f64>,
@@ -110,6 +131,8 @@ where
     for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
     PyFitnessCallback: evolve::fitness::FitnessEvaluator<Vec<T>, f64>,
 {
+    use evolve::fitness::FitnessComparator;
+
     let population: Vec<PyIndividual> = run_result
         .population()
         .iter()
@@ -141,20 +164,24 @@ where
 fn build_ea_inner(
     operators: &Bound<'_, PyAny>,
     fe: PyFitnessCallback,
-    termination: &PyMaxGenerations,
+    termination: PyTermination,
     pop_size: NonZero<usize>,
     rng: SmallRng,
     cmp: PyComparator,
     dtype: Dtype,
-    min_len: usize,
-    max_len: usize,
+    initializer_data: InitializerData,
 ) -> PyResult<EaInner> {
     macro_rules! make {
         ($extract_fn:ident, $t:ty, $variant:ident) => {{
-            let range = min_len..max_len + 1;
+            let initializer = match initializer_data {
+                InitializerData::RangedRandom { min_len, max_len } => {
+                    PyInitializer::RangedRandom(RangedRandom::<$t>::new(min_len..max_len + 1))
+                }
+                InitializerData::PythonCallback(cb) => PyInitializer::PythonCallback(cb),
+            };
             Ok(EaInner::$variant(EvolutionaryAlgorithm::new(
-                RangedRandom::<$t>::new(range),
-                termination.inner,
+                initializer,
+                termination,
                 fe,
                 $extract_fn(operators)?,
                 pop_size,

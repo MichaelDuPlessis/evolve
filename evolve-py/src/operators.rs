@@ -1,7 +1,7 @@
 use std::num::NonZero;
 
 use evolve::{
-    core::{context::Context, offspring::Offspring, population::Population, state::State},
+    core::{context::Context, individual::Individual, offspring::Offspring, population::Population, state::State},
     operators::{
         GeneticOperator,
         sequential::{
@@ -53,6 +53,7 @@ macro_rules! define_int_operator_enum {
             Repeat(Repeat<Box<$name>>),
             Identity(Identity),
             WithRate(WithRate<Box<$name>>),
+            PythonCallback(Py<PyAny>),
         }
 
         impl GeneticOperator<Vec<$t>, f64, PyFitnessCallback, SmallRng, PyComparator> for $name {
@@ -86,6 +87,7 @@ macro_rules! define_int_operator_enum {
                     Self::Repeat(op) => op.apply(state, ctx),
                     Self::Identity(op) => op.apply(state, ctx),
                     Self::WithRate(op) => op.apply(state, ctx),
+                    Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, state),
                 }
             }
 
@@ -119,6 +121,7 @@ macro_rules! define_int_operator_enum {
                     Self::Repeat(op) => op.transform(state, ctx),
                     Self::Identity(op) => op.transform(state, ctx),
                     Self::WithRate(op) => op.transform(state, ctx),
+                    Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, &state),
                 }
             }
         }
@@ -154,6 +157,7 @@ macro_rules! define_float_operator_enum {
             Repeat(Repeat<Box<$name>>),
             Identity(Identity),
             WithRate(WithRate<Box<$name>>),
+            PythonCallback(Py<PyAny>),
         }
 
         impl GeneticOperator<Vec<$t>, f64, PyFitnessCallback, SmallRng, PyComparator> for $name {
@@ -188,6 +192,7 @@ macro_rules! define_float_operator_enum {
                     Self::Repeat(op) => op.apply(state, ctx),
                     Self::Identity(op) => op.apply(state, ctx),
                     Self::WithRate(op) => op.apply(state, ctx),
+                    Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, state),
                 }
             }
 
@@ -222,6 +227,7 @@ macro_rules! define_float_operator_enum {
                     Self::Repeat(op) => op.transform(state, ctx),
                     Self::Identity(op) => op.transform(state, ctx),
                     Self::WithRate(op) => op.transform(state, ctx),
+                    Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, &state),
                 }
             }
         }
@@ -239,6 +245,48 @@ define_int_operator_enum!(PyOperatorI32, i32);
 define_int_operator_enum!(PyOperatorI64, i64);
 define_float_operator_enum!(PyOperatorF32, f32);
 define_float_operator_enum!(PyOperatorF64, f64);
+
+// ── Python callback operator helper ──────────────────────────────────────────
+
+/// Call a Python callable with the population's genomes and return new offspring.
+///
+/// The callable receives `list[list[T]]` and must return `list[list[T]]`.
+fn python_callback_apply<T>(
+    cb: &Py<PyAny>,
+    state: &State<Vec<T>, f64>,
+) -> Offspring<Vec<T>, f64>
+where
+    T: for<'py> IntoPyObject<'py> + for<'py> pyo3::FromPyObject<'py> + Clone,
+    for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
+{
+    use pyo3::BoundObject;
+    Python::with_gil(|py| {
+        // Build list[list[T]] from population genomes
+        let genomes_list: Vec<PyObject> = state.population().iter().map(|ind| {
+            let inner: Vec<PyObject> = ind.genome().iter()
+                .map(|v| v.clone().into_pyobject(py).unwrap().into_any().unbind())
+                .collect();
+            PyList::new(py, inner).unwrap().into_any().unbind()
+        }).collect();
+        let genomes_py = PyList::new(py, genomes_list).unwrap();
+
+        let result = cb
+            .bind(py)
+            .call1((genomes_py,))
+            .expect("operator callable raised an exception");
+
+        let new_genomes: Vec<Vec<T>> = result
+            .extract()
+            .expect("operator callable must return list[list[...]]");
+
+        let population: Population<Vec<T>, f64> = new_genomes
+            .into_iter()
+            .map(|genome| Individual::new(genome))
+            .collect();
+
+        Offspring::Multiple(population)
+    })
+}
 
 // ── Shared Proportional helpers ───────────────────────────────────────────────
 
@@ -721,7 +769,11 @@ macro_rules! extract_int_op {
                 let inner = $fn_name(wr.operator.bind(obj.py()))?;
                 return Ok($enum_name::WithRate(WithRate::new(Box::new(inner), wr.rate)));
             }
-            Err(pyo3::exceptions::PyTypeError::new_err("expected an operator"))
+            // Python callable fallback
+            if obj.is_callable() {
+                return Ok($enum_name::PythonCallback(obj.clone().unbind()));
+            }
+            Err(pyo3::exceptions::PyTypeError::new_err("expected an operator or callable"))
         }
     };
 }
@@ -865,7 +917,11 @@ macro_rules! extract_float_op {
                 let inner = $fn_name(wr.operator.bind(obj.py()))?;
                 return Ok($enum_name::WithRate(WithRate::new(Box::new(inner), wr.rate)));
             }
-            Err(pyo3::exceptions::PyTypeError::new_err("expected an operator"))
+            // Python callable fallback
+            if obj.is_callable() {
+                return Ok($enum_name::PythonCallback(obj.clone().unbind()));
+            }
+            Err(pyo3::exceptions::PyTypeError::new_err("expected an operator or callable"))
         }
     };
 }
