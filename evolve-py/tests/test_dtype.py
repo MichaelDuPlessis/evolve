@@ -3,9 +3,9 @@ import pytest
 
 
 def _make_ea(dtype, *, initializer_class="ranged", genome_length=10, generations=5, pop_size=20):
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, RandomReset, Pipeline, Combine, Fill
-    from evolve_rs.initializers import RangedRandom, Random
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, RandomReset, Pipeline, Combine, Fill
+    from evolve.initializers import RangedRandom, Random
 
     if initializer_class == "ranged":
         init = RangedRandom(genome_length, genome_length, dtype=dtype)
@@ -47,9 +47,9 @@ def test_dtype_random_initializer_runs(dtype):
 
 def test_float_genome_values_f64():
     """f64 genomes should produce list[float]."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, Gaussian, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, Gaussian, Fill
+    from evolve.initializers import RangedRandom
 
     ea = EvolutionaryAlgorithm(
         initializer=RangedRandom(5, 5, dtype="f64"),
@@ -68,9 +68,9 @@ def test_float_genome_values_f64():
 
 def test_gaussian_mutation_f64():
     """Gaussian mutation should work with f64 dtype."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, Gaussian, Pipeline, Combine, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, Gaussian, Pipeline, Combine, Fill
+    from evolve.initializers import RangedRandom
 
     ea = EvolutionaryAlgorithm(
         initializer=RangedRandom(10, 10, dtype="f64"),
@@ -87,9 +87,9 @@ def test_gaussian_mutation_f64():
 
 def test_gaussian_mutation_f32():
     """Gaussian mutation should work with f32 dtype."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, Gaussian, Pipeline, Combine, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, Gaussian, Pipeline, Combine, Fill
+    from evolve.initializers import RangedRandom
 
     ea = EvolutionaryAlgorithm(
         initializer=RangedRandom(10, 10, dtype="f32"),
@@ -106,9 +106,9 @@ def test_gaussian_mutation_f32():
 
 def test_arithmetic_crossover_f64():
     """Arithmetic crossover should work with f64 dtype."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, Arithmetic, Pipeline, Combine, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, Arithmetic, Pipeline, Combine, Fill
+    from evolve.initializers import RangedRandom
 
     ea = EvolutionaryAlgorithm(
         initializer=RangedRandom(10, 10, dtype="f64"),
@@ -125,9 +125,9 @@ def test_arithmetic_crossover_f64():
 
 def test_creep_mutation_i32():
     """Creep mutation should work with i32 dtype."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, Creep, Pipeline, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, Creep, Pipeline, Fill
+    from evolve.initializers import RangedRandom
 
     ea = EvolutionaryAlgorithm(
         initializer=RangedRandom(10, 10, dtype="i32"),
@@ -143,16 +143,16 @@ def test_creep_mutation_i32():
 
 
 def test_invalid_dtype_raises():
-    from evolve_rs.initializers import RangedRandom
+    from evolve.initializers import RangedRandom
     with pytest.raises(Exception, match="invalid dtype"):
         RangedRandom(10, 10, dtype="bad_dtype")
 
 
 def test_gaussian_on_integer_dtype_raises():
     """Gaussian on integer dtype should raise ValueError."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, Gaussian, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, Gaussian, Fill
+    from evolve.initializers import RangedRandom
 
     with pytest.raises(Exception):
         EvolutionaryAlgorithm(
@@ -168,9 +168,9 @@ def test_gaussian_on_integer_dtype_raises():
 
 def test_creep_on_float_dtype_raises():
     """Creep on float dtype should raise ValueError."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, Creep, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, Creep, Fill
+    from evolve.initializers import RangedRandom
 
     with pytest.raises(Exception):
         EvolutionaryAlgorithm(

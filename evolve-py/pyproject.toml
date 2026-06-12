@@ -12,6 +12,6 @@ dependencies = []
 
 [tool.maturin]
 python-source = "python"
-module-name = "evolve_rs._evolve"
+module-name = "evolve._evolve"
 features = []
 bindings = "pyo3"

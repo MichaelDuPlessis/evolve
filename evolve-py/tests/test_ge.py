@@ -1,7 +1,7 @@
 def test_ge_basic():
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations, Grammar, StandardMapper, GeFitness
-    from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations, Grammar, StandardMapper, GeFitness
+    from evolve.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
+    from evolve.initializers import RangedRandom
 
     grammar = Grammar.builder() \
         .rule("expr", [["expr", "op", "expr"], ["x"], ["1"]]) \

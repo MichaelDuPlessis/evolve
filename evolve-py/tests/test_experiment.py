@@ -1,7 +1,7 @@
 def test_experiment():
-    from evolve_rs import Experiment, EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import Experiment, EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
+    from evolve.initializers import RangedRandom
 
     def make_ea():
         return EvolutionaryAlgorithm(

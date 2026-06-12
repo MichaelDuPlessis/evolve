@@ -17,9 +17,9 @@ maturin develop
 ## Quick Start — OneMax
 
 ```python
-from evolve_rs import EvolutionaryAlgorithm, MaxGenerations
-from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
-from evolve_rs.initializers import RangedRandom
+from evolve import EvolutionaryAlgorithm, MaxGenerations
+from evolve.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
+from evolve.initializers import RangedRandom
 
 def onemax(genome):
     return float(sum(g > 127 for g in genome))
@@ -45,14 +45,14 @@ print(f"Best fitness: {best.fitness}  genome[:5]: {best.genome[:5]}")
 
 ## API Overview
 
-### `evolve_rs`
+### `evolve`
 
 | Class | Description |
 |---|---|
 | `EvolutionaryAlgorithm(initializer, operators, fitness, termination, population_size, comparator=None, seed=None)` | Main entry point. |
 | `MaxGenerations(n)` | Stop after `n` generations. |
 
-### `evolve_rs.operators`
+### `evolve.operators`
 
 | Class | Description |
 |---|---|
@@ -64,13 +64,13 @@ print(f"Best fitness: {best.fitness}  genome[:5]: {best.genome[:5]}")
 | `Fill(op)` | Repeat `op` until population is full. |
 | `FillFixed(op, size)` | Repeat `op` until exactly `size` individuals. |
 
-### `evolve_rs.initializers`
+### `evolve.initializers`
 
 | Class | Description |
 |---|---|
 | `RangedRandom(min_len, max_len)` | Initialize genomes with random `u8` values and random length in `[min_len, max_len]`. |
 
-### `evolve_rs` comparators (optional)
+### `evolve` comparators (optional)
 
 Pass `comparator=Maximize()` (default) or `comparator=Minimize()` to `EvolutionaryAlgorithm`.
 

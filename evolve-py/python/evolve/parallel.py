@@ -6,9 +6,9 @@ cannot be inferred at construction time.
 
 Usage::
 
-    from evolve_rs.parallel import ParallelFill, ParallelRandomReset
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.initializers import RangedRandom
+    from evolve.parallel import ParallelFill, ParallelRandomReset
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.initializers import RangedRandom
 
     ea = EvolutionaryAlgorithm(
         initializer=RangedRandom(10, 10),
@@ -19,7 +19,7 @@ Usage::
     )
 """
 
-from evolve_rs._evolve import (
+from evolve._evolve import (
     ParallelFill,
     ParallelRandomReset,
     ParallelSwap,

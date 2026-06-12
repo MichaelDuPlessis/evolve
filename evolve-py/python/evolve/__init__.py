@@ -1,6 +1,6 @@
 """evolve-rs: High-performance evolutionary algorithms in Python, powered by Rust."""
 
-from evolve_rs._evolve import (
+from evolve._evolve import (
     EvolutionaryAlgorithm,
     Experiment,
     Maximize,
@@ -16,9 +16,9 @@ from evolve_rs._evolve import (
     GeFitness,
 )
 
-from evolve_rs import operators
-from evolve_rs import initializers
-from evolve_rs import parallel
+from evolve import operators
+from evolve import initializers
+from evolve import parallel
 
 __all__ = [
     "EvolutionaryAlgorithm",

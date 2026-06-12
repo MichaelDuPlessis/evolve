@@ -3,8 +3,8 @@ import pytest
 
 
 def make_ea(operators, termination, comparator=None, seed=42, population_size=20):
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.initializers import RangedRandom
 
     def fitness(genome):
         return float(sum(genome))
@@ -24,9 +24,9 @@ def make_ea(operators, termination, comparator=None, seed=42, population_size=20
 
 def test_callable_comparator_maximize():
     """A callable comparator returning a > b behaves like Maximize."""
-    from evolve_rs import EvolutionaryAlgorithm, MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, MaxGenerations
+    from evolve.operators import Fill, RandomReset
+    from evolve.initializers import RangedRandom
 
     def maximize(a, b):
         return a > b
@@ -49,9 +49,9 @@ def test_callable_comparator_maximize():
 
 def test_callable_comparator_minimize():
     """A callable comparator returning a < b behaves like Minimize."""
-    from evolve_rs import EvolutionaryAlgorithm, MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, MaxGenerations
+    from evolve.operators import Fill, RandomReset
+    from evolve.initializers import RangedRandom
 
     def minimize(a, b):
         return a < b
@@ -71,9 +71,9 @@ def test_callable_comparator_minimize():
 
 def test_comparator_callable_is_called():
     """Verify callable comparator actually gets called."""
-    from evolve_rs import EvolutionaryAlgorithm, MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, MaxGenerations
+    from evolve.operators import Fill, RandomReset
+    from evolve.initializers import RangedRandom
 
     calls = []
 
@@ -100,9 +100,9 @@ def test_comparator_callable_is_called():
 
 def test_invalid_comparator_raises():
     """Passing a non-callable, non-Maximize/Minimize raises TypeError."""
-    from evolve_rs import EvolutionaryAlgorithm, MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, MaxGenerations
+    from evolve.operators import Fill, RandomReset
+    from evolve.initializers import RangedRandom
 
     with pytest.raises(TypeError):
         EvolutionaryAlgorithm(
@@ -119,8 +119,8 @@ def test_invalid_comparator_raises():
 
 def test_run_with_basic_collector():
     """A collector with on_generation and finalize works."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, RandomReset
 
     class HistoryCollector:
         def __init__(self):
@@ -144,8 +144,8 @@ def test_run_with_basic_collector():
 
 def test_run_with_on_start_called():
     """on_start hook is called once."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, RandomReset
 
     class StartCollector:
         def __init__(self):
@@ -170,8 +170,8 @@ def test_run_with_on_start_called():
 
 def test_run_with_on_end_called():
     """on_end hook is called once."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, RandomReset
 
     class EndCollector:
         def __init__(self):
@@ -191,8 +191,8 @@ def test_run_with_on_end_called():
 
 def test_run_with_no_finalize_returns_none():
     """A collector without finalize returns None."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, RandomReset
 
     class NoFinalizeCollector:
         def on_generation(self, generation, best_fitness):
@@ -206,8 +206,8 @@ def test_run_with_no_finalize_returns_none():
 
 def test_run_with_fitness_tracking():
     """Collector can track best fitness progression."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.operators import Fill, Pipeline, Tournament, RandomReset
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, Pipeline, Tournament, RandomReset
 
     class FitnessTracker:
         def __init__(self):
@@ -231,8 +231,8 @@ def test_run_with_fitness_tracking():
 
 def test_run_with_returns_finalize_value():
     """Whatever finalize() returns is the run_with return value."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, RandomReset
 
     class DictCollector:
         def finalize(self):
@@ -248,8 +248,8 @@ def test_run_with_returns_finalize_value():
 
 def test_parallel_random_reset_runs():
     """ParallelRandomReset can be used inside a ParallelFill."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.parallel import ParallelFill, ParallelRandomReset
+    from evolve import MaxGenerations
+    from evolve.parallel import ParallelFill, ParallelRandomReset
 
     ea = make_ea(
         ParallelFill(ParallelRandomReset(), target_size=20),
@@ -263,8 +263,8 @@ def test_parallel_random_reset_runs():
 
 def test_parallel_swap_runs():
     """ParallelSwap works as inner operator."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.parallel import ParallelFill, ParallelSwap
+    from evolve import MaxGenerations
+    from evolve.parallel import ParallelFill, ParallelSwap
 
     ea = make_ea(
         ParallelFill(ParallelSwap(), target_size=20),
@@ -277,8 +277,8 @@ def test_parallel_swap_runs():
 
 def test_parallel_inversion_runs():
     """ParallelInversion works."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.parallel import ParallelFill, ParallelInversion
+    from evolve import MaxGenerations
+    from evolve.parallel import ParallelFill, ParallelInversion
 
     ea = make_ea(
         ParallelFill(ParallelInversion(), target_size=20),
@@ -291,8 +291,8 @@ def test_parallel_inversion_runs():
 
 def test_parallel_scramble_runs():
     """ParallelScramble works."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.parallel import ParallelFill, ParallelScramble
+    from evolve import MaxGenerations
+    from evolve.parallel import ParallelFill, ParallelScramble
 
     ea = make_ea(
         ParallelFill(ParallelScramble(), target_size=20),
@@ -305,8 +305,8 @@ def test_parallel_scramble_runs():
 
 def test_parallel_creep_runs():
     """ParallelCreep works with integer genomes."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.parallel import ParallelFill, ParallelCreep
+    from evolve import MaxGenerations
+    from evolve.parallel import ParallelFill, ParallelCreep
 
     ea = make_ea(
         ParallelFill(ParallelCreep(step=1), target_size=20),
@@ -319,9 +319,9 @@ def test_parallel_creep_runs():
 
 def test_parallel_gaussian_runs():
     """ParallelGaussian works with float genomes."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.parallel import ParallelFill, ParallelGaussian
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.parallel import ParallelFill, ParallelGaussian
+    from evolve.initializers import RangedRandom
 
     ea = EvolutionaryAlgorithm(
         initializer=RangedRandom(10, 10, dtype="f64"),
@@ -338,7 +338,7 @@ def test_parallel_gaussian_runs():
 
 def test_parallel_import():
     """parallel module can be imported and has expected exports."""
-    from evolve_rs import parallel
+    from evolve import parallel
 
     assert hasattr(parallel, "ParallelFill")
     assert hasattr(parallel, "ParallelRandomReset")
@@ -351,9 +351,9 @@ def test_parallel_import():
 
 def test_parallel_creep_invalid_for_float():
     """ParallelCreep raises ValueError for float dtype."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.parallel import ParallelFill, ParallelCreep
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.parallel import ParallelFill, ParallelCreep
+    from evolve.initializers import RangedRandom
 
     with pytest.raises(ValueError, match="integer"):
         EvolutionaryAlgorithm(

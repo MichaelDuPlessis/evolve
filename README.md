@@ -403,9 +403,9 @@ println!("{json}");
 Python bindings are available as [`evolve-rs`](https://pypi.org/project/evolve-rs/) on PyPI. See [`evolve-py/README.md`](evolve-py/README.md) for full details.
 
 ```python
-from evolve_rs import EvolutionaryAlgorithm, MaxGenerations
-from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
-from evolve_rs.initializers import RangedRandom
+from evolve import EvolutionaryAlgorithm, MaxGenerations
+from evolve.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
+from evolve.initializers import RangedRandom
 
 ea = EvolutionaryAlgorithm(
     initializer=RangedRandom(20, 20),

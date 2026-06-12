@@ -4,9 +4,9 @@ import pytest
 
 def test_onemax_basic():
     """Run OneMax and verify the EA produces improving fitness."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
+    from evolve.initializers import RangedRandom
 
     def fitness(genome):
         return float(sum(genome))
@@ -43,9 +43,9 @@ def test_onemax_basic():
 
 def test_onemax_seeded_determinism():
     """Two runs with the same seed should produce identical results."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
+    from evolve.initializers import RangedRandom
 
     def fitness(genome):
         return float(sum(genome))
@@ -77,9 +77,9 @@ def test_onemax_seeded_determinism():
 
 def test_onemax_minimize():
     """Verify Minimize comparator works (minimizes fitness)."""
-    from evolve_rs import EvolutionaryAlgorithm, Minimize, MaxGenerations
-    from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Minimize, MaxGenerations
+    from evolve.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
+    from evolve.initializers import RangedRandom
 
     def fitness(genome):
         return float(sum(genome))

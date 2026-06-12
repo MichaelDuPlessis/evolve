@@ -4,8 +4,8 @@ import pytest
 
 
 def make_ea(operators, termination, initializer=None, seed=42):
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.initializers import RangedRandom
 
     def fitness(genome):
         return float(sum(genome))
@@ -25,8 +25,8 @@ def make_ea(operators, termination, initializer=None, seed=42):
 
 def test_custom_operator_callable():
     """A plain Python callable can be used as a genetic operator."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.operators import Fill
+    from evolve import MaxGenerations
+    from evolve.operators import Fill
 
     calls = []
 
@@ -48,8 +48,8 @@ def test_custom_operator_callable():
 
 def test_custom_operator_in_pipeline():
     """A Python callable works inside a Pipeline combinator."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.operators import Fill, Pipeline, Combine, Tournament, SinglePoint
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, Pipeline, Combine, Tournament, SinglePoint
 
     mutation_calls = []
 
@@ -73,8 +73,8 @@ def test_custom_operator_in_pipeline():
 
 def test_custom_operator_modifies_genome():
     """Custom operator can modify genome values."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.operators import Fill
+    from evolve import MaxGenerations
+    from evolve.operators import Fill
 
     def zero_first_gene(genomes):
         return [[0] + list(g[1:]) for g in genomes]
@@ -94,7 +94,7 @@ def test_custom_operator_modifies_genome():
 
 def test_custom_termination_callable():
     """A Python callable can be used as a termination condition."""
-    from evolve_rs.operators import Fill, Pipeline, Combine, Tournament, SinglePoint, RandomReset
+    from evolve.operators import Fill, Pipeline, Combine, Tournament, SinglePoint, RandomReset
 
     stop_at = 7
     generations_seen = []
@@ -119,7 +119,7 @@ def test_custom_termination_callable():
 
 def test_custom_termination_fitness_based():
     """Termination callable can stop based on best_fitness."""
-    from evolve_rs.operators import Fill, Pipeline, Tournament, RandomReset
+    from evolve.operators import Fill, Pipeline, Tournament, RandomReset
 
     fitness_threshold = 1000.0  # impossible for 10-gene u8 genome (max=2550), use 100
 
@@ -144,8 +144,8 @@ def test_custom_termination_fitness_based():
 
 def test_maxgenerations_still_works():
     """Existing MaxGenerations still works after refactor."""
-    from evolve_rs import MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, RandomReset
 
     ea = make_ea(
         operators=Fill(RandomReset()),
@@ -157,7 +157,7 @@ def test_maxgenerations_still_works():
 
 def test_invalid_termination_raises():
     """Passing a non-callable, non-MaxGenerations object raises TypeError."""
-    from evolve_rs.operators import Fill, RandomReset
+    from evolve.operators import Fill, RandomReset
 
     with pytest.raises(TypeError):
         make_ea(
@@ -170,8 +170,8 @@ def test_invalid_termination_raises():
 
 def test_custom_initializer_callable():
     """A Python callable can be used as a population initializer."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Fill, RandomReset
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Fill, RandomReset
 
     def my_init(population_size):
         # All-zeros population

@@ -4,9 +4,9 @@ import pytest
 
 def _make_simple_ea(**overrides):
     """Helper to create a basic EA with sensible defaults."""
-    from evolve_rs import EvolutionaryAlgorithm, Maximize, MaxGenerations
-    from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
-    from evolve_rs.initializers import RangedRandom
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Tournament, SinglePoint, RandomReset, Pipeline, Combine, Fill
+    from evolve.initializers import RangedRandom
 
     defaults = dict(
         initializer=RangedRandom(20, 20),
@@ -29,7 +29,7 @@ def test_population_size_zero():
 
 
 def test_tournament_size_zero():
-    from evolve_rs.operators import Tournament, Fill
+    from evolve.operators import Tournament, Fill
     with pytest.raises(BaseException):
         _make_simple_ea(operators=Fill(Tournament(0)))
 
@@ -56,21 +56,21 @@ def test_fitness_raising_exception():
 # --- Operator construction ---
 
 def test_fill_with_tournament_only():
-    from evolve_rs.operators import Tournament, Fill
+    from evolve.operators import Tournament, Fill
     ea = _make_simple_ea(operators=Fill(Tournament(3)))
     result = ea.run()
     assert result.generations == 10
 
 
 def test_pipeline_crossover():
-    from evolve_rs.operators import Tournament, SinglePoint, Combine, Pipeline, Fill
+    from evolve.operators import Tournament, SinglePoint, Combine, Pipeline, Fill
     ea = _make_simple_ea(operators=Fill(Pipeline([Combine([Tournament(3), Tournament(3)]), SinglePoint()])))
     result = ea.run()
     assert result.generations == 10
 
 
 def test_pipeline_mutation_only():
-    from evolve_rs.operators import Tournament, RandomReset, Pipeline, Fill
+    from evolve.operators import Tournament, RandomReset, Pipeline, Fill
     ea = _make_simple_ea(operators=Fill(Pipeline([Tournament(3), RandomReset()])))
     result = ea.run()
     assert result.generations == 10
@@ -79,7 +79,7 @@ def test_pipeline_mutation_only():
 # --- Nesting combinators ---
 
 def test_nested_pipeline_in_fill():
-    from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Combine, Pipeline, Fill
+    from evolve.operators import Tournament, SinglePoint, RandomReset, Combine, Pipeline, Fill
     # Tournament selects 1 individual; Combine([T, T]) provides 2 parents for SinglePoint
     ea = _make_simple_ea(operators=Fill(Pipeline([Combine([Tournament(3), Tournament(3)]), SinglePoint(), RandomReset()])))
     result = ea.run()
@@ -87,7 +87,7 @@ def test_nested_pipeline_in_fill():
 
 
 def test_nested_combine_in_pipeline():
-    from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Combine, Pipeline, Fill
+    from evolve.operators import Tournament, SinglePoint, RandomReset, Combine, Pipeline, Fill
     ops = Fill(Pipeline([Combine([Tournament(3), Tournament(5)]), SinglePoint(), RandomReset()]))
     ea = _make_simple_ea(operators=ops)
     result = ea.run()
@@ -95,7 +95,7 @@ def test_nested_combine_in_pipeline():
 
 
 def test_deeply_nested():
-    from evolve_rs.operators import Tournament, SinglePoint, RandomReset, Combine, Pipeline, Fill
+    from evolve.operators import Tournament, SinglePoint, RandomReset, Combine, Pipeline, Fill
     ops = Fill(Pipeline([
         Combine([Tournament(3), Tournament(3)]),
         SinglePoint(),
@@ -130,7 +130,7 @@ def test_result_properties():
 # --- Edge cases ---
 
 def test_single_generation():
-    from evolve_rs import MaxGenerations
+    from evolve import MaxGenerations
     ea = _make_simple_ea(termination=MaxGenerations(1))
     result = ea.run()
     assert result.generations == 1
@@ -144,7 +144,7 @@ def test_population_size_one():
 
 
 def test_short_genome():
-    from evolve_rs.initializers import RangedRandom
+    from evolve.initializers import RangedRandom
     ea = _make_simple_ea(initializer=RangedRandom(1, 1))
     result = ea.run()
     best = result.best()

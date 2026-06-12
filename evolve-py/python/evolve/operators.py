@@ -1,6 +1,6 @@
 """Genetic operators: selection, crossover, mutation, and combinators."""
 
-from evolve_rs._evolve import (
+from evolve._evolve import (
     Tournament,
     Elitism,
     RouletteWheel,
