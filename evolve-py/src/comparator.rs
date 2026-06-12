@@ -24,6 +24,7 @@ impl Minimize {
 }
 
 /// Internal enum used as the concrete `FitnessComparator<f64>` type.
+#[derive(Clone)]
 pub enum PyComparator {
     Maximize,
     Minimize,

@@ -6,6 +6,7 @@ from evolve_rs._evolve import (
     Minimize,
     MaxGenerations,
     RangedRandom,
+    Random,
     RunResult,
     Individual,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "Minimize",
     "MaxGenerations",
     "RangedRandom",
+    "Random",
     "RunResult",
     "Individual",
     "operators",

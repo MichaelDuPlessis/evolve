@@ -1,17 +1,18 @@
+use std::fmt::Debug;
 use pyo3::prelude::*;
 
-/// A single evaluated individual. Access `genome` (list of ints) and `fitness` (float).
+/// A single evaluated individual. Access `genome` (list) and `fitness` (float).
 #[pyclass(name = "Individual")]
 pub struct PyIndividual {
-    genome: Vec<u8>,
+    genome: PyObject,
     fitness: f64,
 }
 
 #[pymethods]
 impl PyIndividual {
     #[getter]
-    fn genome(&self) -> Vec<u32> {
-        self.genome.iter().map(|&b| b as u32).collect()
+    fn genome(&self, py: Python<'_>) -> PyObject {
+        self.genome.clone_ref(py)
     }
 
     #[getter]
@@ -21,12 +22,26 @@ impl PyIndividual {
 }
 
 impl PyIndividual {
-    pub fn new(genome: Vec<u8>, fitness: f64) -> Self {
+    pub fn new(genome: PyObject, fitness: f64) -> Self {
         Self { genome, fitness }
     }
 }
 
-/// The result of an EA run. Contains the final population, best individual, and per-generation statistics.
+/// Convert a `&[T]` genome slice to a Python list object.
+pub fn genome_to_pyobject<T>(py: Python<'_>, genome: &[T]) -> PyObject
+where
+    for<'py> T: IntoPyObject<'py> + Copy,
+    for<'py> <T as IntoPyObject<'py>>::Error: Debug,
+{
+    use pyo3::BoundObject;
+    let items: Vec<PyObject> = genome
+        .iter()
+        .map(|&v| v.into_pyobject(py).unwrap().into_any().unbind())
+        .collect();
+    pyo3::types::PyList::new(py, items).unwrap().into()
+}
+
+/// The result of an EA run.
 #[pyclass(name = "RunResult")]
 pub struct PyRunResult {
     population: Vec<PyIndividual>,
@@ -40,10 +55,10 @@ pub struct PyRunResult {
 #[pymethods]
 impl PyRunResult {
     #[getter]
-    fn population(&self) -> Vec<PyIndividual> {
+    fn population(&self, py: Python<'_>) -> Vec<PyIndividual> {
         self.population
             .iter()
-            .map(|ind| PyIndividual::new(ind.genome.clone(), ind.fitness))
+            .map(|ind| PyIndividual::new(ind.genome.clone_ref(py), ind.fitness))
             .collect()
     }
 
@@ -67,9 +82,8 @@ impl PyRunResult {
         self.generation_durations_secs.clone()
     }
 
-    /// Return the best individual found across all generations.
-    fn best(&self) -> PyIndividual {
-        PyIndividual::new(self.best_individual.genome.clone(), self.best_individual.fitness)
+    fn best(&self, py: Python<'_>) -> PyIndividual {
+        PyIndividual::new(self.best_individual.genome.clone_ref(py), self.best_individual.fitness)
     }
 }
 
