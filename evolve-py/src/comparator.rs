@@ -51,12 +51,12 @@ impl FitnessComparator<f64> for PyComparator {
         match self {
             Self::Maximize => RsMaximize.is_better(f1, f2),
             Self::Minimize => RsMinimize.is_better(f1, f2),
-            Self::PythonCallback(cb) => Python::with_gil(|py| {
-                match cb.bind(py).call1((*f1, *f2)) {
+            Self::PythonCallback(cb) => {
+                Python::with_gil(|py| match cb.bind(py).call1((*f1, *f2)) {
                     Ok(v) => v.extract::<bool>().unwrap_or(false),
                     Err(_) => false,
-                }
-            }),
+                })
+            }
         }
     }
 }

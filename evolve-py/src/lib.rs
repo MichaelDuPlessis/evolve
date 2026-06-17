@@ -16,12 +16,12 @@ use experiment::PyExperiment;
 use grammar::{PyGeFitness, PyGrammar, PyGrammarBuilder, PyStandardMapper};
 use initializer::{PyRandom, PyRangedRandom};
 use operators::{
-    PyArithmetic, PyCombine, PyConditional, PyCreep, PyElitism, PyFill, PyFillFixed, PyGaussian, PyIdentity,
-    PyInversion, PyParallelCreep, PyParallelFill, PyParallelGaussian, PyParallelInversion,
-    PyParallelRandomReset, PyParallelScramble, PyParallelSwap, PyPipeline, PyProportional,
-    PyRandomReset, PyRank, PyRepeat, PyRouletteWheel, PyScramble, PySegmentDeletion,
-    PySegmentDuplication, PySinglePoint, PySus, PySwap, PyTournament, PyTwoPoint, PyUniform,
-    PyWeighted, PyWithRate,
+    PyArithmetic, PyCombine, PyConditional, PyCreep, PyElitism, PyFill, PyFillFixed, PyGaussian,
+    PyIdentity, PyInversion, PyParallelCreep, PyParallelFill, PyParallelGaussian,
+    PyParallelInversion, PyParallelRandomReset, PyParallelScramble, PyParallelSwap, PyPipeline,
+    PyProportional, PyRandomReset, PyRank, PyRepeat, PyRouletteWheel, PyScramble,
+    PySegmentDeletion, PySegmentDuplication, PySinglePoint, PySus, PySwap, PyTournament,
+    PyTwoPoint, PyUniform, PyWeighted, PyWithRate,
 };
 use pyo3::prelude::*;
 use result::{PyIndividual, PyRunResult};
