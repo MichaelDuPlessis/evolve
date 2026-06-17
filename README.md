@@ -424,4 +424,4 @@ Contributions are welcome! Feel free to open an issue for bug reports, feature r
 
 ## AI Disclosure
 
-AI was used only to assist with writing comments, writing tests, writing examples, and as a rubber duck to discuss ideas with. All final decisions and code were written by a human.
+AI was used only to assist with writing comments, writing tests, writing examples, the python bindings and as a rubber duck to discuss ideas with. Otherwise all final decisions and code were written by a human.
