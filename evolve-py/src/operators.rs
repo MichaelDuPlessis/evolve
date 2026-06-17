@@ -305,6 +305,7 @@ where
     for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
 {
     use pyo3::BoundObject;
+    use crate::fitness::stash_error;
     Python::with_gil(|py| {
         // Build list[list[T]] from population genomes
         let genomes_list: Vec<PyObject> = state.population().iter().map(|ind| {
@@ -313,16 +314,25 @@ where
                 .collect();
             PyList::new(py, inner).unwrap().into_any().unbind()
         }).collect();
-        let genomes_py = PyList::new(py, genomes_list).unwrap();
+        let genomes_py = match PyList::new(py, genomes_list) {
+            Ok(l) => l,
+            Err(e) => { stash_error(py, e); return Offspring::Multiple(Default::default()); }
+        };
 
-        let result = cb
-            .bind(py)
-            .call1((genomes_py,))
-            .expect("operator callable raised an exception");
+        let result = match cb.bind(py).call1((genomes_py,)) {
+            Ok(r) => r,
+            Err(e) => { stash_error(py, e); return Offspring::Multiple(Default::default()); }
+        };
 
-        let new_genomes: Vec<Vec<T>> = result
-            .extract()
-            .expect("operator callable must return list[list[...]]");
+        let new_genomes: Vec<Vec<T>> = match result.extract() {
+            Ok(v) => v,
+            Err(_) => {
+                stash_error(py, pyo3::exceptions::PyTypeError::new_err(
+                    "operator callable must return list[list[...]]",
+                ));
+                return Offspring::Multiple(Default::default());
+            }
+        };
 
         let population: Population<Vec<T>, f64> = new_genomes
             .into_iter()

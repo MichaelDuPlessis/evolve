@@ -77,7 +77,7 @@ impl PyEvolutionaryAlgorithm {
     fn run(&mut self, py: Python<'_>) -> PyResult<PyRunResult> {
         let fe = &self.fitness_evaluator;
         let cmp = &self.comparator;
-        match &mut self.inner {
+        let result = match &mut self.inner {
             EaInner::U8(ea)  => { let r = py.allow_threads(|| ea.run()); convert_result::<u8>(py, r, fe, cmp) }
             EaInner::U16(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<u16>(py, r, fe, cmp) }
             EaInner::U32(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<u32>(py, r, fe, cmp) }
@@ -88,7 +88,11 @@ impl PyEvolutionaryAlgorithm {
             EaInner::I64(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<i64>(py, r, fe, cmp) }
             EaInner::F32(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<f32>(py, r, fe, cmp) }
             EaInner::F64(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<f64>(py, r, fe, cmp) }
+        };
+        if let Some(err) = crate::fitness::take_stashed_error() {
+            return Err(err);
         }
+        result
     }
 
     fn run_with(&mut self, py: Python<'_>, collector: Py<PyAny>) -> PyResult<PyObject> {
@@ -105,6 +109,9 @@ impl PyEvolutionaryAlgorithm {
             EaInner::F32(ea) => py.allow_threads(|| ea.run_with(wrapper)),
             EaInner::F64(ea) => py.allow_threads(|| ea.run_with(wrapper)),
         };
+        if let Some(err) = crate::fitness::take_stashed_error() {
+            return Err(err);
+        }
         Ok(result.into_pyobject(py)?.into())
     }
 }

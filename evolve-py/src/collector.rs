@@ -1,7 +1,7 @@
 use evolve::{collector::Collector, core::state::State};
 use pyo3::prelude::*;
 
-use crate::{comparator::PyComparator, fitness::PyFitnessCallback};
+use crate::{comparator::PyComparator, fitness::{PyFitnessCallback, stash_error}};
 
 /// Wraps a Python object as a `Collector`. The Python object may optionally
 /// implement `on_start`, `on_generation`, `on_end`, and `finalize`.
@@ -39,8 +39,9 @@ where
             if m.is_callable() {
                 let generation = state.generation();
                 let best = best_fitness(state, fe);
-                m.call1((generation, best))
-                    .expect("collector method raised an exception");
+                if let Err(e) = m.call1((generation, best)) {
+                    stash_error(py, e);
+                }
             }
         }
     });
@@ -70,10 +71,10 @@ macro_rules! impl_collector {
                         let bound = self.obj.bind(py);
                         if let Ok(m) = bound.getattr("finalize") {
                             if m.is_callable() {
-                                return m
-                                    .call0()
-                                    .expect("collector finalize raised an exception")
-                                    .unbind();
+                                match m.call0() {
+                                    Ok(v) => return v.unbind(),
+                                    Err(e) => { stash_error(py, e); }
+                                }
                             }
                         }
                         py.None()

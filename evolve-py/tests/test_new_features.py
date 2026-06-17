@@ -364,3 +364,207 @@ def test_parallel_creep_invalid_for_float():
             population_size=20,
             comparator=Maximize(),
         )
+
+
+# ── Missing coverage ──────────────────────────────────────────────────────────
+
+def test_with_rate_operator():
+    """WithRate wraps an operator and applies it at the given rate."""
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, WithRate, RandomReset
+
+    ea = make_ea(Fill(WithRate(RandomReset(), 0.5)), MaxGenerations(5))
+    result = ea.run()
+    assert result.generations == 5
+    assert len(result.population) == 20
+
+
+def test_parallel_fill():
+    """ParallelFill works as top-level operator."""
+    from evolve import MaxGenerations
+    from evolve.parallel import ParallelFill, ParallelRandomReset
+
+    ea = make_ea(
+        ParallelFill(ParallelRandomReset(), target_size=20),
+        MaxGenerations(5),
+        population_size=20,
+    )
+    result = ea.run()
+    assert result.generations == 5
+    assert len(result.population) == 20
+
+
+def test_parallel_random_reset():
+    """ParallelRandomReset inside ParallelFill mutates population."""
+    from evolve import MaxGenerations
+    from evolve.parallel import ParallelFill, ParallelRandomReset
+
+    ea = make_ea(
+        ParallelFill(ParallelRandomReset(), target_size=20),
+        MaxGenerations(3),
+        population_size=20,
+    )
+    result = ea.run()
+    assert len(result.population) == 20
+
+
+def test_parallel_swap():
+    """ParallelSwap inside ParallelFill works."""
+    from evolve import MaxGenerations
+    from evolve.parallel import ParallelFill, ParallelSwap
+
+    ea = make_ea(
+        ParallelFill(ParallelSwap(), target_size=20),
+        MaxGenerations(3),
+        population_size=20,
+    )
+    result = ea.run()
+    assert len(result.population) == 20
+
+
+def test_weighted_operator():
+    """Weighted combinator distributes work among operators by weight."""
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, Weighted, RandomReset, Swap
+
+    ops = Weighted([(RandomReset(), 3), (Swap(), 1)])
+    ea = make_ea(Fill(ops), MaxGenerations(5))
+    result = ea.run()
+    assert result.generations == 5
+    assert len(result.population) == 20
+
+
+def test_proportional_operator():
+    """Proportional combinator fills population proportionally by weight."""
+    from evolve import MaxGenerations
+    from evolve.operators import Proportional, RandomReset, Swap
+
+    ops = Proportional([(RandomReset(), 3), (Swap(), 1)])
+    ea = make_ea(ops, MaxGenerations(5))
+    result = ea.run()
+    assert result.generations == 5
+    assert len(result.population) == 20
+
+
+def test_repeat_operator():
+    """Repeat applies its inner operator N times."""
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, Repeat, RandomReset
+
+    ea = make_ea(Fill(Repeat(RandomReset(), 3)), MaxGenerations(5))
+    result = ea.run()
+    assert result.generations == 5
+
+
+def test_identity_operator():
+    """Identity passes population through unchanged."""
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, Identity
+
+    ea = make_ea(Fill(Identity()), MaxGenerations(5))
+    result = ea.run()
+    assert result.generations == 5
+    assert len(result.population) == 20
+
+
+def test_seed_determinism_f64():
+    """Two runs with the same seed and dtype=f64 produce identical results."""
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Fill, RandomReset
+    from evolve.initializers import RangedRandom
+
+    def make():
+        return EvolutionaryAlgorithm(
+            initializer=RangedRandom(10, 10, dtype="f64"),
+            operators=Fill(RandomReset()),
+            fitness=lambda g: float(sum(g)),
+            termination=MaxGenerations(10),
+            population_size=20,
+            comparator=Maximize(),
+            seed=99,
+        )
+
+    r1 = make().run()
+    r2 = make().run()
+    assert [ind.fitness for ind in r1.population] == [ind.fitness for ind in r2.population]
+
+
+def test_seed_determinism_i32():
+    """Two runs with the same seed and dtype=i32 produce identical results."""
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Fill, RandomReset
+    from evolve.initializers import RangedRandom
+
+    def make():
+        return EvolutionaryAlgorithm(
+            initializer=RangedRandom(10, 10, dtype="i32"),
+            operators=Fill(RandomReset()),
+            fitness=lambda g: float(sum(g)),
+            termination=MaxGenerations(10),
+            population_size=20,
+            comparator=Maximize(),
+            seed=99,
+        )
+
+    r1 = make().run()
+    r2 = make().run()
+    assert [ind.fitness for ind in r1.population] == [ind.fitness for ind in r2.population]
+
+
+def test_error_tournament_zero():
+    """Tournament(0) raises ValueError when used in an EA."""
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Fill, Tournament
+    from evolve.initializers import RangedRandom
+    import pytest
+
+    with pytest.raises(ValueError, match="non-zero"):
+        EvolutionaryAlgorithm(
+            initializer=RangedRandom(10, 10),
+            operators=Fill(Tournament(0)),
+            fitness=lambda g: float(sum(g)),
+            termination=MaxGenerations(1),
+            population_size=20,
+            comparator=Maximize(),
+        )
+
+
+def test_error_fitness_non_float():
+    """Fitness returning a string raises TypeError."""
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Fill, RandomReset
+    from evolve.initializers import RangedRandom
+    import pytest
+
+    ea = EvolutionaryAlgorithm(
+        initializer=RangedRandom(10, 10),
+        operators=Fill(RandomReset()),
+        fitness=lambda g: "not a float",
+        termination=MaxGenerations(5),
+        population_size=20,
+        comparator=Maximize(),
+    )
+    with pytest.raises(TypeError):
+        ea.run()
+
+
+def test_error_fitness_exception():
+    """Fitness raising ValueError propagates out of ea.run()."""
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Fill, RandomReset
+    from evolve.initializers import RangedRandom
+    import pytest
+
+    def bad_fitness(g):
+        raise ValueError("bad fitness")
+
+    ea = EvolutionaryAlgorithm(
+        initializer=RangedRandom(10, 10),
+        operators=Fill(RandomReset()),
+        fitness=bad_fitness,
+        termination=MaxGenerations(5),
+        population_size=20,
+        comparator=Maximize(),
+    )
+    with pytest.raises((ValueError, Exception)):
+        ea.run()

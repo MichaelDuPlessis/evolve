@@ -201,10 +201,17 @@ impl PyGeFitness {
                 }
             }
             MapperKind::Python(mapper_fn) => {
-                let py_codons = pyo3::types::PyList::new(
+                let py_codons = match pyo3::types::PyList::new(
                     py,
                     codons.iter().map(|&v| v.into_pyobject(py).unwrap()),
-                ).unwrap();
+                ) {
+                    Ok(list) => list,
+                    Err(e) => {
+                        use crate::fitness::stash_error;
+                        stash_error(py, e);
+                        return self.penalty;
+                    }
+                };
                 match mapper_fn.bind(py).call1((py_codons,)) {
                     Ok(r) if !r.is_none() => {
                         match r.extract::<String>() {
@@ -212,18 +219,31 @@ impl PyGeFitness {
                             Err(_) => self.penalty,
                         }
                     }
-                    _ => self.penalty,
+                    Ok(_) => self.penalty,
+                    Err(e) => {
+                        use crate::fitness::stash_error;
+                        stash_error(py, e);
+                        self.penalty
+                    }
                 }
             }
         }
     }
 
     fn call_evaluator(&self, py: Python<'_>, phenotype: &str) -> f64 {
-        self.evaluator
-            .bind(py)
-            .call1((phenotype,))
-            .expect("GE evaluator raised an exception")
-            .extract::<f64>()
-            .expect("GE evaluator must return a float")
+        use crate::fitness::stash_error;
+        let result = match self.evaluator.bind(py).call1((phenotype,)) {
+            Ok(r) => r,
+            Err(e) => { stash_error(py, e); return f64::NAN; }
+        };
+        match result.extract::<f64>() {
+            Ok(v) => v,
+            Err(_) => {
+                stash_error(py, pyo3::exceptions::PyTypeError::new_err(
+                    "GE evaluator must return a float",
+                ));
+                f64::NAN
+            }
+        }
     }
 }

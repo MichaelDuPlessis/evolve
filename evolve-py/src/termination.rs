@@ -1,6 +1,8 @@
 use evolve::{core::state::State, termination::{MaxGenerations, TerminationCondition}};
 use pyo3::prelude::*;
 
+use crate::fitness::stash_error;
+
 /// Stop the algorithm after a fixed number of generations.
 #[pyclass(name = "MaxGenerations")]
 pub struct PyMaxGenerations {
@@ -33,19 +35,25 @@ impl<G: Clone> TerminationCondition<G, f64> for PyTermination {
             Self::MaxGenerations(t) => t.should_terminate(state),
             Self::PythonCallback(cb) => {
                 let generation = state.generation();
-                // Best fitness: find already-computed fitness in population.
-                // After the first generation operators run, fitness is lazily cached.
                 let best: f64 = state
                     .population()
                     .iter()
                     .filter_map(|ind| ind.try_fitness().copied())
                     .fold(f64::NEG_INFINITY, f64::max);
                 Python::with_gil(|py| {
-                    cb.bind(py)
-                        .call1((generation, best))
-                        .expect("termination callable raised an exception")
-                        .extract::<bool>()
-                        .expect("termination callable must return a bool")
+                    let result = match cb.bind(py).call1((generation, best)) {
+                        Ok(r) => r,
+                        Err(e) => { stash_error(py, e); return true; } // stop the loop
+                    };
+                    match result.extract::<bool>() {
+                        Ok(v) => v,
+                        Err(_) => {
+                            stash_error(py, pyo3::exceptions::PyTypeError::new_err(
+                                "termination callable must return a bool",
+                            ));
+                            true // stop the loop
+                        }
+                    }
                 })
             }
         }
