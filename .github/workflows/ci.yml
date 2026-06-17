@@ -13,8 +13,26 @@ jobs:
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo fmt --check
-      - run: cargo clippy -- -D warnings
-      - run: cargo test --quiet
-      - run: cargo test --quiet --features parallel
-      - run: cargo test --quiet --features serde
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace -- -D warnings
+      - run: cargo test --quiet --workspace --exclude evolve-py
+      - run: cargo test --quiet --workspace --exclude evolve-py --features parallel
+      - run: cargo test --quiet --workspace --exclude evolve-py --features serde
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install maturin pytest
+      - name: Build extension
+        working-directory: evolve-py
+        run: maturin develop
+      - name: Run tests
+        working-directory: evolve-py
+        run: pytest tests/ -q
