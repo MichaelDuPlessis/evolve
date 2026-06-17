@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Callable, Any
 
 class Tournament:
     def __init__(self, tournament_size: int) -> None: ...
@@ -77,3 +77,6 @@ class Identity:
 
 class WithRate:
     def __init__(self, operator: Any, rate: float) -> None: ...
+
+class Conditional:
+    def __init__(self, predicate: Callable[[int, int], bool], if_true: Any, if_false: Any) -> None: ...

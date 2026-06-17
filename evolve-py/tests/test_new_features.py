@@ -580,11 +580,11 @@ def test_conditional_switches_operators():
     applied_true = []
     applied_false = []
 
-    def track_true(population):
+    def track_true(population, generation):
         applied_true.append(1)
         return [ind["genome"] for ind in population]
 
-    def track_false(population):
+    def track_false(population, generation):
         applied_false.append(1)
         return [ind["genome"] for ind in population]
 
@@ -608,7 +608,7 @@ def test_conditional_always_true():
 
     calls = []
 
-    def my_op(population):
+    def my_op(population, generation):
         calls.append(1)
         return [ind["genome"] for ind in population]
 
@@ -630,7 +630,7 @@ def test_custom_operator_receives_dicts():
 
     received = []
 
-    def inspect_population(population):
+    def inspect_population(population, generation):
         received.append(population)
         return [ind["genome"] for ind in population]
 
@@ -651,7 +651,7 @@ def test_custom_operator_fitness_accessible():
     from evolve import MaxGenerations
     from evolve.operators import Fill
 
-    def best_clone(population):
+    def best_clone(population, generation):
         evaluated = [ind for ind in population if ind["fitness"] is not None]
         if evaluated:
             best = max(evaluated, key=lambda ind: ind["fitness"])
@@ -736,3 +736,63 @@ def test_proportional_no_size_uses_pop_size():
     result = ea.run()
     assert result.generations == 3
     assert len(result.population) == 20
+
+
+# ── New tests: SegmentDuplication, SegmentDeletion, collector error ───────────
+
+def test_segment_duplication():
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Fill, Pipeline, Tournament, SinglePoint, Combine, SegmentDuplication
+    from evolve.initializers import RangedRandom
+    ea = EvolutionaryAlgorithm(
+        initializer=RangedRandom(50, 50),
+        operators=Fill(Pipeline([Combine([Tournament(3), Tournament(3)]), SinglePoint(), SegmentDuplication(0.3, 200)])),
+        fitness=lambda g: float(sum(g)),
+        termination=MaxGenerations(10),
+        population_size=50,
+        comparator=Maximize(),
+        seed=42,
+    )
+    result = ea.run()
+    assert result.generations == 10
+
+
+def test_segment_deletion():
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Fill, Pipeline, Tournament, SinglePoint, Combine, SegmentDeletion
+    from evolve.initializers import RangedRandom
+    ea = EvolutionaryAlgorithm(
+        initializer=RangedRandom(50, 50),
+        operators=Fill(Pipeline([Combine([Tournament(3), Tournament(3)]), SinglePoint(), SegmentDeletion(0.3, 10)])),
+        fitness=lambda g: float(sum(g)),
+        termination=MaxGenerations(10),
+        population_size=50,
+        comparator=Maximize(),
+        seed=42,
+    )
+    result = ea.run()
+    assert result.generations == 10
+
+
+def test_collector_error_propagation():
+    from evolve import EvolutionaryAlgorithm, Maximize, MaxGenerations
+    from evolve.operators import Fill, RandomReset
+    from evolve.initializers import RangedRandom
+    import pytest
+
+    class BadCollector:
+        def on_generation(self, gen, bf, pop):
+            if gen >= 2:
+                raise ValueError("intentional collector error")
+
+    ea = EvolutionaryAlgorithm(
+        initializer=RangedRandom(10, 10),
+        operators=Fill(RandomReset()),
+        fitness=lambda g: float(sum(g)),
+        termination=MaxGenerations(10),
+        population_size=20,
+        comparator=Maximize(),
+        seed=42,
+    )
+    with pytest.raises(BaseException):
+        ea.run_with(BadCollector())

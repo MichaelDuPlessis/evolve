@@ -97,13 +97,14 @@ where
         match self {
             Self::RangedRandom(init) => init.initialize(population_size, ctx),
             Self::PythonCallback(cb) => Python::with_gil(|py| {
-                let result = cb
-                    .bind(py)
-                    .call1((population_size.get(),))
-                    .expect("initializer callable raised an exception");
-                let genomes: Vec<Vec<T>> = result
-                    .extract()
-                    .expect("initializer callable must return list[list[...]]");
+                let result = match cb.bind(py).call1((population_size.get(),)) {
+                    Ok(r) => r,
+                    Err(_) => return Population::default(),
+                };
+                let genomes: Vec<Vec<T>> = match result.extract() {
+                    Ok(v) => v,
+                    Err(_) => return Population::default(),
+                };
                 genomes
                     .into_iter()
                     .map(|genome| Individual::new(genome))

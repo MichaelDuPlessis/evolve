@@ -352,7 +352,7 @@ where
             }
         };
 
-        let result = match cb.bind(py).call1((pop_py,)) {
+        let result = match cb.bind(py).call1((pop_py, state.generation())) {
             Ok(r) => r,
             Err(e) => {
                 stash_error(py, e);

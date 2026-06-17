@@ -13,11 +13,17 @@ keywords = ["genetic-algorithm", "evolutionary", "optimization", "grammatical-ev
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
 ]
 dependencies = []
+
+[project.urls]
+Repository = "https://github.com/MichaelDuPlessis/evolve"
+Documentation = "https://docs.rs/evolve"
 
 [tool.maturin]
 python-source = "python"
 module-name = "evolve._evolve"
-features = []
 bindings = "pyo3"

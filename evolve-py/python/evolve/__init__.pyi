@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Any
+from typing import Callable, Any
 
 class EvolutionaryAlgorithm:
     def __init__(
@@ -8,7 +8,7 @@ class EvolutionaryAlgorithm:
         fitness: Callable[[list], float],
         termination: Any,
         population_size: int,
-        comparator: Optional[Any] = ...,
+        comparator: Maximize | Minimize | Callable[[float, float], bool] | None = ...,
         seed: Optional[int] = ...,
     ) -> None: ...
     def run(self) -> RunResult: ...
@@ -66,4 +66,4 @@ class GeFitness:
 
 class Experiment:
     def __init__(self, factory: Callable[[], EvolutionaryAlgorithm], trials: int) -> None: ...
-    def run(self) -> list[RunResult]: ...
+    def run(self) -> list[Any]: ...
