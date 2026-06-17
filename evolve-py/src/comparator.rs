@@ -9,7 +9,9 @@ pub struct Maximize;
 impl Maximize {
     /// Create a Maximize comparator.
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 /// Comparator that treats lower fitness as better.
@@ -20,7 +22,9 @@ pub struct Minimize;
 impl Minimize {
     /// Create a Minimize comparator.
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 /// Internal enum used as the concrete `FitnessComparator<f64>` type.
@@ -35,7 +39,9 @@ impl Clone for PyComparator {
         match self {
             Self::Maximize => Self::Maximize,
             Self::Minimize => Self::Minimize,
-            Self::PythonCallback(cb) => Self::PythonCallback(Python::with_gil(|py| cb.clone_ref(py))),
+            Self::PythonCallback(cb) => {
+                Self::PythonCallback(Python::with_gil(|py| cb.clone_ref(py)))
+            }
         }
     }
 }
@@ -45,15 +51,13 @@ impl FitnessComparator<f64> for PyComparator {
         match self {
             Self::Maximize => RsMaximize.is_better(f1, f2),
             Self::Minimize => RsMinimize.is_better(f1, f2),
-            Self::PythonCallback(cb) => {
-                Python::with_gil(|py| {
-                    cb.bind(py)
-                        .call1((*f1, *f2))
-                        .expect("comparator callable raised an exception")
-                        .extract::<bool>()
-                        .expect("comparator callable must return a bool")
-                })
-            }
+            Self::PythonCallback(cb) => Python::with_gil(|py| {
+                cb.bind(py)
+                    .call1((*f1, *f2))
+                    .expect("comparator callable raised an exception")
+                    .extract::<bool>()
+                    .expect("comparator callable must return a bool")
+            }),
         }
     }
 }

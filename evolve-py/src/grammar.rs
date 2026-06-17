@@ -1,10 +1,10 @@
 //! Python wrappers for Grammar, StandardMapper, and GeFitness.
 
-use evolve::grammar::{Grammar, GrammarBuilder};
 use evolve::grammar::mapper::{Mapper, StandardMapper};
+use evolve::grammar::{Grammar, GrammarBuilder};
 use evolve::phenotype::{Event, PhenotypeBuilder};
-use pyo3::prelude::*;
 use pyo3::exceptions::{PyTypeError, PyValueError};
+use pyo3::prelude::*;
 
 // --- StringBuilder ---
 
@@ -61,7 +61,9 @@ pub struct PyGrammarBuilder {
 impl PyGrammarBuilder {
     fn take(&mut self) -> PyResult<GrammarBuilder<String>> {
         self.inner.take().ok_or_else(|| {
-            PyValueError::new_err("GrammarBuilder has already been consumed (called build() or reused)")
+            PyValueError::new_err(
+                "GrammarBuilder has already been consumed (called build() or reused)",
+            )
         })
     }
 }
@@ -78,29 +80,38 @@ impl PyGrammarBuilder {
         let builder = slf.take()?;
         let refs: Vec<&[String]> = productions.iter().map(|p| p.as_slice()).collect();
         let new_builder = builder.rule(name, &refs);
-        Ok(Bound::new(py, PyGrammarBuilder { inner: Some(new_builder) })?.into_any().unbind())
+        Ok(Bound::new(
+            py,
+            PyGrammarBuilder {
+                inner: Some(new_builder),
+            },
+        )?
+        .into_any()
+        .unbind())
     }
 
     /// Set the start symbol.
-    fn start(
-        mut slf: PyRefMut<'_, Self>,
-        name: String,
-        py: Python<'_>,
-    ) -> PyResult<PyObject> {
+    fn start(mut slf: PyRefMut<'_, Self>, name: String, py: Python<'_>) -> PyResult<PyObject> {
         let builder = slf.take()?;
         let new_builder = builder.start(name);
-        Ok(Bound::new(py, PyGrammarBuilder { inner: Some(new_builder) })?.into_any().unbind())
+        Ok(Bound::new(
+            py,
+            PyGrammarBuilder {
+                inner: Some(new_builder),
+            },
+        )?
+        .into_any()
+        .unbind())
     }
 
     /// Build the Grammar.
-    fn build(
-        mut slf: PyRefMut<'_, Self>,
-        py: Python<'_>,
-    ) -> PyResult<PyObject> {
+    fn build(mut slf: PyRefMut<'_, Self>, py: Python<'_>) -> PyResult<PyObject> {
         let builder = slf.take()?;
         let result = std::panic::catch_unwind(|| builder.build());
         match result {
-            Ok(grammar) => Ok(Bound::new(py, PyGrammar { inner: grammar })?.into_any().unbind()),
+            Ok(grammar) => Ok(Bound::new(py, PyGrammar { inner: grammar })?
+                .into_any()
+                .unbind()),
             Err(e) => {
                 let msg = e
                     .downcast_ref::<String>()
@@ -213,12 +224,10 @@ impl PyGeFitness {
                     }
                 };
                 match mapper_fn.bind(py).call1((py_codons,)) {
-                    Ok(r) if !r.is_none() => {
-                        match r.extract::<String>() {
-                            Ok(phenotype) => self.call_evaluator(py, &phenotype),
-                            Err(_) => self.penalty,
-                        }
-                    }
+                    Ok(r) if !r.is_none() => match r.extract::<String>() {
+                        Ok(phenotype) => self.call_evaluator(py, &phenotype),
+                        Err(_) => self.penalty,
+                    },
                     Ok(_) => self.penalty,
                     Err(e) => {
                         use crate::fitness::stash_error;
@@ -234,14 +243,18 @@ impl PyGeFitness {
         use crate::fitness::stash_error;
         let result = match self.evaluator.bind(py).call1((phenotype,)) {
             Ok(r) => r,
-            Err(e) => { stash_error(py, e); return f64::NAN; }
+            Err(e) => {
+                stash_error(py, e);
+                return f64::NAN;
+            }
         };
         match result.extract::<f64>() {
             Ok(v) => v,
             Err(_) => {
-                stash_error(py, pyo3::exceptions::PyTypeError::new_err(
-                    "GE evaluator must return a float",
-                ));
+                stash_error(
+                    py,
+                    pyo3::exceptions::PyTypeError::new_err("GE evaluator must return a float"),
+                );
                 f64::NAN
             }
         }

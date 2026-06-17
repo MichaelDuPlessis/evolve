@@ -4,10 +4,12 @@ use crate::core::{
 };
 use crate::fitness::Maximize;
 use crate::operators::GeneticOperator;
-use crate::operators::sequential::combinator::{Combine, Fill, Pipeline, Proportional, Repeat, Weighted};
+use crate::operators::sequential::combinator::{
+    Combine, Fill, Pipeline, Proportional, Repeat, Weighted,
+};
 use crate::operators::sequential::crossover::SinglePoint;
-use crate::operators::sequential::mutation::RandomReset;
 use crate::operators::sequential::identity::Identity;
+use crate::operators::sequential::mutation::RandomReset;
 use crate::operators::sequential::selection::Elitism;
 use crate::operators::sequential::selection::Tournament;
 use std::num::NonZero;
@@ -669,7 +671,11 @@ fn gaussian_mutation_modifies_genome() {
     let op = Gaussian::new(1.0);
     let offspring = op.apply(&state, &mut ctx);
     let result = offspring.into_population();
-    assert!(result.iter().any(|ind| ind.genome().iter().any(|&g| g != 0.0)));
+    assert!(
+        result
+            .iter()
+            .any(|ind| ind.genome().iter().any(|&g| g != 0.0))
+    );
 }
 
 #[test]
@@ -701,7 +707,11 @@ fn gaussian_mutation_transform_modifies_genome() {
     let op = Gaussian::new(1.0);
     let offspring = op.transform(state, &mut ctx);
     let result = offspring.into_population();
-    assert!(result.iter().any(|ind| ind.genome().iter().any(|&g| g != 0.0)));
+    assert!(
+        result
+            .iter()
+            .any(|ind| ind.genome().iter().any(|&g| g != 0.0))
+    );
 }
 
 // ── RouletteWheel ──
@@ -779,10 +789,7 @@ fn proportional_single_operator() {
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
 
-    let ops = [(
-        RandomReset::<i32>::new(),
-        NonZero::new(3u16).unwrap(),
-    )];
+    let ops = [(RandomReset::<i32>::new(), NonZero::new(3u16).unwrap())];
     let op = Proportional::new(ops.as_slice());
     let offspring = op.apply(&state, &mut ctx);
     assert_eq!(offspring.into_population().len(), 5);
@@ -840,10 +847,13 @@ fn proportional_tuple_with_size() {
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
 
-    let op = Proportional::with_size((
-        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
-        (RandomReset::<i32>::new(), NonZero::new(3u16).unwrap()),
-    ), 20);
+    let op = Proportional::with_size(
+        (
+            (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+            (RandomReset::<i32>::new(), NonZero::new(3u16).unwrap()),
+        ),
+        20,
+    );
     let offspring = op.apply(&state, &mut ctx);
     assert_eq!(offspring.into_population().len(), 20);
 }
@@ -1190,9 +1200,15 @@ fn sus_favors_higher_fitness() {
     let op = Sus::new(NonZero::new(100).unwrap());
     let offspring = op.apply(&state, &mut ctx);
     let pop = offspring.into_population();
-    let high_count = pop.iter().filter(|ind| *ind.genome() == [9, 9, 9, 9]).count();
+    let high_count = pop
+        .iter()
+        .filter(|ind| *ind.genome() == [9, 9, 9, 9])
+        .count();
     // 99% of fitness belongs to [9,9,9,9], so it should get ~99 of 100 selections
-    assert!(high_count > 90, "high fitness selected {high_count}/100 times");
+    assert!(
+        high_count > 90,
+        "high fitness selected {high_count}/100 times"
+    );
 }
 
 // ── Conditional ──

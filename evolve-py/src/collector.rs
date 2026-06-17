@@ -1,7 +1,10 @@
 use evolve::{collector::Collector, core::state::State};
 use pyo3::prelude::*;
 
-use crate::{comparator::PyComparator, fitness::{PyFitnessCallback, stash_error}};
+use crate::{
+    comparator::PyComparator,
+    fitness::{PyFitnessCallback, stash_error},
+};
 
 /// Wraps a Python object as a `Collector`. The Python object may optionally
 /// implement `on_start`, `on_generation`, `on_end`, and `finalize`.

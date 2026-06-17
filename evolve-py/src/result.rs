@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use pyo3::prelude::*;
+use std::fmt::Debug;
 
 /// A single evaluated individual. Access `genome` (list) and `fitness` (float).
 #[pyclass(name = "Individual")]
@@ -83,7 +83,10 @@ impl PyRunResult {
     }
 
     fn best(&self, py: Python<'_>) -> PyIndividual {
-        PyIndividual::new(self.best_individual.genome.clone_ref(py), self.best_individual.fitness)
+        PyIndividual::new(
+            self.best_individual.genome.clone_ref(py),
+            self.best_individual.fitness,
+        )
     }
 }
 

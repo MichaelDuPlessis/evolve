@@ -22,7 +22,11 @@ pub struct Creep<T> {
 impl<T> Creep<T> {
     /// Creates a new parallel `Creep` mutation with the given maximum step size.
     pub fn new(step: T) -> Self {
-        Self { step, min: None, max: None }
+        Self {
+            step,
+            min: None,
+            max: None,
+        }
     }
 
     /// Sets the lower bound. Genes are clamped to this minimum after mutation.
@@ -63,8 +67,12 @@ where
             let genes = genome.as_mut();
             let gene_idx = rng.random_range(0..genes.len());
             genes[gene_idx] = genes[gene_idx].creep(step, &mut rng);
-            if let Some(lo) = min { genes[gene_idx] = std::cmp::max(genes[gene_idx], lo); }
-            if let Some(hi) = max { genes[gene_idx] = std::cmp::min(genes[gene_idx], hi); }
+            if let Some(lo) = min {
+                genes[gene_idx] = std::cmp::max(genes[gene_idx], lo);
+            }
+            if let Some(hi) = max {
+                genes[gene_idx] = std::cmp::min(genes[gene_idx], hi);
+            }
             Individual::new(genome)
         });
 

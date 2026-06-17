@@ -11,17 +11,17 @@ mod termination;
 mod types;
 
 use algorithm::PyEvolutionaryAlgorithm;
-use experiment::PyExperiment;
 use comparator::{Maximize, Minimize};
+use experiment::PyExperiment;
 use grammar::{PyGeFitness, PyGrammar, PyGrammarBuilder, PyStandardMapper};
-use initializer::{PyRangedRandom, PyRandom};
+use initializer::{PyRandom, PyRangedRandom};
 use operators::{
     PyArithmetic, PyCombine, PyCreep, PyElitism, PyFill, PyFillFixed, PyGaussian, PyIdentity,
-    PyInversion, PyPipeline, PyProportional, PyRandomReset, PyRank, PyRepeat, PyRouletteWheel,
-    PyScramble, PySegmentDeletion, PySegmentDuplication, PySinglePoint, PySus, PySwap,
-    PyTournament, PyTwoPoint, PyUniform, PyWeighted, PyWithRate,
-    PyParallelFill, PyParallelRandomReset, PyParallelSwap, PyParallelInversion,
-    PyParallelScramble, PyParallelCreep, PyParallelGaussian,
+    PyInversion, PyParallelCreep, PyParallelFill, PyParallelGaussian, PyParallelInversion,
+    PyParallelRandomReset, PyParallelScramble, PyParallelSwap, PyPipeline, PyProportional,
+    PyRandomReset, PyRank, PyRepeat, PyRouletteWheel, PyScramble, PySegmentDeletion,
+    PySegmentDuplication, PySinglePoint, PySus, PySwap, PyTournament, PyTwoPoint, PyUniform,
+    PyWeighted, PyWithRate,
 };
 use pyo3::prelude::*;
 use result::{PyIndividual, PyRunResult};

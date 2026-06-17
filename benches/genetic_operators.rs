@@ -10,8 +10,8 @@ use evolve::{
             combinator::{Combine, Fill, Pipeline, Proportional},
             crossover::{Arithmetic, SinglePoint, TwoPoint, Uniform},
             mutation::{
-                Creep, Gaussian, Inversion, Scramble, Swap,
-                deletion::SegmentDeletion, duplication::SegmentDuplication, RandomReset,
+                Creep, Gaussian, Inversion, RandomReset, Scramble, Swap, deletion::SegmentDeletion,
+                duplication::SegmentDuplication,
             },
             selection::{Rank, RouletteWheel, Sus, Tournament},
             with_rate::WithRate,
@@ -430,10 +430,7 @@ fn bench_ge_mapping(c: &mut Criterion) {
         .start("expr")
         .build();
 
-    let ge = GeFitness::<_, u8, f64, _, ExprBuilder, _>::new(grammar,
-    3,
-    |p: &Expr| p.0,
-    0.0,);
+    let ge = GeFitness::<_, u8, f64, _, ExprBuilder, _>::new(grammar, 3, |p: &Expr| p.0, 0.0);
 
     c.bench_function("ge_mapping", |b| {
         let genome: Vec<u8> = vec![0, 1, 0, 2, 1, 0, 2, 1, 0, 1, 2, 0, 1, 2, 0];

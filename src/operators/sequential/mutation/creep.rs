@@ -37,7 +37,11 @@ pub struct Creep<T> {
 impl<T> Creep<T> {
     /// Creates a new `Creep` mutation with the given maximum step size.
     pub fn new(step: T) -> Self {
-        Self { step, min: None, max: None }
+        Self {
+            step,
+            min: None,
+            max: None,
+        }
     }
 
     /// Sets the lower bound. Genes are clamped to this minimum after mutation.
@@ -107,8 +111,12 @@ where
             let genes = genome.as_mut();
             let idx = ctx.rng().random_range(0..genes.len());
             genes[idx] = genes[idx].creep(self.step, ctx.rng());
-            if let Some(min) = self.min { genes[idx] = std::cmp::max(genes[idx], min); }
-            if let Some(max) = self.max { genes[idx] = std::cmp::min(genes[idx], max); }
+            if let Some(min) = self.min {
+                genes[idx] = std::cmp::max(genes[idx], min);
+            }
+            if let Some(max) = self.max {
+                genes[idx] = std::cmp::min(genes[idx], max);
+            }
             population.add(Individual::new(genome));
         }
         Offspring::Multiple(population)
@@ -126,8 +134,12 @@ where
                     let genes = genome.as_mut();
                     let idx = ctx.rng().random_range(0..genes.len());
                     genes[idx] = genes[idx].creep(step, ctx.rng());
-                    if let Some(lo) = min { genes[idx] = std::cmp::max(genes[idx], lo); }
-                    if let Some(hi) = max { genes[idx] = std::cmp::min(genes[idx], hi); }
+                    if let Some(lo) = min {
+                        genes[idx] = std::cmp::max(genes[idx], lo);
+                    }
+                    if let Some(hi) = max {
+                        genes[idx] = std::cmp::min(genes[idx], hi);
+                    }
                 })
             })
             .collect();

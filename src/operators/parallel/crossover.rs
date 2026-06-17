@@ -339,7 +339,11 @@ macro_rules! impl_parallel_arithmetic {
             C: Sync,
             Individual<[$float; N], F>: Sync,
         {
-            fn apply(&self, state: &State<[$float; N], F>, ctx: &mut Context<Fe, R, C>) -> Offspring<[$float; N], F> {
+            fn apply(
+                &self,
+                state: &State<[$float; N], F>,
+                ctx: &mut Context<Fe, R, C>,
+            ) -> Offspring<[$float; N], F> {
                 let individuals = state.population().as_slice();
                 let inputs: vecpool::PoolVec<(u64, usize)> = individuals
                     .chunks_exact(2)
@@ -354,8 +358,12 @@ macro_rules! impl_parallel_arithmetic {
                     let p2 = individuals[base + 1].genome();
                     let alpha: f64 = rng.random();
 
-                    let child1: [$float; N] = std::array::from_fn(|i| $cast(alpha * p1[i] as f64 + (1.0 - alpha) * p2[i] as f64));
-                    let child2: [$float; N] = std::array::from_fn(|i| $cast((1.0 - alpha) * p1[i] as f64 + alpha * p2[i] as f64));
+                    let child1: [$float; N] = std::array::from_fn(|i| {
+                        $cast(alpha * p1[i] as f64 + (1.0 - alpha) * p2[i] as f64)
+                    });
+                    let child2: [$float; N] = std::array::from_fn(|i| {
+                        $cast((1.0 - alpha) * p1[i] as f64 + alpha * p2[i] as f64)
+                    });
 
                     (Individual::new(child1), Individual::new(child2))
                 });
@@ -379,7 +387,11 @@ macro_rules! impl_parallel_arithmetic {
             C: Sync,
             Individual<Vec<$float>, F>: Sync,
         {
-            fn apply(&self, state: &State<Vec<$float>, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<Vec<$float>, F> {
+            fn apply(
+                &self,
+                state: &State<Vec<$float>, F>,
+                ctx: &mut Context<Fe, R, C>,
+            ) -> Offspring<Vec<$float>, F> {
                 let individuals = state.population().as_slice();
                 let inputs: vecpool::PoolVec<(u64, usize)> = individuals
                     .chunks_exact(2)

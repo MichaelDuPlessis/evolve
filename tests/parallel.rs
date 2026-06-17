@@ -376,10 +376,12 @@ fn parallel_ge_runs_to_completion() {
         .start("expr")
         .build();
 
-    let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(grammar,
-    3,
-    |p: &TerminalCount| p.run(&()) as f64,
-    -1.0,);
+    let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(
+        grammar,
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
 
     let mut ga = EvolutionaryAlgorithm::builder(nz(100))
         .initializer(RangedRandom::<u8>::new(5..20))
@@ -393,16 +395,18 @@ fn parallel_ge_runs_to_completion() {
 
     let result = ga.run();
 
-    let fe = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(Grammar::builder()
-        .rule("expr", &[&["expr", "op", "expr"], &["var"], &["const"]])
-        .rule("op", &[&["+"], &["-"], &["*"]])
-        .rule("var", &[&["x"], &["y"]])
-        .rule("const", &[&["1"], &["2"]])
-        .start("expr")
-        .build(),
-    3,
-    |p: &TerminalCount| p.run(&()) as f64,
-    -1.0,);
+    let fe = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(
+        Grammar::builder()
+            .rule("expr", &[&["expr", "op", "expr"], &["var"], &["const"]])
+            .rule("op", &[&["+"], &["-"], &["*"]])
+            .rule("var", &[&["x"], &["y"]])
+            .rule("const", &[&["1"], &["2"]])
+            .start("expr")
+            .build(),
+        3,
+        |p: &TerminalCount| p.run(&()) as f64,
+        -1.0,
+    );
 
     let best_fitness = fe.evaluate(result.population().best(&fe, &Maximize).genome());
     assert!(
@@ -456,7 +460,12 @@ fn parallel_two_point_crossover() {
     let mut rng = SmallRng::seed_from_u64(42);
     let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
 
-    let state = make_state(&[[0, 0, 0, 0], [255, 255, 255, 255], [1, 1, 1, 1], [2, 2, 2, 2]]);
+    let state = make_state(&[
+        [0, 0, 0, 0],
+        [255, 255, 255, 255],
+        [1, 1, 1, 1],
+        [2, 2, 2, 2],
+    ]);
     let op = TwoPoint::<u8>::new();
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
 }
@@ -470,7 +479,12 @@ fn parallel_uniform_crossover() {
     let mut rng = SmallRng::seed_from_u64(42);
     let mut ctx = Context::new(&fe, &mut rng, &Maximize, &runtime);
 
-    let state = make_state(&[[0, 0, 0, 0], [255, 255, 255, 255], [1, 1, 1, 1], [2, 2, 2, 2]]);
+    let state = make_state(&[
+        [0, 0, 0, 0],
+        [255, 255, 255, 255],
+        [1, 1, 1, 1],
+        [2, 2, 2, 2],
+    ]);
     let op = Uniform::<u8>::new();
     assert_eq!(op.apply(&state, &mut ctx).num_offspring(), 4);
 }
@@ -489,7 +503,9 @@ fn parallel_arithmetic_crossover() {
         Individual::new([1.0, 1.0, 1.0, 1.0]),
         Individual::new([2.0, 2.0, 2.0, 2.0]),
         Individual::new([3.0, 3.0, 3.0, 3.0]),
-    ].into_iter().collect();
+    ]
+    .into_iter()
+    .collect();
     let state = State::new(pop, 0);
 
     let op = Arithmetic::new();
@@ -500,7 +516,10 @@ fn parallel_arithmetic_crossover() {
     let result = offspring.into_population();
     for ind in result.iter() {
         for &g in ind.genome() {
-            assert!(g >= 0.0 && g <= 3.0, "blended gene {g} should be between parent values");
+            assert!(
+                g >= 0.0 && g <= 3.0,
+                "blended gene {g} should be between parent values"
+            );
         }
     }
 }
@@ -576,7 +595,9 @@ fn parallel_gaussian_mutation() {
         Individual::new([0.0; 4]),
         Individual::new([0.0; 4]),
         Individual::new([0.0; 4]),
-    ].into_iter().collect();
+    ]
+    .into_iter()
+    .collect();
     let state = State::new(pop, 0);
 
     let op = Gaussian::new(1.0);
@@ -585,6 +606,11 @@ fn parallel_gaussian_mutation() {
 
     // At least one gene should have changed
     let result = offspring.into_population();
-    let any_changed = result.iter().any(|ind| ind.genome().iter().any(|&g| g != 0.0));
-    assert!(any_changed, "Gaussian mutation should change at least one gene");
+    let any_changed = result
+        .iter()
+        .any(|ind| ind.genome().iter().any(|&g| g != 0.0));
+    assert!(
+        any_changed,
+        "Gaussian mutation should change at least one gene"
+    );
 }

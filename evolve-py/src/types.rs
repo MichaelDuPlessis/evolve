@@ -12,9 +12,8 @@ use crate::{
     comparator::PyComparator,
     fitness::PyFitnessCallback,
     operators::{
+        PyOperatorF32, PyOperatorF64, PyOperatorI8, PyOperatorI16, PyOperatorI32, PyOperatorI64,
         PyOperatorU8, PyOperatorU16, PyOperatorU32, PyOperatorU64,
-        PyOperatorI8, PyOperatorI16, PyOperatorI32, PyOperatorI64,
-        PyOperatorF32, PyOperatorF64,
     },
     termination::PyTermination,
 };
@@ -27,11 +26,11 @@ macro_rules! ea_type {
 
 /// Holds the monomorphized EA for whichever dtype was selected.
 pub enum EaInner {
-    U8(ea_type!(u8,  PyOperatorU8)),
+    U8(ea_type!(u8, PyOperatorU8)),
     U16(ea_type!(u16, PyOperatorU16)),
     U32(ea_type!(u32, PyOperatorU32)),
     U64(ea_type!(u64, PyOperatorU64)),
-    I8(ea_type!(i8,  PyOperatorI8)),
+    I8(ea_type!(i8, PyOperatorI8)),
     I16(ea_type!(i16, PyOperatorI16)),
     I32(ea_type!(i32, PyOperatorI32)),
     I64(ea_type!(i64, PyOperatorI64)),
@@ -42,19 +41,26 @@ pub enum EaInner {
 /// Supported genome element dtype.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Dtype {
-    U8, U16, U32, U64,
-    I8, I16, I32, I64,
-    F32, F64,
+    U8,
+    U16,
+    U32,
+    U64,
+    I8,
+    I16,
+    I32,
+    I64,
+    F32,
+    F64,
 }
 
 impl Dtype {
     pub fn parse(s: &str) -> pyo3::PyResult<Self> {
         match s {
-            "u8"  => Ok(Self::U8),
+            "u8" => Ok(Self::U8),
             "u16" => Ok(Self::U16),
             "u32" => Ok(Self::U32),
             "u64" => Ok(Self::U64),
-            "i8"  => Ok(Self::I8),
+            "i8" => Ok(Self::I8),
             "i16" => Ok(Self::I16),
             "i32" => Ok(Self::I32),
             "i64" => Ok(Self::I64),
@@ -90,21 +96,19 @@ where
     ) -> Population<Vec<T>, F> {
         match self {
             Self::RangedRandom(init) => init.initialize(population_size, ctx),
-            Self::PythonCallback(cb) => {
-                Python::with_gil(|py| {
-                    let result = cb
-                        .bind(py)
-                        .call1((population_size.get(),))
-                        .expect("initializer callable raised an exception");
-                    let genomes: Vec<Vec<T>> = result
-                        .extract()
-                        .expect("initializer callable must return list[list[...]]");
-                    genomes
-                        .into_iter()
-                        .map(|genome| Individual::new(genome))
-                        .collect()
-                })
-            }
+            Self::PythonCallback(cb) => Python::with_gil(|py| {
+                let result = cb
+                    .bind(py)
+                    .call1((population_size.get(),))
+                    .expect("initializer callable raised an exception");
+                let genomes: Vec<Vec<T>> = result
+                    .extract()
+                    .expect("initializer callable must return list[list[...]]");
+                genomes
+                    .into_iter()
+                    .map(|genome| Individual::new(genome))
+                    .collect()
+            }),
         }
     }
 }

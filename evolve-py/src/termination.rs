@@ -1,4 +1,7 @@
-use evolve::{core::state::State, termination::{MaxGenerations, TerminationCondition}};
+use evolve::{
+    core::state::State,
+    termination::{MaxGenerations, TerminationCondition},
+};
 use pyo3::prelude::*;
 
 use crate::fitness::stash_error;
@@ -43,14 +46,20 @@ impl<G: Clone> TerminationCondition<G, f64> for PyTermination {
                 Python::with_gil(|py| {
                     let result = match cb.bind(py).call1((generation, best)) {
                         Ok(r) => r,
-                        Err(e) => { stash_error(py, e); return true; } // stop the loop
+                        Err(e) => {
+                            stash_error(py, e);
+                            return true;
+                        } // stop the loop
                     };
                     match result.extract::<bool>() {
                         Ok(v) => v,
                         Err(_) => {
-                            stash_error(py, pyo3::exceptions::PyTypeError::new_err(
-                                "termination callable must return a bool",
-                            ));
+                            stash_error(
+                                py,
+                                pyo3::exceptions::PyTypeError::new_err(
+                                    "termination callable must return a bool",
+                                ),
+                            );
                             true // stop the loop
                         }
                     }

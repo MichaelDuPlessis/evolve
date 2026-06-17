@@ -1,9 +1,6 @@
 use std::num::NonZero;
 
-use evolve::{
-    algorithm::EvolutionaryAlgorithm,
-    initialization::RangedRandom,
-};
+use evolve::{algorithm::EvolutionaryAlgorithm, initialization::RangedRandom};
 use pyo3::prelude::*;
 use rand::{SeedableRng, rngs::SmallRng};
 
@@ -11,13 +8,13 @@ use crate::{
     collector::PyCollectorWrapper,
     comparator::{Maximize, Minimize, PyComparator},
     fitness::PyFitnessCallback,
-    initializer::{PyRangedRandom, PyRandom},
+    initializer::{PyRandom, PyRangedRandom},
     operators::{
-        extract_op_f32, extract_op_f64, extract_op_i16, extract_op_i32, extract_op_i64,
-        extract_op_i8, extract_op_u16, extract_op_u32, extract_op_u64, extract_op_u8,
+        extract_op_f32, extract_op_f64, extract_op_i8, extract_op_i16, extract_op_i32,
+        extract_op_i64, extract_op_u8, extract_op_u16, extract_op_u32, extract_op_u64,
     },
     result::{PyIndividual, PyRunResult, genome_to_pyobject},
-    termination::{extract_termination, PyTermination},
+    termination::{PyTermination, extract_termination},
     types::{Dtype, EaInner, PyInitializer},
 };
 
@@ -42,17 +39,20 @@ impl PyEvolutionaryAlgorithm {
         comparator: Option<&Bound<'_, PyAny>>,
         seed: Option<u64>,
     ) -> PyResult<Self> {
-        let pop_size = NonZero::new(population_size)
-            .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("population_size must be > 0"))?;
+        let pop_size = NonZero::new(population_size).ok_or_else(|| {
+            pyo3::exceptions::PyValueError::new_err("population_size must be > 0")
+        })?;
 
         let cmp = match comparator {
             None => PyComparator::Maximize,
             Some(obj) if obj.downcast::<Maximize>().is_ok() => PyComparator::Maximize,
             Some(obj) if obj.downcast::<Minimize>().is_ok() => PyComparator::Minimize,
             Some(obj) if obj.is_callable() => PyComparator::PythonCallback(obj.clone().unbind()),
-            Some(_) => return Err(pyo3::exceptions::PyTypeError::new_err(
-                "comparator must be Maximize(), Minimize(), or a callable(a, b) -> bool",
-            )),
+            Some(_) => {
+                return Err(pyo3::exceptions::PyTypeError::new_err(
+                    "comparator must be Maximize(), Minimize(), or a callable(a, b) -> bool",
+                ));
+            }
         };
 
         let rng = match seed {
@@ -70,24 +70,67 @@ impl PyEvolutionaryAlgorithm {
         // Extract dtype and initializer from the initializer argument
         let (dtype, py_initializer) = extract_initializer(initializer)?;
 
-        let inner = build_ea_inner(operators, fe1, term, pop_size, rng, cmp, dtype, py_initializer)?;
-        Ok(Self { inner, fitness_evaluator: fe2, comparator: cmp_clone })
+        let inner = build_ea_inner(
+            operators,
+            fe1,
+            term,
+            pop_size,
+            rng,
+            cmp,
+            dtype,
+            py_initializer,
+        )?;
+        Ok(Self {
+            inner,
+            fitness_evaluator: fe2,
+            comparator: cmp_clone,
+        })
     }
 
     fn run(&mut self, py: Python<'_>) -> PyResult<PyRunResult> {
         let fe = &self.fitness_evaluator;
         let cmp = &self.comparator;
         let result = match &mut self.inner {
-            EaInner::U8(ea)  => { let r = py.allow_threads(|| ea.run()); convert_result::<u8>(py, r, fe, cmp) }
-            EaInner::U16(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<u16>(py, r, fe, cmp) }
-            EaInner::U32(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<u32>(py, r, fe, cmp) }
-            EaInner::U64(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<u64>(py, r, fe, cmp) }
-            EaInner::I8(ea)  => { let r = py.allow_threads(|| ea.run()); convert_result::<i8>(py, r, fe, cmp) }
-            EaInner::I16(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<i16>(py, r, fe, cmp) }
-            EaInner::I32(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<i32>(py, r, fe, cmp) }
-            EaInner::I64(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<i64>(py, r, fe, cmp) }
-            EaInner::F32(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<f32>(py, r, fe, cmp) }
-            EaInner::F64(ea) => { let r = py.allow_threads(|| ea.run()); convert_result::<f64>(py, r, fe, cmp) }
+            EaInner::U8(ea) => {
+                let r = py.allow_threads(|| ea.run());
+                convert_result::<u8>(py, r, fe, cmp)
+            }
+            EaInner::U16(ea) => {
+                let r = py.allow_threads(|| ea.run());
+                convert_result::<u16>(py, r, fe, cmp)
+            }
+            EaInner::U32(ea) => {
+                let r = py.allow_threads(|| ea.run());
+                convert_result::<u32>(py, r, fe, cmp)
+            }
+            EaInner::U64(ea) => {
+                let r = py.allow_threads(|| ea.run());
+                convert_result::<u64>(py, r, fe, cmp)
+            }
+            EaInner::I8(ea) => {
+                let r = py.allow_threads(|| ea.run());
+                convert_result::<i8>(py, r, fe, cmp)
+            }
+            EaInner::I16(ea) => {
+                let r = py.allow_threads(|| ea.run());
+                convert_result::<i16>(py, r, fe, cmp)
+            }
+            EaInner::I32(ea) => {
+                let r = py.allow_threads(|| ea.run());
+                convert_result::<i32>(py, r, fe, cmp)
+            }
+            EaInner::I64(ea) => {
+                let r = py.allow_threads(|| ea.run());
+                convert_result::<i64>(py, r, fe, cmp)
+            }
+            EaInner::F32(ea) => {
+                let r = py.allow_threads(|| ea.run());
+                convert_result::<f32>(py, r, fe, cmp)
+            }
+            EaInner::F64(ea) => {
+                let r = py.allow_threads(|| ea.run());
+                convert_result::<f64>(py, r, fe, cmp)
+            }
         };
         if let Some(err) = crate::fitness::take_stashed_error() {
             return Err(err);
@@ -98,11 +141,11 @@ impl PyEvolutionaryAlgorithm {
     fn run_with(&mut self, py: Python<'_>, collector: Py<PyAny>) -> PyResult<PyObject> {
         let wrapper = PyCollectorWrapper::new(collector.clone_ref(py));
         let result: Py<PyAny> = match &mut self.inner {
-            EaInner::U8(ea)  => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::U8(ea) => py.allow_threads(|| ea.run_with(wrapper)),
             EaInner::U16(ea) => py.allow_threads(|| ea.run_with(wrapper)),
             EaInner::U32(ea) => py.allow_threads(|| ea.run_with(wrapper)),
             EaInner::U64(ea) => py.allow_threads(|| ea.run_with(wrapper)),
-            EaInner::I8(ea)  => py.allow_threads(|| ea.run_with(wrapper)),
+            EaInner::I8(ea) => py.allow_threads(|| ea.run_with(wrapper)),
             EaInner::I16(ea) => py.allow_threads(|| ea.run_with(wrapper)),
             EaInner::I32(ea) => py.allow_threads(|| ea.run_with(wrapper)),
             EaInner::I64(ea) => py.allow_threads(|| ea.run_with(wrapper)),
@@ -125,11 +168,23 @@ enum InitializerData {
 fn extract_initializer(initializer: &Bound<'_, PyAny>) -> PyResult<(Dtype, InitializerData)> {
     if let Ok(cell) = initializer.downcast::<PyRangedRandom>() {
         let init = cell.borrow();
-        return Ok((init.dtype, InitializerData::RangedRandom { min_len: init.min_len, max_len: init.max_len }));
+        return Ok((
+            init.dtype,
+            InitializerData::RangedRandom {
+                min_len: init.min_len,
+                max_len: init.max_len,
+            },
+        ));
     }
     if let Ok(cell) = initializer.downcast::<PyRandom>() {
         let init = cell.borrow();
-        return Ok((init.dtype, InitializerData::RangedRandom { min_len: init.genome_length, max_len: init.genome_length }));
+        return Ok((
+            init.dtype,
+            InitializerData::RangedRandom {
+                min_len: init.genome_length,
+                max_len: init.genome_length,
+            },
+        ));
     }
     if initializer.is_callable() {
         // Callable initializer: default to u8 unless the object exposes a dtype attribute
@@ -139,7 +194,10 @@ fn extract_initializer(initializer: &Bound<'_, PyAny>) -> PyResult<(Dtype, Initi
         } else {
             Dtype::U8
         };
-        return Ok((dtype, InitializerData::PythonCallback(initializer.clone().unbind())));
+        return Ok((
+            dtype,
+            InitializerData::PythonCallback(initializer.clone().unbind()),
+        ));
     }
     Err(pyo3::exceptions::PyTypeError::new_err(
         "initializer must be RangedRandom, Random, or a callable(population_size) -> list[list[...]]",
@@ -182,7 +240,11 @@ where
         run_result.generations(),
         run_result.total_duration().as_secs_f64(),
         run_result.best_fitness().to_vec(),
-        run_result.generation_durations().iter().map(|d| d.as_secs_f64()).collect(),
+        run_result
+            .generation_durations()
+            .iter()
+            .map(|d| d.as_secs_f64())
+            .collect(),
     ))
 }
 
@@ -218,11 +280,11 @@ fn build_ea_inner(
     }
 
     match dtype {
-        Dtype::U8  => make!(extract_op_u8,  u8,  U8),
+        Dtype::U8 => make!(extract_op_u8, u8, U8),
         Dtype::U16 => make!(extract_op_u16, u16, U16),
         Dtype::U32 => make!(extract_op_u32, u32, U32),
         Dtype::U64 => make!(extract_op_u64, u64, U64),
-        Dtype::I8  => make!(extract_op_i8,  i8,  I8),
+        Dtype::I8 => make!(extract_op_i8, i8, I8),
         Dtype::I16 => make!(extract_op_i16, i16, I16),
         Dtype::I32 => make!(extract_op_i32, i32, I32),
         Dtype::I64 => make!(extract_op_i64, i64, I64),

@@ -20,7 +20,11 @@ pub struct Gaussian {
 impl Gaussian {
     /// Creates a new parallel `Gaussian` mutation with the given standard deviation.
     pub fn new(std_dev: f64) -> Self {
-        Self { std_dev, min: None, max: None }
+        Self {
+            std_dev,
+            min: None,
+            max: None,
+        }
     }
 
     /// Sets the lower bound. Genes are clamped to this minimum after mutation.
@@ -54,7 +58,11 @@ macro_rules! impl_parallel_gaussian {
             C: Sync,
             Individual<[$float; N], F>: Sync,
         {
-            fn apply(&self, state: &State<[$float; N], F>, ctx: &mut Context<Fe, R, C>) -> Offspring<[$float; N], F> {
+            fn apply(
+                &self,
+                state: &State<[$float; N], F>,
+                ctx: &mut Context<Fe, R, C>,
+            ) -> Offspring<[$float; N], F> {
                 let individuals = state.population().as_slice();
                 let std_dev = self.std_dev;
                 let min = self.min;
@@ -68,8 +76,12 @@ macro_rules! impl_parallel_gaussian {
                     let mut genome = *individuals[*idx].genome();
                     let gene_idx = rng.random_range(0..N);
                     genome[gene_idx] += $cast(box_muller(&mut rng) * std_dev);
-                    if let Some(lo) = min { genome[gene_idx] = genome[gene_idx].max(lo as $float); }
-                    if let Some(hi) = max { genome[gene_idx] = genome[gene_idx].min(hi as $float); }
+                    if let Some(lo) = min {
+                        genome[gene_idx] = genome[gene_idx].max(lo as $float);
+                    }
+                    if let Some(hi) = max {
+                        genome[gene_idx] = genome[gene_idx].min(hi as $float);
+                    }
                     Individual::new(genome)
                 });
 
@@ -90,7 +102,11 @@ macro_rules! impl_parallel_gaussian {
             C: Sync,
             Individual<Vec<$float>, F>: Sync,
         {
-            fn apply(&self, state: &State<Vec<$float>, F>, ctx: &mut Context<Fe, R, C>) -> Offspring<Vec<$float>, F> {
+            fn apply(
+                &self,
+                state: &State<Vec<$float>, F>,
+                ctx: &mut Context<Fe, R, C>,
+            ) -> Offspring<Vec<$float>, F> {
                 let individuals = state.population().as_slice();
                 let std_dev = self.std_dev;
                 let min = self.min;
@@ -104,8 +120,12 @@ macro_rules! impl_parallel_gaussian {
                     let mut genome = individuals[*idx].genome().clone();
                     let gene_idx = rng.random_range(0..genome.len());
                     genome[gene_idx] += $cast(box_muller(&mut rng) * std_dev);
-                    if let Some(lo) = min { genome[gene_idx] = genome[gene_idx].max(lo as $float); }
-                    if let Some(hi) = max { genome[gene_idx] = genome[gene_idx].min(hi as $float); }
+                    if let Some(lo) = min {
+                        genome[gene_idx] = genome[gene_idx].max(lo as $float);
+                    }
+                    if let Some(hi) = max {
+                        genome[gene_idx] = genome[gene_idx].min(hi as $float);
+                    }
                     Individual::new(genome)
                 });
 

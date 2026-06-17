@@ -1,10 +1,7 @@
 #![cfg(feature = "serde")]
 
 use evolve::core::{
-    individual::Individual,
-    offspring::Offspring,
-    population::Population,
-    state::State,
+    individual::Individual, offspring::Offspring, population::Population, state::State,
 };
 
 #[test]
@@ -105,5 +102,8 @@ fn generation_record_serializes() {
     let result: RunResult<u32, i32> = serde_json::from_str(json).unwrap();
     let record = result.generation(0).unwrap();
     let record_json = serde_json::to_string(&record).unwrap();
-    assert_eq!(record_json, r#"{"best_fitness":10,"duration":{"secs":0,"nanos":500}}"#);
+    assert_eq!(
+        record_json,
+        r#"{"best_fitness":10,"duration":{"secs":0,"nanos":500}}"#
+    );
 }

@@ -39,8 +39,7 @@ impl<O> Proportional<O, FixedSize> {
     }
 }
 
-impl<G, F, Fe, R, C, O, S> GeneticOperator<G, F, Fe, R, C>
-    for Proportional<&[(O, NonZero<u16>)], S>
+impl<G, F, Fe, R, C, O, S> GeneticOperator<G, F, Fe, R, C> for Proportional<&[(O, NonZero<u16>)], S>
 where
     O: GeneticOperator<G, F, Fe, R, C> + Sync,
     G: Send,

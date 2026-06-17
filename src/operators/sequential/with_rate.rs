@@ -1,6 +1,4 @@
-use crate::core::{
-    context::Context, offspring::Offspring, population::Population, state::State,
-};
+use crate::core::{context::Context, offspring::Offspring, population::Population, state::State};
 use crate::operators::GeneticOperator;
 use rand::{Rng, RngExt};
 

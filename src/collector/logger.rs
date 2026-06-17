@@ -126,7 +126,10 @@ mod test {
             rand::rng(),
             Maximize,
         );
-        let result = ga.run_with(Logger::with_collector(NonZero::new(1).unwrap(), Standard::default()));
+        let result = ga.run_with(Logger::with_collector(
+            NonZero::new(1).unwrap(),
+            Standard::default(),
+        ));
         assert_eq!(result.generations(), 10);
         assert!(!result.best_fitness().is_empty());
     }
@@ -142,7 +145,10 @@ mod test {
             rand::rng(),
             Maximize,
         );
-        let result = ga.run_with(Logger::with_collector(NonZero::new(5).unwrap(), Basic::new()));
+        let result = ga.run_with(Logger::with_collector(
+            NonZero::new(5).unwrap(),
+            Basic::new(),
+        ));
         assert_eq!(result.generations(), 10);
     }
 }

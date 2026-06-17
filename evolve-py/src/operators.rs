@@ -1,9 +1,19 @@
 use std::num::NonZero;
 
 use evolve::{
-    core::{context::Context, individual::Individual, offspring::Offspring, population::Population, state::State},
+    core::{
+        context::Context, individual::Individual, offspring::Offspring, population::Population,
+        state::State,
+    },
     operators::{
         GeneticOperator,
+        parallel::{
+            combinator::Fill as ParFill,
+            mutation::{
+                Creep as ParCreep, Gaussian as ParGaussian, Inversion as ParInversion,
+                RandomReset as ParRandomReset, Scramble as ParScramble, Swap as ParSwap,
+            },
+        },
         sequential::{
             combinator::{
                 Combine, Fill, Pipeline, Repeat, Weighted,
@@ -11,16 +21,12 @@ use evolve::{
             },
             crossover::{Arithmetic, SinglePoint, TwoPoint, Uniform},
             identity::Identity,
-            mutation::{Creep, Gaussian, Inversion, RandomReset, Scramble, SegmentDeletion, SegmentDuplication, Swap},
+            mutation::{
+                Creep, Gaussian, Inversion, RandomReset, Scramble, SegmentDeletion,
+                SegmentDuplication, Swap,
+            },
             selection::{Elitism, Rank, RouletteWheel, Sus, Tournament},
             with_rate::WithRate,
-        },
-        parallel::{
-            combinator::Fill as ParFill,
-            mutation::{
-                Creep as ParCreep, Gaussian as ParGaussian, Inversion as ParInversion,
-                RandomReset as ParRandomReset, Scramble as ParScramble, Swap as ParSwap,
-            },
         },
     },
 };
@@ -296,40 +302,52 @@ define_float_operator_enum!(PyOperatorF64, f64);
 /// Call a Python callable with the population's genomes and return new offspring.
 ///
 /// The callable receives `list[list[T]]` and must return `list[list[T]]`.
-fn python_callback_apply<T>(
-    cb: &Py<PyAny>,
-    state: &State<Vec<T>, f64>,
-) -> Offspring<Vec<T>, f64>
+fn python_callback_apply<T>(cb: &Py<PyAny>, state: &State<Vec<T>, f64>) -> Offspring<Vec<T>, f64>
 where
     T: for<'py> IntoPyObject<'py> + for<'py> pyo3::FromPyObject<'py> + Clone,
     for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
 {
-    use pyo3::BoundObject;
     use crate::fitness::stash_error;
+    use pyo3::BoundObject;
     Python::with_gil(|py| {
         // Build list[list[T]] from population genomes
-        let genomes_list: Vec<PyObject> = state.population().iter().map(|ind| {
-            let inner: Vec<PyObject> = ind.genome().iter()
-                .map(|v| v.clone().into_pyobject(py).unwrap().into_any().unbind())
-                .collect();
-            PyList::new(py, inner).unwrap().into_any().unbind()
-        }).collect();
+        let genomes_list: Vec<PyObject> = state
+            .population()
+            .iter()
+            .map(|ind| {
+                let inner: Vec<PyObject> = ind
+                    .genome()
+                    .iter()
+                    .map(|v| v.clone().into_pyobject(py).unwrap().into_any().unbind())
+                    .collect();
+                PyList::new(py, inner).unwrap().into_any().unbind()
+            })
+            .collect();
         let genomes_py = match PyList::new(py, genomes_list) {
             Ok(l) => l,
-            Err(e) => { stash_error(py, e); return Offspring::Multiple(Default::default()); }
+            Err(e) => {
+                stash_error(py, e);
+                return Offspring::Multiple(Default::default());
+            }
         };
 
         let result = match cb.bind(py).call1((genomes_py,)) {
             Ok(r) => r,
-            Err(e) => { stash_error(py, e); return Offspring::Multiple(Default::default()); }
+            Err(e) => {
+                stash_error(py, e);
+                return Offspring::Multiple(Default::default());
+            }
         };
 
         let new_genomes: Vec<Vec<T>> = match result.extract() {
             Ok(v) => v,
             Err(_) => {
-                stash_error(py, pyo3::exceptions::PyTypeError::new_err(
-                    "operator callable must return list[list[...]]",
-                ));
+                stash_error(
+                    py,
+                    pyo3::exceptions::PyTypeError::new_err(
+                        "operator callable must return list[list[...]]",
+                    ),
+                );
                 return Offspring::Multiple(Default::default());
             }
         };
@@ -405,7 +423,9 @@ pub struct PySinglePoint;
 #[pymethods]
 impl PySinglePoint {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "TwoPoint")]
@@ -414,7 +434,9 @@ pub struct PyTwoPoint;
 #[pymethods]
 impl PyTwoPoint {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "Uniform")]
@@ -423,7 +445,9 @@ pub struct PyUniform;
 #[pymethods]
 impl PyUniform {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "Arithmetic")]
@@ -432,7 +456,9 @@ pub struct PyArithmetic;
 #[pymethods]
 impl PyArithmetic {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "RandomReset")]
@@ -441,7 +467,9 @@ pub struct PyRandomReset;
 #[pymethods]
 impl PyRandomReset {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "Swap")]
@@ -450,7 +478,9 @@ pub struct PySwap;
 #[pymethods]
 impl PySwap {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "Inversion")]
@@ -459,7 +489,9 @@ pub struct PyInversion;
 #[pymethods]
 impl PyInversion {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "Scramble")]
@@ -468,7 +500,9 @@ pub struct PyScramble;
 #[pymethods]
 impl PyScramble {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "Creep")]
@@ -480,7 +514,9 @@ pub struct PyCreep {
 #[pymethods]
 impl PyCreep {
     #[new]
-    fn new(step: i64) -> Self { Self { step } }
+    fn new(step: i64) -> Self {
+        Self { step }
+    }
 }
 
 #[pyclass(name = "Gaussian")]
@@ -491,7 +527,9 @@ pub struct PyGaussian {
 #[pymethods]
 impl PyGaussian {
     #[new]
-    fn new(std_dev: f64) -> Self { Self { std_dev } }
+    fn new(std_dev: f64) -> Self {
+        Self { std_dev }
+    }
 }
 
 #[pyclass(name = "SegmentDuplication")]
@@ -504,7 +542,10 @@ pub struct PySegmentDuplication {
 impl PySegmentDuplication {
     #[new]
     fn new(max_segment_fraction: f64, max_genome_len: usize) -> Self {
-        Self { max_segment_fraction, max_genome_len }
+        Self {
+            max_segment_fraction,
+            max_genome_len,
+        }
     }
 }
 
@@ -518,7 +559,10 @@ pub struct PySegmentDeletion {
 impl PySegmentDeletion {
     #[new]
     fn new(max_segment_fraction: f64, min_genome_len: usize) -> Self {
-        Self { max_segment_fraction, min_genome_len }
+        Self {
+            max_segment_fraction,
+            min_genome_len,
+        }
     }
 }
 
@@ -531,7 +575,9 @@ pub struct PyElitism {
 impl PyElitism {
     #[new]
     #[pyo3(signature = (amount=1))]
-    fn new(amount: usize) -> Self { Self { amount } }
+    fn new(amount: usize) -> Self {
+        Self { amount }
+    }
 }
 
 #[pyclass(name = "RouletteWheel")]
@@ -540,7 +586,9 @@ pub struct PyRouletteWheel;
 #[pymethods]
 impl PyRouletteWheel {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "Rank")]
@@ -549,7 +597,9 @@ pub struct PyRank;
 #[pymethods]
 impl PyRank {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "Sus")]
@@ -560,7 +610,9 @@ pub struct PySus {
 #[pymethods]
 impl PySus {
     #[new]
-    fn new(count: usize) -> Self { Self { count } }
+    fn new(count: usize) -> Self {
+        Self { count }
+    }
 }
 
 #[pyclass(name = "Fill")]
@@ -571,7 +623,9 @@ pub struct PyFill {
 #[pymethods]
 impl PyFill {
     #[new]
-    fn new(operator: PyObject) -> Self { Self { operator } }
+    fn new(operator: PyObject) -> Self {
+        Self { operator }
+    }
 }
 
 #[pyclass(name = "FillFixed")]
@@ -583,7 +637,9 @@ pub struct PyFillFixed {
 #[pymethods]
 impl PyFillFixed {
     #[new]
-    fn new(operator: PyObject, size: usize) -> Self { Self { operator, size } }
+    fn new(operator: PyObject, size: usize) -> Self {
+        Self { operator, size }
+    }
 }
 
 #[pyclass(name = "Pipeline")]
@@ -594,7 +650,9 @@ pub struct PyPipeline {
 #[pymethods]
 impl PyPipeline {
     #[new]
-    fn new(operators: Py<PyList>) -> Self { Self { operators } }
+    fn new(operators: Py<PyList>) -> Self {
+        Self { operators }
+    }
 }
 
 #[pyclass(name = "Combine")]
@@ -605,7 +663,9 @@ pub struct PyCombine {
 #[pymethods]
 impl PyCombine {
     #[new]
-    fn new(operators: Py<PyList>) -> Self { Self { operators } }
+    fn new(operators: Py<PyList>) -> Self {
+        Self { operators }
+    }
 }
 
 #[pyclass(name = "Weighted")]
@@ -657,7 +717,9 @@ pub struct PyRepeat {
 #[pymethods]
 impl PyRepeat {
     #[new]
-    fn new(operator: PyObject, n: usize) -> Self { Self { operator, n } }
+    fn new(operator: PyObject, n: usize) -> Self {
+        Self { operator, n }
+    }
 }
 
 #[pyclass(name = "Identity")]
@@ -666,7 +728,9 @@ pub struct PyIdentity;
 #[pymethods]
 impl PyIdentity {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 #[pyclass(name = "WithRate")]
@@ -678,7 +742,9 @@ pub struct PyWithRate {
 #[pymethods]
 impl PyWithRate {
     #[new]
-    fn new(operator: PyObject, rate: f64) -> Self { Self { operator, rate } }
+    fn new(operator: PyObject, rate: f64) -> Self {
+        Self { operator, rate }
+    }
 }
 
 // ── Parallel operator Python wrappers ────────────────────────────────────────
@@ -694,7 +760,10 @@ pub struct PyParallelFill {
 impl PyParallelFill {
     #[new]
     fn new(operator: PyObject, target_size: usize) -> Self {
-        Self { operator, target_size }
+        Self {
+            operator,
+            target_size,
+        }
     }
 }
 
@@ -705,7 +774,9 @@ pub struct PyParallelRandomReset;
 #[pymethods]
 impl PyParallelRandomReset {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 /// Parallel version of Swap mutation.
@@ -715,7 +786,9 @@ pub struct PyParallelSwap;
 #[pymethods]
 impl PyParallelSwap {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 /// Parallel version of Inversion mutation.
@@ -725,7 +798,9 @@ pub struct PyParallelInversion;
 #[pymethods]
 impl PyParallelInversion {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 /// Parallel version of Scramble mutation.
@@ -735,7 +810,9 @@ pub struct PyParallelScramble;
 #[pymethods]
 impl PyParallelScramble {
     #[new]
-    fn new() -> Self { Self }
+    fn new() -> Self {
+        Self
+    }
 }
 
 /// Parallel version of Creep mutation (integer dtypes only).
@@ -747,7 +824,9 @@ pub struct PyParallelCreep {
 #[pymethods]
 impl PyParallelCreep {
     #[new]
-    fn new(step: i64) -> Self { Self { step } }
+    fn new(step: i64) -> Self {
+        Self { step }
+    }
 }
 
 /// Parallel version of Gaussian mutation (float dtypes only).
@@ -759,7 +838,9 @@ pub struct PyParallelGaussian {
 #[pymethods]
 impl PyParallelGaussian {
     #[new]
-    fn new(std_dev: f64) -> Self { Self { std_dev } }
+    fn new(std_dev: f64) -> Self {
+        Self { std_dev }
+    }
 }
 
 // ── extract_op_* functions (one per dtype) ────────────────────────────────────
@@ -772,15 +853,17 @@ macro_rules! extract_int_op {
             if let Ok(cell) = obj.downcast::<PyTournament>() {
                 let op = cell.borrow();
                 return Ok($enum_name::Tournament(Tournament::new(
-                    NonZero::new(op.tournament_size)
-                        .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("tournament_size must be non-zero"))?,
+                    NonZero::new(op.tournament_size).ok_or_else(|| {
+                        pyo3::exceptions::PyValueError::new_err("tournament_size must be non-zero")
+                    })?,
                 )));
             }
             if let Ok(cell) = obj.downcast::<PyElitism>() {
                 let op = cell.borrow();
                 return Ok($enum_name::Elitism(Elitism::new(
-                    NonZero::new(op.amount)
-                        .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("amount must be non-zero"))?,
+                    NonZero::new(op.amount).ok_or_else(|| {
+                        pyo3::exceptions::PyValueError::new_err("amount must be non-zero")
+                    })?,
                 )));
             }
             if obj.downcast::<PyRouletteWheel>().is_ok() {
@@ -792,8 +875,9 @@ macro_rules! extract_int_op {
             if let Ok(cell) = obj.downcast::<PySus>() {
                 let op = cell.borrow();
                 return Ok($enum_name::Sus(Sus::new(
-                    NonZero::new(op.count)
-                        .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("count must be non-zero"))?,
+                    NonZero::new(op.count).ok_or_else(|| {
+                        pyo3::exceptions::PyValueError::new_err("count must be non-zero")
+                    })?,
                 )));
             }
             // Crossover
@@ -841,40 +925,51 @@ macro_rules! extract_int_op {
             }
             if let Ok(cell) = obj.downcast::<PySegmentDeletion>() {
                 let op = cell.borrow();
-                return Ok($enum_name::SegmentDeletion(
-                    SegmentDeletion::<$t>::new(op.max_segment_fraction, op.min_genome_len),
-                ));
+                return Ok($enum_name::SegmentDeletion(SegmentDeletion::<$t>::new(
+                    op.max_segment_fraction,
+                    op.min_genome_len,
+                )));
             }
             // Combinators
             if let Ok(cell) = obj.downcast::<PyFill>() {
                 let fill = cell.borrow();
                 let inner = $fn_name(fill.operator.bind(obj.py()))?;
-                return Ok($enum_name::Fill(Fill::from_population_size(Box::new(inner))));
+                return Ok($enum_name::Fill(Fill::from_population_size(Box::new(
+                    inner,
+                ))));
             }
             if let Ok(cell) = obj.downcast::<PyFillFixed>() {
                 let fill = cell.borrow();
                 let inner = $fn_name(fill.operator.bind(obj.py()))?;
-                return Ok($enum_name::FillFixed(Fill::from_fixed_size(Box::new(inner), fill.size)));
+                return Ok($enum_name::FillFixed(Fill::from_fixed_size(
+                    Box::new(inner),
+                    fill.size,
+                )));
             }
             if let Ok(cell) = obj.downcast::<PyPipeline>() {
                 let pipe = cell.borrow();
                 let list = pipe.operators.bind(obj.py());
-                let ops: PyResult<Vec<$enum_name>> = list.iter().map(|item| $fn_name(&item)).collect();
+                let ops: PyResult<Vec<$enum_name>> =
+                    list.iter().map(|item| $fn_name(&item)).collect();
                 return Ok($enum_name::Pipeline(Pipeline::new(ops?)));
             }
             if let Ok(cell) = obj.downcast::<PyCombine>() {
                 let comb = cell.borrow();
                 let list = comb.operators.bind(obj.py());
-                let ops: PyResult<Vec<$enum_name>> = list.iter().map(|item| $fn_name(&item)).collect();
+                let ops: PyResult<Vec<$enum_name>> =
+                    list.iter().map(|item| $fn_name(&item)).collect();
                 return Ok($enum_name::Combine(Combine::new(ops?)));
             }
             if let Ok(cell) = obj.downcast::<PyWeighted>() {
                 let w = cell.borrow();
-                let pairs: PyResult<Vec<($enum_name, NonZero<u16>)>> = w.ops.iter()
+                let pairs: PyResult<Vec<($enum_name, NonZero<u16>)>> = w
+                    .ops
+                    .iter()
                     .map(|(op_obj, weight)| {
                         let inner = $fn_name(op_obj.bind(obj.py()))?;
-                        let nz = NonZero::new(*weight)
-                            .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("weight must be non-zero"))?;
+                        let nz = NonZero::new(*weight).ok_or_else(|| {
+                            pyo3::exceptions::PyValueError::new_err("weight must be non-zero")
+                        })?;
                         Ok((inner, nz))
                     })
                     .collect();
@@ -882,11 +977,14 @@ macro_rules! extract_int_op {
             }
             if let Ok(cell) = obj.downcast::<PyProportional>() {
                 let p = cell.borrow();
-                let pairs: PyResult<Vec<($enum_name, NonZero<u16>)>> = p.ops.iter()
+                let pairs: PyResult<Vec<($enum_name, NonZero<u16>)>> = p
+                    .ops
+                    .iter()
                     .map(|(op_obj, weight)| {
                         let inner = $fn_name(op_obj.bind(obj.py()))?;
-                        let nz = NonZero::new(*weight)
-                            .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("weight must be non-zero"))?;
+                        let nz = NonZero::new(*weight).ok_or_else(|| {
+                            pyo3::exceptions::PyValueError::new_err("weight must be non-zero")
+                        })?;
                         Ok((inner, nz))
                     })
                     .collect();
@@ -903,13 +1001,19 @@ macro_rules! extract_int_op {
             if let Ok(cell) = obj.downcast::<PyWithRate>() {
                 let wr = cell.borrow();
                 let inner = $fn_name(wr.operator.bind(obj.py()))?;
-                return Ok($enum_name::WithRate(WithRate::new(Box::new(inner), wr.rate)));
+                return Ok($enum_name::WithRate(WithRate::new(
+                    Box::new(inner),
+                    wr.rate,
+                )));
             }
             // Parallel operators
             if let Ok(cell) = obj.downcast::<PyParallelFill>() {
                 let fill = cell.borrow();
                 let inner = $fn_name(fill.operator.bind(obj.py()))?;
-                return Ok($enum_name::ParallelFill(ParFill::new(Box::new(inner), fill.target_size)));
+                return Ok($enum_name::ParallelFill(ParFill::new(
+                    Box::new(inner),
+                    fill.target_size,
+                )));
             }
             if obj.downcast::<PyParallelRandomReset>().is_ok() {
                 return Ok($enum_name::ParallelRandomReset(ParRandomReset::new()));
@@ -925,7 +1029,9 @@ macro_rules! extract_int_op {
             }
             if let Ok(cell) = obj.downcast::<PyParallelCreep>() {
                 let op = cell.borrow();
-                return Ok($enum_name::ParallelCreep(ParCreep::new($creep_cast(op.step))));
+                return Ok($enum_name::ParallelCreep(ParCreep::new($creep_cast(
+                    op.step,
+                ))));
             }
             if obj.downcast::<PyParallelGaussian>().is_ok() {
                 return Err(pyo3::exceptions::PyValueError::new_err(
@@ -936,7 +1042,9 @@ macro_rules! extract_int_op {
             if obj.is_callable() {
                 return Ok($enum_name::PythonCallback(obj.clone().unbind()));
             }
-            Err(pyo3::exceptions::PyTypeError::new_err("expected an operator or callable"))
+            Err(pyo3::exceptions::PyTypeError::new_err(
+                "expected an operator or callable",
+            ))
         }
     };
 }
@@ -949,15 +1057,17 @@ macro_rules! extract_float_op {
             if let Ok(cell) = obj.downcast::<PyTournament>() {
                 let op = cell.borrow();
                 return Ok($enum_name::Tournament(Tournament::new(
-                    NonZero::new(op.tournament_size)
-                        .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("tournament_size must be non-zero"))?,
+                    NonZero::new(op.tournament_size).ok_or_else(|| {
+                        pyo3::exceptions::PyValueError::new_err("tournament_size must be non-zero")
+                    })?,
                 )));
             }
             if let Ok(cell) = obj.downcast::<PyElitism>() {
                 let op = cell.borrow();
                 return Ok($enum_name::Elitism(Elitism::new(
-                    NonZero::new(op.amount)
-                        .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("amount must be non-zero"))?,
+                    NonZero::new(op.amount).ok_or_else(|| {
+                        pyo3::exceptions::PyValueError::new_err("amount must be non-zero")
+                    })?,
                 )));
             }
             if obj.downcast::<PyRouletteWheel>().is_ok() {
@@ -969,8 +1079,9 @@ macro_rules! extract_float_op {
             if let Ok(cell) = obj.downcast::<PySus>() {
                 let op = cell.borrow();
                 return Ok($enum_name::Sus(Sus::new(
-                    NonZero::new(op.count)
-                        .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("count must be non-zero"))?,
+                    NonZero::new(op.count).ok_or_else(|| {
+                        pyo3::exceptions::PyValueError::new_err("count must be non-zero")
+                    })?,
                 )));
             }
             // Crossover
@@ -1016,40 +1127,51 @@ macro_rules! extract_float_op {
             }
             if let Ok(cell) = obj.downcast::<PySegmentDeletion>() {
                 let op = cell.borrow();
-                return Ok($enum_name::SegmentDeletion(
-                    SegmentDeletion::<$t>::new(op.max_segment_fraction, op.min_genome_len),
-                ));
+                return Ok($enum_name::SegmentDeletion(SegmentDeletion::<$t>::new(
+                    op.max_segment_fraction,
+                    op.min_genome_len,
+                )));
             }
             // Combinators
             if let Ok(cell) = obj.downcast::<PyFill>() {
                 let fill = cell.borrow();
                 let inner = $fn_name(fill.operator.bind(obj.py()))?;
-                return Ok($enum_name::Fill(Fill::from_population_size(Box::new(inner))));
+                return Ok($enum_name::Fill(Fill::from_population_size(Box::new(
+                    inner,
+                ))));
             }
             if let Ok(cell) = obj.downcast::<PyFillFixed>() {
                 let fill = cell.borrow();
                 let inner = $fn_name(fill.operator.bind(obj.py()))?;
-                return Ok($enum_name::FillFixed(Fill::from_fixed_size(Box::new(inner), fill.size)));
+                return Ok($enum_name::FillFixed(Fill::from_fixed_size(
+                    Box::new(inner),
+                    fill.size,
+                )));
             }
             if let Ok(cell) = obj.downcast::<PyPipeline>() {
                 let pipe = cell.borrow();
                 let list = pipe.operators.bind(obj.py());
-                let ops: PyResult<Vec<$enum_name>> = list.iter().map(|item| $fn_name(&item)).collect();
+                let ops: PyResult<Vec<$enum_name>> =
+                    list.iter().map(|item| $fn_name(&item)).collect();
                 return Ok($enum_name::Pipeline(Pipeline::new(ops?)));
             }
             if let Ok(cell) = obj.downcast::<PyCombine>() {
                 let comb = cell.borrow();
                 let list = comb.operators.bind(obj.py());
-                let ops: PyResult<Vec<$enum_name>> = list.iter().map(|item| $fn_name(&item)).collect();
+                let ops: PyResult<Vec<$enum_name>> =
+                    list.iter().map(|item| $fn_name(&item)).collect();
                 return Ok($enum_name::Combine(Combine::new(ops?)));
             }
             if let Ok(cell) = obj.downcast::<PyWeighted>() {
                 let w = cell.borrow();
-                let pairs: PyResult<Vec<($enum_name, NonZero<u16>)>> = w.ops.iter()
+                let pairs: PyResult<Vec<($enum_name, NonZero<u16>)>> = w
+                    .ops
+                    .iter()
                     .map(|(op_obj, weight)| {
                         let inner = $fn_name(op_obj.bind(obj.py()))?;
-                        let nz = NonZero::new(*weight)
-                            .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("weight must be non-zero"))?;
+                        let nz = NonZero::new(*weight).ok_or_else(|| {
+                            pyo3::exceptions::PyValueError::new_err("weight must be non-zero")
+                        })?;
                         Ok((inner, nz))
                     })
                     .collect();
@@ -1057,11 +1179,14 @@ macro_rules! extract_float_op {
             }
             if let Ok(cell) = obj.downcast::<PyProportional>() {
                 let p = cell.borrow();
-                let pairs: PyResult<Vec<($enum_name, NonZero<u16>)>> = p.ops.iter()
+                let pairs: PyResult<Vec<($enum_name, NonZero<u16>)>> = p
+                    .ops
+                    .iter()
                     .map(|(op_obj, weight)| {
                         let inner = $fn_name(op_obj.bind(obj.py()))?;
-                        let nz = NonZero::new(*weight)
-                            .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("weight must be non-zero"))?;
+                        let nz = NonZero::new(*weight).ok_or_else(|| {
+                            pyo3::exceptions::PyValueError::new_err("weight must be non-zero")
+                        })?;
                         Ok((inner, nz))
                     })
                     .collect();
@@ -1078,13 +1203,19 @@ macro_rules! extract_float_op {
             if let Ok(cell) = obj.downcast::<PyWithRate>() {
                 let wr = cell.borrow();
                 let inner = $fn_name(wr.operator.bind(obj.py()))?;
-                return Ok($enum_name::WithRate(WithRate::new(Box::new(inner), wr.rate)));
+                return Ok($enum_name::WithRate(WithRate::new(
+                    Box::new(inner),
+                    wr.rate,
+                )));
             }
             // Parallel operators
             if let Ok(cell) = obj.downcast::<PyParallelFill>() {
                 let fill = cell.borrow();
                 let inner = $fn_name(fill.operator.bind(obj.py()))?;
-                return Ok($enum_name::ParallelFill(ParFill::new(Box::new(inner), fill.target_size)));
+                return Ok($enum_name::ParallelFill(ParFill::new(
+                    Box::new(inner),
+                    fill.target_size,
+                )));
             }
             if obj.downcast::<PyParallelRandomReset>().is_ok() {
                 return Ok($enum_name::ParallelRandomReset(ParRandomReset::new()));
@@ -1111,17 +1242,19 @@ macro_rules! extract_float_op {
             if obj.is_callable() {
                 return Ok($enum_name::PythonCallback(obj.clone().unbind()));
             }
-            Err(pyo3::exceptions::PyTypeError::new_err("expected an operator or callable"))
+            Err(pyo3::exceptions::PyTypeError::new_err(
+                "expected an operator or callable",
+            ))
         }
     };
 }
 
 // Generate extract functions for all 10 dtypes
-extract_int_op!(extract_op_u8,  PyOperatorU8,  u8,  |s: i64| s as u8);
+extract_int_op!(extract_op_u8, PyOperatorU8, u8, |s: i64| s as u8);
 extract_int_op!(extract_op_u16, PyOperatorU16, u16, |s: i64| s as u16);
 extract_int_op!(extract_op_u32, PyOperatorU32, u32, |s: i64| s as u32);
 extract_int_op!(extract_op_u64, PyOperatorU64, u64, |s: i64| s as u64);
-extract_int_op!(extract_op_i8,  PyOperatorI8,  i8,  |s: i64| s as i8);
+extract_int_op!(extract_op_i8, PyOperatorI8, i8, |s: i64| s as i8);
 extract_int_op!(extract_op_i16, PyOperatorI16, i16, |s: i64| s as i16);
 extract_int_op!(extract_op_i32, PyOperatorI32, i32, |s: i64| s as i32);
 extract_int_op!(extract_op_i64, PyOperatorI64, i64, |s: i64| s);

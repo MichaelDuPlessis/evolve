@@ -52,8 +52,12 @@ macro_rules! impl_arithmetic_crossover {
                     let p2 = unsafe { chunk.get_unchecked(1) }.genome();
                     let alpha: f64 = ctx.rng().random();
 
-                    let child1: [$float; N] = std::array::from_fn(|i| $cast(alpha * p1[i] as f64 + (1.0 - alpha) * p2[i] as f64));
-                    let child2: [$float; N] = std::array::from_fn(|i| $cast((1.0 - alpha) * p1[i] as f64 + alpha * p2[i] as f64));
+                    let child1: [$float; N] = std::array::from_fn(|i| {
+                        $cast(alpha * p1[i] as f64 + (1.0 - alpha) * p2[i] as f64)
+                    });
+                    let child2: [$float; N] = std::array::from_fn(|i| {
+                        $cast((1.0 - alpha) * p1[i] as f64 + alpha * p2[i] as f64)
+                    });
 
                     population.add(Individual::new(child1));
                     population.add(Individual::new(child2));

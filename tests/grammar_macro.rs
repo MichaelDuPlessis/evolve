@@ -44,10 +44,12 @@ fn macro_grammar_def_works() {
 
 #[test]
 fn macro_grammar_maps_to_bytecode() {
-    let fitness = GeFitness::<Grammar, u8, f64, _, BytecodeBuilder<Symbol>, _>::new(Grammar,
-    0,
-    |p: &Bytecode<Symbol>| p.run(&5.0),
-    f64::NAN,);
+    let fitness = GeFitness::<Grammar, u8, f64, _, BytecodeBuilder<Symbol>, _>::new(
+        Grammar,
+        0,
+        |p: &Bytecode<Symbol>| p.run(&5.0),
+        f64::NAN,
+    );
     // Codons: 1 % 2 = 1 → Val, then 0 % 2 = 0 → X
     let result = fitness.evaluate(&vec![1u8, 0]);
     assert_eq!(result, 5.0);
@@ -55,10 +57,12 @@ fn macro_grammar_maps_to_bytecode() {
 
 #[test]
 fn macro_grammar_runs_expression() {
-    let fitness = GeFitness::<Grammar, u8, f64, _, BytecodeBuilder<Symbol>, _>::new(Grammar,
-    0,
-    |p: &Bytecode<Symbol>| p.run(&3.0),
-    f64::NAN,);
+    let fitness = GeFitness::<Grammar, u8, f64, _, BytecodeBuilder<Symbol>, _>::new(
+        Grammar,
+        0,
+        |p: &Bytecode<Symbol>| p.run(&3.0),
+        f64::NAN,
+    );
     // Codons: 0 → Expr Expr BinOp (binary)
     //         1 → Val (left)
     //         0 → X (left val)
@@ -72,14 +76,16 @@ fn macro_grammar_runs_expression() {
 
 #[test]
 fn macro_grammar_with_ge_fitness() {
-    let fitness = GeFitness::<Grammar, u8, f64, _, BytecodeBuilder<Symbol>, _>::new(Grammar,
-    3,
-    |program: &Bytecode<Symbol>| {
-        // Test on x = 2: target is x + 1 = 3
-        let result = program.run(&2.0);
-        (result - 3.0).abs()
-    },
-    f64::MAX,);
+    let fitness = GeFitness::<Grammar, u8, f64, _, BytecodeBuilder<Symbol>, _>::new(
+        Grammar,
+        3,
+        |program: &Bytecode<Symbol>| {
+            // Test on x = 2: target is x + 1 = 3
+            let result = program.run(&2.0);
+            (result - 3.0).abs()
+        },
+        f64::MAX,
+    );
 
     // Codons that produce x + 1
     let codons = vec![0u8, 1, 0, 1, 1, 0];
