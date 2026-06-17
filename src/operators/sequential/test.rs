@@ -743,9 +743,10 @@ fn roulette_wheel_selects_proportionally() {
     for _ in 0..100 {
         let offspring = op.apply(&state, &mut ctx);
         if let Offspring::Single(ind) = offspring
-            && *ind.genome() == [9, 9, 9, 9] {
-                high_count += 1;
-            }
+            && *ind.genome() == [9, 9, 9, 9]
+        {
+            high_count += 1;
+        }
     }
     assert!(
         high_count > 80,
@@ -805,8 +806,10 @@ fn proportional_slice_reference() {
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
 
-    let ops = [(RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
-        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap())];
+    let ops = [
+        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap()),
+    ];
     let op = Proportional::new(&ops[..]);
     let offspring = op.apply(&state, &mut ctx);
     assert_eq!(offspring.into_population().len(), 6);
@@ -1146,9 +1149,10 @@ fn rank_selection_favors_best() {
     for _ in 0..100 {
         let offspring = op.apply(&state, &mut ctx);
         if let Offspring::Single(ind) = offspring
-            && *ind.genome() == [9, 9, 9, 9] {
-                best_count += 1;
-            }
+            && *ind.genome() == [9, 9, 9, 9]
+        {
+            best_count += 1;
+        }
     }
     // With rank weights 2:1, best should be selected ~67% of the time
     assert!(

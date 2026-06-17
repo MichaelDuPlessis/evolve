@@ -42,35 +42,36 @@ where
     Python::with_gil(|py| {
         let bound = obj.bind(py);
         if let Ok(m) = bound.getattr(method)
-            && m.is_callable() {
-                let generation = state.generation();
-                let best = best_fitness(state, fe);
-                let pop_list: Vec<PyObject> = state
-                    .population()
-                    .iter()
-                    .map(|ind| {
-                        use pyo3::BoundObject;
-                        let genome: Vec<PyObject> = ind
-                            .genome()
-                            .iter()
-                            .map(|v| v.clone().into_pyobject(py).unwrap().into_any().unbind())
-                            .collect();
-                        let genome_py = PyList::new(py, genome).unwrap().into_any().unbind();
-                        let fitness_py: PyObject = match ind.try_fitness() {
-                            Some(f) => f.into_pyobject(py).unwrap().into_any().unbind(),
-                            None => py.None(),
-                        };
-                        let d = PyDict::new(py);
-                        d.set_item("genome", genome_py).unwrap();
-                        d.set_item("fitness", fitness_py).unwrap();
-                        d.into_any().unbind()
-                    })
-                    .collect();
-                let pop_py = PyList::new(py, pop_list).unwrap();
-                if let Err(e) = m.call1((generation, best, pop_py)) {
-                    stash_error(py, e);
-                }
+            && m.is_callable()
+        {
+            let generation = state.generation();
+            let best = best_fitness(state, fe);
+            let pop_list: Vec<PyObject> = state
+                .population()
+                .iter()
+                .map(|ind| {
+                    use pyo3::BoundObject;
+                    let genome: Vec<PyObject> = ind
+                        .genome()
+                        .iter()
+                        .map(|v| v.clone().into_pyobject(py).unwrap().into_any().unbind())
+                        .collect();
+                    let genome_py = PyList::new(py, genome).unwrap().into_any().unbind();
+                    let fitness_py: PyObject = match ind.try_fitness() {
+                        Some(f) => f.into_pyobject(py).unwrap().into_any().unbind(),
+                        None => py.None(),
+                    };
+                    let d = PyDict::new(py);
+                    d.set_item("genome", genome_py).unwrap();
+                    d.set_item("fitness", fitness_py).unwrap();
+                    d.into_any().unbind()
+                })
+                .collect();
+            let pop_py = PyList::new(py, pop_list).unwrap();
+            if let Err(e) = m.call1((generation, best, pop_py)) {
+                stash_error(py, e);
             }
+        }
     });
 }
 

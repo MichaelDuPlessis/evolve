@@ -31,9 +31,13 @@ static RUNTIME: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::ne
 macro_rules! make_ctx {
     ($fe:expr, $rng:expr, $cmp:expr) => {{
         #[cfg(feature = "parallel")]
-        { Context::new($fe, $rng, $cmp, &RUNTIME) }
+        {
+            Context::new($fe, $rng, $cmp, &RUNTIME)
+        }
         #[cfg(not(feature = "parallel"))]
-        { Context::new($fe, $rng, $cmp) }
+        {
+            Context::new($fe, $rng, $cmp)
+        }
     }};
 }
 

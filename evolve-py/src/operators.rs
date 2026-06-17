@@ -389,10 +389,8 @@ where
             }
         };
 
-        let population: Population<Vec<T>, f64> = new_genomes
-            .into_iter()
-            .map(Individual::new)
-            .collect();
+        let population: Population<Vec<T>, f64> =
+            new_genomes.into_iter().map(Individual::new).collect();
 
         Offspring::Multiple(population)
     })
