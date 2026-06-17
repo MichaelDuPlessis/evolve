@@ -9,6 +9,7 @@ repository = "https://github.com/MichaelDuPlessis/evolve"
 readme = "README.md"
 keywords = ["genetic-algorithm", "evolutionary", "optimization", "metaheuristic"]
 categories = ["artificial-intelligence", "algorithms"]
+exclude = ["evolve-py/"]
 
 [workspace]
 members = ["evolve-derive", "evolve-py"]
