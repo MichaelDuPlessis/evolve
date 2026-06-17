@@ -344,6 +344,7 @@ fn weighted_boxed_slice_picks_one_operator() {
 
 // ── SinglePoint crossover for Vec<T> ──
 
+#[allow(clippy::ptr_arg)]
 fn id_vec(g: &Vec<i32>) -> i32 {
     g.iter().sum()
 }
@@ -419,6 +420,7 @@ fn segment_duplication_increases_length() {
     let state = State::new(pop, 0);
     let mut rng = rand::rng();
 
+    #[allow(clippy::ptr_arg)]
     fn eval(g: &Vec<i32>) -> i32 {
         g.iter().sum()
     }
@@ -448,6 +450,7 @@ fn segment_duplication_skips_when_exceeds_max() {
     let state = State::new(pop, 0);
     let mut rng = rand::rng();
 
+    #[allow(clippy::ptr_arg)]
     fn eval(g: &Vec<i32>) -> i32 {
         g.iter().sum()
     }
@@ -479,6 +482,7 @@ fn segment_deletion_decreases_length() {
     let state = State::new(pop, 0);
     let mut rng = rand::rng();
 
+    #[allow(clippy::ptr_arg)]
     fn eval(g: &Vec<i32>) -> i32 {
         g.iter().sum()
     }
@@ -508,6 +512,7 @@ fn segment_deletion_skips_when_at_min_len() {
     let state = State::new(pop, 0);
     let mut rng = rand::rng();
 
+    #[allow(clippy::ptr_arg)]
     fn eval(g: &Vec<i32>) -> i32 {
         g.iter().sum()
     }

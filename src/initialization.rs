@@ -230,6 +230,7 @@ mod test {
         }
     }
 
+    #[allow(clippy::ptr_arg)]
     fn vec_sum(g: &Vec<u8>) -> u32 {
         g.iter().map(|&x| x as u32).sum()
     }

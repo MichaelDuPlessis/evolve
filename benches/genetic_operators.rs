@@ -22,6 +22,21 @@ use evolve::{
 use rand::{SeedableRng, rngs::SmallRng};
 use std::num::NonZero;
 
+#[cfg(feature = "parallel")]
+use std::sync::LazyLock;
+#[cfg(feature = "parallel")]
+static RUNTIME: LazyLock<pooled::Runtime> = LazyLock::new(|| pooled::Runtime::new(4));
+
+/// Create a Context, handling the parallel/non-parallel feature difference.
+macro_rules! make_ctx {
+    ($fe:expr, $rng:expr, $cmp:expr) => {{
+        #[cfg(feature = "parallel")]
+        { Context::new($fe, $rng, $cmp, &RUNTIME) }
+        #[cfg(not(feature = "parallel"))]
+        { Context::new($fe, $rng, $cmp) }
+    }};
+}
+
 fn make_population_array(rng: &mut SmallRng, size: usize) -> Population<[u8; 8], u32> {
     use evolve::random::Randomizable;
     (0..size)
@@ -44,6 +59,7 @@ fn fitness_array(g: &[u8; 8]) -> u32 {
     g.iter().map(|&x| x as u32).sum()
 }
 
+#[allow(clippy::ptr_arg)]
 fn fitness_vec(g: &Vec<u8>) -> u32 {
     g.iter().map(|&x| x as u32).sum()
 }
@@ -59,7 +75,7 @@ fn bench_crossover(c: &mut Criterion) {
         let op = SinglePoint::<u8>::new();
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -72,7 +88,7 @@ fn bench_crossover(c: &mut Criterion) {
         let op = SinglePoint::<u8>::new();
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -85,7 +101,7 @@ fn bench_crossover(c: &mut Criterion) {
         let op = Uniform::<u8>::new();
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -98,7 +114,7 @@ fn bench_crossover(c: &mut Criterion) {
         let op = TwoPoint::<u8>::new();
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -114,7 +130,7 @@ fn bench_crossover(c: &mut Criterion) {
         let op = Arithmetic::new();
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -133,7 +149,7 @@ fn bench_mutation(c: &mut Criterion) {
         let op = RandomReset::<u8>::new();
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -146,7 +162,7 @@ fn bench_mutation(c: &mut Criterion) {
         let op = SegmentDuplication::<u8>::new(0.25, 400);
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -159,7 +175,7 @@ fn bench_mutation(c: &mut Criterion) {
         let op = SegmentDeletion::<u8>::new(0.25, 10);
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -175,7 +191,7 @@ fn bench_mutation(c: &mut Criterion) {
         let op = Gaussian::new(0.1);
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -188,7 +204,7 @@ fn bench_mutation(c: &mut Criterion) {
         let op = Swap::<u8>::new();
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -201,7 +217,7 @@ fn bench_mutation(c: &mut Criterion) {
         let op = Inversion::<u8>::new();
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -214,7 +230,7 @@ fn bench_mutation(c: &mut Criterion) {
         let op = Creep::<u8>::new(5);
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -227,7 +243,7 @@ fn bench_mutation(c: &mut Criterion) {
         let op = Scramble::<u8>::new();
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -246,7 +262,7 @@ fn bench_selection(c: &mut Criterion) {
         let op = Tournament::new(NonZero::new(3).unwrap());
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -265,7 +281,7 @@ fn bench_selection(c: &mut Criterion) {
         let op = RouletteWheel;
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -278,7 +294,7 @@ fn bench_selection(c: &mut Criterion) {
         let op = Rank;
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -297,7 +313,7 @@ fn bench_selection(c: &mut Criterion) {
         let op = Sus::new(NonZero::new(50).unwrap());
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -312,7 +328,7 @@ fn bench_initialization(c: &mut Criterion) {
         let fe = fitness_array as fn(&[u8; 8]) -> u32;
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             Random::new().initialize(NonZero::new(100).unwrap(), &mut ctx)
         });
     });
@@ -321,7 +337,7 @@ fn bench_initialization(c: &mut Criterion) {
         let fe = fitness_vec as fn(&Vec<u8>) -> u32;
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             RangedRandom::<u8>::new(50..200).initialize(NonZero::new(100).unwrap(), &mut ctx)
         });
     });
@@ -347,7 +363,7 @@ fn bench_combinators(c: &mut Criterion) {
         )));
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -364,7 +380,7 @@ fn bench_combinators(c: &mut Criterion) {
         ));
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -377,7 +393,7 @@ fn bench_combinators(c: &mut Criterion) {
         let op = WithRate::new(RandomReset::<u8>::new(), 0.1);
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
@@ -394,7 +410,7 @@ fn bench_combinators(c: &mut Criterion) {
         let op = Proportional::new(&ops[..]);
         b.iter(|| {
             let mut rng = SmallRng::seed_from_u64(42);
-            let mut ctx = Context::new(&fe, &mut rng, &Maximize);
+            let mut ctx = make_ctx!(&fe, &mut rng, &Maximize);
             op.apply(&state, &mut ctx)
         });
     });
