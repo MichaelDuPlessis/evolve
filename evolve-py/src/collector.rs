@@ -1,5 +1,6 @@
 use evolve::{collector::Collector, core::state::State};
 use pyo3::prelude::*;
+use pyo3::types::{PyDict, PyList};
 
 use crate::{
     comparator::PyComparator,
@@ -9,7 +10,7 @@ use crate::{
 /// Wraps a Python object as a `Collector`. The Python object may optionally
 /// implement `on_start`, `on_generation`, `on_end`, and `finalize`.
 ///
-/// Hook methods are called with `(generation: int, best_fitness: float)`.
+/// `on_generation` is called with `(generation: int, best_fitness: float, population: list[dict])`.
 /// `finalize()` is called with no args and its return value is returned from `run_with`.
 pub struct PyCollectorWrapper {
     obj: Py<PyAny>,
@@ -35,6 +36,8 @@ where
 fn call_hook<T>(obj: &Py<PyAny>, method: &str, state: &State<Vec<T>, f64>, fe: &PyFitnessCallback)
 where
     PyFitnessCallback: evolve::fitness::FitnessEvaluator<Vec<T>, f64>,
+    T: for<'py> IntoPyObject<'py> + Clone,
+    for<'py> <T as IntoPyObject<'py>>::Error: std::fmt::Debug,
 {
     Python::with_gil(|py| {
         let bound = obj.bind(py);
@@ -42,7 +45,29 @@ where
             if m.is_callable() {
                 let generation = state.generation();
                 let best = best_fitness(state, fe);
-                if let Err(e) = m.call1((generation, best)) {
+                let pop_list: Vec<PyObject> = state
+                    .population()
+                    .iter()
+                    .map(|ind| {
+                        use pyo3::BoundObject;
+                        let genome: Vec<PyObject> = ind
+                            .genome()
+                            .iter()
+                            .map(|v| v.clone().into_pyobject(py).unwrap().into_any().unbind())
+                            .collect();
+                        let genome_py = PyList::new(py, genome).unwrap().into_any().unbind();
+                        let fitness_py: PyObject = match ind.try_fitness() {
+                            Some(f) => f.into_pyobject(py).unwrap().into_any().unbind(),
+                            None => py.None(),
+                        };
+                        let d = PyDict::new(py);
+                        d.set_item("genome", genome_py).unwrap();
+                        d.set_item("fitness", fitness_py).unwrap();
+                        d.into_any().unbind()
+                    })
+                    .collect();
+                let pop_py = PyList::new(py, pop_list).unwrap();
+                if let Err(e) = m.call1((generation, best, pop_py)) {
                     stash_error(py, e);
                 }
             }

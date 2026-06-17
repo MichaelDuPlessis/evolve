@@ -63,10 +63,12 @@ macro_rules! define_int_operator_enum {
             Combine(Combine<Vec<$name>>),
             Weighted(Weighted<Vec<($name, NonZero<u16>)>>),
             Proportional(Box<[($name, NonZero<u16>)]>),
+            ProportionalFixed(Box<[($name, NonZero<u16>)]>, usize),
             Repeat(Repeat<Box<$name>>),
             Identity(Identity),
             WithRate(WithRate<Box<$name>>),
             PythonCallback(Py<PyAny>),
+            Conditional(Py<PyAny>, Box<$name>, Box<$name>),
             // Parallel operators
             ParallelFill(ParFill<Box<$name>>),
             ParallelRandomReset(ParRandomReset<$t>),
@@ -104,10 +106,12 @@ macro_rules! define_int_operator_enum {
                     Self::Combine(op) => op.apply(state, ctx),
                     Self::Weighted(op) => op.apply(state, ctx),
                     Self::Proportional(ops) => proportional_apply(ops, state, ctx),
+                    Self::ProportionalFixed(ops, size) => proportional_fixed_apply(ops, *size, state, ctx),
                     Self::Repeat(op) => op.apply(state, ctx),
                     Self::Identity(op) => op.apply(state, ctx),
                     Self::WithRate(op) => op.apply(state, ctx),
                     Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, state),
+                    Self::Conditional(pred, a, b) => conditional_apply::<$t, $name>(pred, a, b, state, ctx),
                     Self::ParallelFill(op) => op.apply(state, ctx),
                     Self::ParallelRandomReset(op) => op.apply(state, ctx),
                     Self::ParallelSwap(op) => op.apply(state, ctx),
@@ -144,10 +148,12 @@ macro_rules! define_int_operator_enum {
                     Self::Combine(op) => op.transform(state, ctx),
                     Self::Weighted(op) => op.transform(state, ctx),
                     Self::Proportional(ops) => proportional_transform(ops, state, ctx),
+                    Self::ProportionalFixed(ops, size) => proportional_fixed_apply(ops, *size, &state, ctx),
                     Self::Repeat(op) => op.transform(state, ctx),
                     Self::Identity(op) => op.transform(state, ctx),
                     Self::WithRate(op) => op.transform(state, ctx),
                     Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, &state),
+                    Self::Conditional(pred, a, b) => conditional_apply::<$t, $name>(pred, a, b, &state, ctx),
                     Self::ParallelFill(op) => op.transform(state, ctx),
                     Self::ParallelRandomReset(op) => op.transform(state, ctx),
                     Self::ParallelSwap(op) => op.transform(state, ctx),
@@ -186,10 +192,12 @@ macro_rules! define_float_operator_enum {
             Combine(Combine<Vec<$name>>),
             Weighted(Weighted<Vec<($name, NonZero<u16>)>>),
             Proportional(Box<[($name, NonZero<u16>)]>),
+            ProportionalFixed(Box<[($name, NonZero<u16>)]>, usize),
             Repeat(Repeat<Box<$name>>),
             Identity(Identity),
             WithRate(WithRate<Box<$name>>),
             PythonCallback(Py<PyAny>),
+            Conditional(Py<PyAny>, Box<$name>, Box<$name>),
             // Parallel operators
             ParallelFill(ParFill<Box<$name>>),
             ParallelRandomReset(ParRandomReset<$t>),
@@ -228,10 +236,12 @@ macro_rules! define_float_operator_enum {
                     Self::Combine(op) => op.apply(state, ctx),
                     Self::Weighted(op) => op.apply(state, ctx),
                     Self::Proportional(ops) => proportional_apply(ops, state, ctx),
+                    Self::ProportionalFixed(ops, size) => proportional_fixed_apply(ops, *size, state, ctx),
                     Self::Repeat(op) => op.apply(state, ctx),
                     Self::Identity(op) => op.apply(state, ctx),
                     Self::WithRate(op) => op.apply(state, ctx),
                     Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, state),
+                    Self::Conditional(pred, a, b) => conditional_apply::<$t, $name>(pred, a, b, state, ctx),
                     Self::ParallelFill(op) => op.apply(state, ctx),
                     Self::ParallelRandomReset(op) => op.apply(state, ctx),
                     Self::ParallelSwap(op) => op.apply(state, ctx),
@@ -269,10 +279,12 @@ macro_rules! define_float_operator_enum {
                     Self::Combine(op) => op.transform(state, ctx),
                     Self::Weighted(op) => op.transform(state, ctx),
                     Self::Proportional(ops) => proportional_transform(ops, state, ctx),
+                    Self::ProportionalFixed(ops, size) => proportional_fixed_apply(ops, *size, &state, ctx),
                     Self::Repeat(op) => op.transform(state, ctx),
                     Self::Identity(op) => op.transform(state, ctx),
                     Self::WithRate(op) => op.transform(state, ctx),
                     Self::PythonCallback(cb) => python_callback_apply::<$t>(cb, &state),
+                    Self::Conditional(pred, a, b) => conditional_apply::<$t, $name>(pred, a, b, &state, ctx),
                     Self::ParallelFill(op) => op.transform(state, ctx),
                     Self::ParallelRandomReset(op) => op.transform(state, ctx),
                     Self::ParallelSwap(op) => op.transform(state, ctx),
@@ -299,9 +311,9 @@ define_float_operator_enum!(PyOperatorF64, f64);
 
 // ── Python callback operator helper ──────────────────────────────────────────
 
-/// Call a Python callable with the population's genomes and return new offspring.
+/// Call a Python callable with the population as list of dicts (genome + fitness) and return new offspring.
 ///
-/// The callable receives `list[list[T]]` and must return `list[list[T]]`.
+/// The callable receives `list[{"genome": list[T], "fitness": float|None}]` and must return `list[list[T]]`.
 fn python_callback_apply<T>(cb: &Py<PyAny>, state: &State<Vec<T>, f64>) -> Offspring<Vec<T>, f64>
 where
     T: for<'py> IntoPyObject<'py> + for<'py> pyo3::FromPyObject<'py> + Clone,
@@ -309,9 +321,10 @@ where
 {
     use crate::fitness::stash_error;
     use pyo3::BoundObject;
+    use pyo3::types::PyDict;
     Python::with_gil(|py| {
-        // Build list[list[T]] from population genomes
-        let genomes_list: Vec<PyObject> = state
+        // Build list[{"genome": list[T], "fitness": float|None}]
+        let pop_list: Vec<PyObject> = state
             .population()
             .iter()
             .map(|ind| {
@@ -320,10 +333,18 @@ where
                     .iter()
                     .map(|v| v.clone().into_pyobject(py).unwrap().into_any().unbind())
                     .collect();
-                PyList::new(py, inner).unwrap().into_any().unbind()
+                let genome_py = PyList::new(py, inner).unwrap().into_any().unbind();
+                let fitness_py: PyObject = match ind.try_fitness() {
+                    Some(f) => f.into_pyobject(py).unwrap().into_any().unbind(),
+                    None => py.None(),
+                };
+                let d = PyDict::new(py);
+                d.set_item("genome", genome_py).unwrap();
+                d.set_item("fitness", fitness_py).unwrap();
+                d.into_any().unbind()
             })
             .collect();
-        let genomes_py = match PyList::new(py, genomes_list) {
+        let pop_py = match PyList::new(py, pop_list) {
             Ok(l) => l,
             Err(e) => {
                 stash_error(py, e);
@@ -331,7 +352,7 @@ where
             }
         };
 
-        let result = match cb.bind(py).call1((genomes_py,)) {
+        let result = match cb.bind(py).call1((pop_py,)) {
             Ok(r) => r,
             Err(e) => {
                 stash_error(py, e);
@@ -359,6 +380,30 @@ where
 
         Offspring::Multiple(population)
     })
+}
+
+/// Apply a Python-predicated conditional operator.
+fn conditional_apply<T, Op>(
+    pred: &Py<PyAny>,
+    if_true: &Op,
+    if_false: &Op,
+    state: &State<Vec<T>, f64>,
+    ctx: &mut Context<PyFitnessCallback, SmallRng, PyComparator>,
+) -> Offspring<Vec<T>, f64>
+where
+    Op: GeneticOperator<Vec<T>, f64, PyFitnessCallback, SmallRng, PyComparator>,
+    T: Clone,
+{
+    use crate::fitness::stash_error;
+    let use_true = Python::with_gil(|py| {
+        let generation = state.generation();
+        let pop_size = state.population().len();
+        match pred.bind(py).call1((generation, pop_size)) {
+            Ok(r) => r.extract::<bool>().unwrap_or(false),
+            Err(e) => { stash_error(py, e); false }
+        }
+    });
+    if use_true { if_true.apply(state, ctx) } else { if_false.apply(state, ctx) }
 }
 
 // ── Shared Proportional helpers ───────────────────────────────────────────────
@@ -400,6 +445,33 @@ where
     T: Clone,
 {
     proportional_apply(ops, &state, ctx)
+}
+
+fn proportional_fixed_apply<T, Op>(
+    ops: &[(Op, NonZero<u16>)],
+    target_size: usize,
+    state: &State<Vec<T>, f64>,
+    ctx: &mut Context<PyFitnessCallback, SmallRng, PyComparator>,
+) -> Offspring<Vec<T>, f64>
+where
+    Op: GeneticOperator<Vec<T>, f64, PyFitnessCallback, SmallRng, PyComparator>,
+    T: Clone,
+{
+    let total_weight: u16 = ops.iter().map(|(_, w)| w.get()).sum();
+    let mut population = Population::with_capacity(target_size);
+    let mut remaining = target_size;
+    for (i, (op, weight)) in ops.iter().enumerate() {
+        let target = if i == ops.len() - 1 {
+            remaining
+        } else {
+            let t = (weight.get() as usize * target_size) / total_weight as usize;
+            remaining -= t;
+            t
+        };
+        let fill = Fill::from_fixed_size(op, target);
+        population.add_offspring(fill.apply(state, ctx));
+    }
+    Offspring::Multiple(population)
 }
 
 // ── Python wrapper structs (dtype-independent) ────────────────────────────────
@@ -691,12 +763,14 @@ impl PyWeighted {
 #[pyclass(name = "Proportional")]
 pub struct PyProportional {
     pub ops: Vec<(PyObject, u16)>,
+    pub size: Option<usize>,
 }
 
 #[pymethods]
 impl PyProportional {
     #[new]
-    fn new(pairs: &Bound<'_, PyList>) -> PyResult<Self> {
+    #[pyo3(signature = (pairs, size=None))]
+    fn new(pairs: &Bound<'_, PyList>, size: Option<usize>) -> PyResult<Self> {
         let mut ops = Vec::with_capacity(pairs.len());
         for item in pairs.iter() {
             let tuple = item.downcast::<pyo3::types::PyTuple>()?;
@@ -704,7 +778,22 @@ impl PyProportional {
             let weight: u16 = tuple.get_item(1)?.extract()?;
             ops.push((op, weight));
         }
-        Ok(Self { ops })
+        Ok(Self { ops, size })
+    }
+}
+
+#[pyclass(name = "Conditional")]
+pub struct PyConditional {
+    pub predicate: PyObject,
+    pub if_true: PyObject,
+    pub if_false: PyObject,
+}
+
+#[pymethods]
+impl PyConditional {
+    #[new]
+    fn new(predicate: PyObject, if_true: PyObject, if_false: PyObject) -> Self {
+        Self { predicate, if_true, if_false }
     }
 }
 
@@ -988,7 +1077,16 @@ macro_rules! extract_int_op {
                         Ok((inner, nz))
                     })
                     .collect();
-                return Ok($enum_name::Proportional(pairs?.into_boxed_slice()));
+                return match p.size {
+                    None => Ok($enum_name::Proportional(pairs?.into_boxed_slice())),
+                    Some(size) => Ok($enum_name::ProportionalFixed(pairs?.into_boxed_slice(), size)),
+                };
+            }
+            if let Ok(cell) = obj.downcast::<PyConditional>() {
+                let c = cell.borrow();
+                let a = $fn_name(c.if_true.bind(obj.py()))?;
+                let b = $fn_name(c.if_false.bind(obj.py()))?;
+                return Ok($enum_name::Conditional(c.predicate.clone_ref(obj.py()), Box::new(a), Box::new(b)));
             }
             if let Ok(cell) = obj.downcast::<PyRepeat>() {
                 let r = cell.borrow();
@@ -1190,7 +1288,16 @@ macro_rules! extract_float_op {
                         Ok((inner, nz))
                     })
                     .collect();
-                return Ok($enum_name::Proportional(pairs?.into_boxed_slice()));
+                return match p.size {
+                    None => Ok($enum_name::Proportional(pairs?.into_boxed_slice())),
+                    Some(size) => Ok($enum_name::ProportionalFixed(pairs?.into_boxed_slice(), size)),
+                };
+            }
+            if let Ok(cell) = obj.downcast::<PyConditional>() {
+                let c = cell.borrow();
+                let a = $fn_name(c.if_true.bind(obj.py()))?;
+                let b = $fn_name(c.if_false.bind(obj.py()))?;
+                return Ok($enum_name::Conditional(c.predicate.clone_ref(obj.py()), Box::new(a), Box::new(b)));
             }
             if let Ok(cell) = obj.downcast::<PyRepeat>() {
                 let r = cell.borrow();

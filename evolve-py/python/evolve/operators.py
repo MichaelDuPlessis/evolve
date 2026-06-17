@@ -27,6 +27,7 @@ from evolve._evolve import (
     Repeat,
     Identity,
     WithRate,
+    Conditional,
 )
 
 __all__ = [
@@ -56,4 +57,5 @@ __all__ = [
     "Repeat",
     "Identity",
     "WithRate",
+    "Conditional",
 ]

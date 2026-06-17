@@ -126,7 +126,7 @@ def test_run_with_basic_collector():
         def __init__(self):
             self.history = []
 
-        def on_generation(self, generation, best_fitness):
+        def on_generation(self, generation, best_fitness, population):
             self.history.append((generation, best_fitness))
 
         def finalize(self):
@@ -152,10 +152,10 @@ def test_run_with_on_start_called():
             self.start_calls = 0
             self.gen_calls = 0
 
-        def on_start(self, generation, best_fitness):
+        def on_start(self, generation, best_fitness, population):
             self.start_calls += 1
 
-        def on_generation(self, generation, best_fitness):
+        def on_generation(self, generation, best_fitness, population):
             self.gen_calls += 1
 
         def finalize(self):
@@ -177,7 +177,7 @@ def test_run_with_on_end_called():
         def __init__(self):
             self.end_calls = 0
 
-        def on_end(self, generation, best_fitness):
+        def on_end(self, generation, best_fitness, population):
             self.end_calls += 1
 
         def finalize(self):
@@ -195,7 +195,7 @@ def test_run_with_no_finalize_returns_none():
     from evolve.operators import Fill, RandomReset
 
     class NoFinalizeCollector:
-        def on_generation(self, generation, best_fitness):
+        def on_generation(self, generation, best_fitness, population):
             pass
 
     ea = make_ea(Fill(RandomReset()), MaxGenerations(3))
@@ -213,7 +213,7 @@ def test_run_with_fitness_tracking():
         def __init__(self):
             self.best_per_gen = []
 
-        def on_generation(self, generation, best_fitness):
+        def on_generation(self, generation, best_fitness, population):
             self.best_per_gen.append(best_fitness)
 
         def finalize(self):
@@ -568,3 +568,171 @@ def test_error_fitness_exception():
     )
     with pytest.raises((ValueError, Exception)):
         ea.run()
+
+
+# ── Improvement 1: Conditional combinator ─────────────────────────────────────
+
+def test_conditional_switches_operators():
+    """Conditional uses if_true op before threshold, if_false after."""
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, Conditional, Tournament, RandomReset
+
+    applied_true = []
+    applied_false = []
+
+    def track_true(population):
+        applied_true.append(1)
+        return [ind["genome"] for ind in population]
+
+    def track_false(population):
+        applied_false.append(1)
+        return [ind["genome"] for ind in population]
+
+    def pred(generation, pop_size):
+        return generation <= 3
+
+    ea = make_ea(
+        operators=Fill(Conditional(pred, track_true, track_false)),
+        termination=MaxGenerations(6),
+    )
+    ea.run()
+
+    assert len(applied_true) > 0
+    assert len(applied_false) > 0
+
+
+def test_conditional_always_true():
+    """Conditional always uses if_true when predicate always returns True."""
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, Conditional, RandomReset, Identity
+
+    calls = []
+
+    def my_op(population):
+        calls.append(1)
+        return [ind["genome"] for ind in population]
+
+    ea = make_ea(
+        operators=Fill(Conditional(lambda g, p: True, my_op, Identity())),
+        termination=MaxGenerations(3),
+    )
+    ea.run()
+
+    assert len(calls) > 0
+
+
+# ── Improvement 2: Custom operators receive Individual dicts ──────────────────
+
+def test_custom_operator_receives_dicts():
+    """Custom operator receives list of dicts with genome and fitness keys."""
+    from evolve import MaxGenerations
+    from evolve.operators import Fill
+
+    received = []
+
+    def inspect_population(population):
+        received.append(population)
+        return [ind["genome"] for ind in population]
+
+    ea = make_ea(operators=Fill(inspect_population), termination=MaxGenerations(1))
+    ea.run()
+
+    assert len(received) > 0
+    first = received[0]
+    assert isinstance(first, list)
+    for ind in first:
+        assert "genome" in ind
+        assert "fitness" in ind
+        assert isinstance(ind["genome"], list)
+
+
+def test_custom_operator_fitness_accessible():
+    """Custom operator can read fitness from Individual dicts."""
+    from evolve import MaxGenerations
+    from evolve.operators import Fill
+
+    def best_clone(population):
+        evaluated = [ind for ind in population if ind["fitness"] is not None]
+        if evaluated:
+            best = max(evaluated, key=lambda ind: ind["fitness"])
+            return [best["genome"]] * len(population)
+        return [ind["genome"] for ind in population]
+
+    ea = make_ea(operators=Fill(best_clone), termination=MaxGenerations(5))
+    result = ea.run()
+    assert result.generations == 5
+
+
+# ── Improvement 3: Collector hooks receive population ─────────────────────────
+
+def test_collector_on_generation_receives_population():
+    """on_generation receives (generation, best_fitness, population) list."""
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, RandomReset
+
+    received_pops = []
+
+    class PopCollector:
+        def on_generation(self, generation, best_fitness, population):
+            received_pops.append(population)
+
+        def finalize(self):
+            return received_pops
+
+    ea = make_ea(Fill(RandomReset()), MaxGenerations(2))
+    pops = ea.run_with(PopCollector())
+
+    assert len(pops) == 2
+    for pop in pops:
+        assert isinstance(pop, list)
+        assert len(pop) > 0
+        for ind in pop:
+            assert "genome" in ind
+            assert "fitness" in ind
+
+
+def test_collector_population_has_correct_size():
+    """Population passed to on_generation has the right size."""
+    from evolve import MaxGenerations
+    from evolve.operators import Fill, RandomReset
+
+    sizes = []
+
+    class SizeCollector:
+        def on_generation(self, generation, best_fitness, population):
+            sizes.append(len(population))
+
+        def finalize(self):
+            return sizes
+
+    ea = make_ea(Fill(RandomReset()), MaxGenerations(3))
+    result = ea.run_with(SizeCollector())
+
+    assert all(s == 20 for s in result)  # population_size=20 in make_ea
+
+
+# ── Improvement 4: Proportional with fixed size ───────────────────────────────
+
+def test_proportional_fixed_size():
+    """Proportional with size= produces offspring of fixed size."""
+    from evolve import MaxGenerations
+    from evolve.operators import Proportional, Tournament, RandomReset
+
+    # Proportional with fixed output size of 20
+    op = Proportional([(Tournament(3), 3), (RandomReset(), 1)], size=20)
+    ea = make_ea(operators=op, termination=MaxGenerations(3))
+    result = ea.run()
+    assert result.generations == 3
+    assert len(result.population) == 20
+
+
+def test_proportional_no_size_uses_pop_size():
+    """Proportional without size= uses population size (default behavior)."""
+    from evolve import MaxGenerations
+    from evolve.operators import Proportional, Tournament, RandomReset
+
+    op = Proportional([(Tournament(3), 3), (RandomReset(), 1)])
+    ea = make_ea(operators=op, termination=MaxGenerations(3))
+    result = ea.run()
+    assert result.generations == 3
+    assert len(result.population) == 20

@@ -16,7 +16,7 @@ use experiment::PyExperiment;
 use grammar::{PyGeFitness, PyGrammar, PyGrammarBuilder, PyStandardMapper};
 use initializer::{PyRandom, PyRangedRandom};
 use operators::{
-    PyArithmetic, PyCombine, PyCreep, PyElitism, PyFill, PyFillFixed, PyGaussian, PyIdentity,
+    PyArithmetic, PyCombine, PyConditional, PyCreep, PyElitism, PyFill, PyFillFixed, PyGaussian, PyIdentity,
     PyInversion, PyParallelCreep, PyParallelFill, PyParallelGaussian, PyParallelInversion,
     PyParallelRandomReset, PyParallelScramble, PyParallelSwap, PyPipeline, PyProportional,
     PyRandomReset, PyRank, PyRepeat, PyRouletteWheel, PyScramble, PySegmentDeletion,
@@ -64,6 +64,7 @@ fn _evolve(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyRepeat>()?;
     m.add_class::<PyIdentity>()?;
     m.add_class::<PyWithRate>()?;
+    m.add_class::<PyConditional>()?;
     // Parallel operators
     m.add_class::<PyParallelFill>()?;
     m.add_class::<PyParallelRandomReset>()?;

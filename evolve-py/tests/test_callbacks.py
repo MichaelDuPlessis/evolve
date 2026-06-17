@@ -30,9 +30,9 @@ def test_custom_operator_callable():
 
     calls = []
 
-    def set_all_max(genomes):
-        calls.append(len(genomes))
-        return [[255] * len(g) for g in genomes]
+    def set_all_max(population):
+        calls.append(len(population))
+        return [[255] * len(ind["genome"]) for ind in population]
 
     ea = make_ea(
         operators=Fill(set_all_max),
@@ -53,9 +53,9 @@ def test_custom_operator_in_pipeline():
 
     mutation_calls = []
 
-    def noop_mutation(genomes):
+    def noop_mutation(population):
         mutation_calls.append(1)
-        return genomes  # identity
+        return [ind["genome"] for ind in population]  # identity
 
     ea = make_ea(
         operators=Fill(Pipeline([
@@ -76,8 +76,8 @@ def test_custom_operator_modifies_genome():
     from evolve import MaxGenerations
     from evolve.operators import Fill
 
-    def zero_first_gene(genomes):
-        return [[0] + list(g[1:]) for g in genomes]
+    def zero_first_gene(population):
+        return [[0] + list(ind["genome"][1:]) for ind in population]
 
     ea = make_ea(
         operators=Fill(zero_first_gene),
