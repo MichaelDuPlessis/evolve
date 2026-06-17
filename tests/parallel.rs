@@ -517,7 +517,7 @@ fn parallel_arithmetic_crossover() {
     for ind in result.iter() {
         for &g in ind.genome() {
             assert!(
-                g >= 0.0 && g <= 3.0,
+                (0.0..=3.0).contains(&g),
                 "blended gene {g} should be between parent values"
             );
         }

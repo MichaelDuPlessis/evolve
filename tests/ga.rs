@@ -384,7 +384,7 @@ fn builder_with_all_fields() {
         .build();
 
     let result = ga.run();
-    assert!(result.population().len() > 0);
+    assert!(!result.population().is_empty());
 }
 
 #[test]
@@ -399,7 +399,7 @@ fn builder_with_minimize() {
         .build();
 
     let result = ga.run();
-    assert!(result.population().len() > 0);
+    assert!(!result.population().is_empty());
 }
 
 #[test]
@@ -418,7 +418,7 @@ fn builder_with_pipeline() {
         .build();
 
     let result = ga.run();
-    assert!(result.population().len() > 0);
+    assert!(!result.population().is_empty());
 }
 
 #[test]
@@ -433,7 +433,7 @@ fn builder_fields_in_any_order() {
         .build();
 
     let result = ga.run();
-    assert!(result.population().len() > 0);
+    assert!(!result.population().is_empty());
 }
 
 #[test]
@@ -484,7 +484,7 @@ fn experiment_runs_multiple_trials() {
             )
         },
         3,
-        || Standard::default(),
+        Standard::default,
     );
 
     let results = experiment.run();
@@ -512,7 +512,7 @@ fn experiment_with_custom_collector() {
             )
         },
         3,
-        || Basic::new(),
+        Basic::new,
     );
 
     let results: Vec<basic::RunResult<[u8; 2], u16>> = experiment.run();
@@ -543,7 +543,7 @@ fn factory_trait_on_struct() {
             )
         },
         3,
-        || Standard::default(),
+        Standard::default,
     );
 
     let results = experiment.run();

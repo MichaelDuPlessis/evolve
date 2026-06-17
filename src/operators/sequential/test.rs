@@ -737,11 +737,10 @@ fn roulette_wheel_selects_proportionally() {
     let mut high_count = 0;
     for _ in 0..100 {
         let offspring = op.apply(&state, &mut ctx);
-        if let Offspring::Single(ind) = offspring {
-            if *ind.genome() == [9, 9, 9, 9] {
+        if let Offspring::Single(ind) = offspring
+            && *ind.genome() == [9, 9, 9, 9] {
                 high_count += 1;
             }
-        }
     }
     assert!(
         high_count > 80,
@@ -801,10 +800,8 @@ fn proportional_slice_reference() {
     let mut rng = rand::rng();
     let mut ctx = make_ctx(&mut rng);
 
-    let ops = vec![
-        (RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
-        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap()),
-    ];
+    let ops = [(RandomReset::<i32>::new(), NonZero::new(1u16).unwrap()),
+        (RandomReset::<i32>::new(), NonZero::new(2u16).unwrap())];
     let op = Proportional::new(&ops[..]);
     let offspring = op.apply(&state, &mut ctx);
     assert_eq!(offspring.into_population().len(), 6);
@@ -950,7 +947,7 @@ fn arithmetic_crossover_f64_blends_parents() {
     assert_eq!(pop.len(), 2);
     for ind in &pop {
         for &gene in ind.genome() {
-            assert!(gene >= 0.0 && gene <= 1.0, "gene {gene} not in [0, 1]");
+            assert!((0.0..=1.0).contains(&gene), "gene {gene} not in [0, 1]");
         }
     }
 }
@@ -1143,11 +1140,10 @@ fn rank_selection_favors_best() {
     let mut best_count = 0;
     for _ in 0..100 {
         let offspring = op.apply(&state, &mut ctx);
-        if let Offspring::Single(ind) = offspring {
-            if *ind.genome() == [9, 9, 9, 9] {
+        if let Offspring::Single(ind) = offspring
+            && *ind.genome() == [9, 9, 9, 9] {
                 best_count += 1;
             }
-        }
     }
     // With rank weights 2:1, best should be selected ~67% of the time
     assert!(
@@ -1282,7 +1278,7 @@ fn gaussian_mutation_respects_bounds() {
 
     let pop: Population<[f64; 4], f64> = vec![[0.9, 0.9, 0.9, 0.9]; 10]
         .into_iter()
-        .map(|g| Individual::new(g))
+        .map(Individual::new)
         .collect();
     let state = State::new(pop, 0);
 
@@ -1305,7 +1301,7 @@ fn gaussian_mutation_respects_bounds() {
     let result = offspring.into_population();
     for ind in result.iter() {
         for &g in ind.genome() {
-            assert!(g >= -1.0 && g <= 1.0, "gene {g} out of bounds");
+            assert!((-1.0..=1.0).contains(&g), "gene {g} out of bounds");
         }
     }
 }
@@ -1327,7 +1323,7 @@ fn creep_mutation_respects_bounds() {
     let result = offspring.into_population();
     for ind in result.iter() {
         for &g in ind.genome() {
-            assert!(g >= 0 && g <= 60, "gene {g} out of bounds [0, 60]");
+            assert!((0..=60).contains(&g), "gene {g} out of bounds [0, 60]");
         }
     }
 }

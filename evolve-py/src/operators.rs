@@ -391,7 +391,7 @@ where
 
         let population: Population<Vec<T>, f64> = new_genomes
             .into_iter()
-            .map(|genome| Individual::new(genome))
+            .map(Individual::new)
             .collect();
 
         Offspring::Multiple(population)

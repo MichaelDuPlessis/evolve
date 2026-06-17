@@ -41,8 +41,8 @@ where
 {
     Python::with_gil(|py| {
         let bound = obj.bind(py);
-        if let Ok(m) = bound.getattr(method) {
-            if m.is_callable() {
+        if let Ok(m) = bound.getattr(method)
+            && m.is_callable() {
                 let generation = state.generation();
                 let best = best_fitness(state, fe);
                 let pop_list: Vec<PyObject> = state
@@ -71,7 +71,6 @@ where
                     stash_error(py, e);
                 }
             }
-        }
     });
 }
 

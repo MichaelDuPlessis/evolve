@@ -98,7 +98,7 @@ mod test {
             rand::rng(),
             Maximize,
         );
-        let result = ga.run_with(NoOp);
-        assert_eq!(result, ());
+        ga.run_with(NoOp);
+        assert_eq!((), ());
     }
 }
