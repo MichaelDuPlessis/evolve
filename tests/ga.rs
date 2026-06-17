@@ -143,10 +143,7 @@ fn maximize_improves_over_generations() {
     let fitness_fn = |g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>();
 
     let ops = Fill::from_population_size(Pipeline::new((
-        Combine::new((
-            Tournament::new(nz(3)),
-            Tournament::new(nz(3)),
-        )),
+        Combine::new((Tournament::new(nz(3)), Tournament::new(nz(3)))),
         SinglePoint::new(),
         RandomReset::new(),
     )));
@@ -162,10 +159,7 @@ fn maximize_improves_over_generations() {
     );
 
     let ops = Fill::from_population_size(Pipeline::new((
-        Combine::new((
-            Tournament::new(nz(3)),
-            Tournament::new(nz(3)),
-        )),
+        Combine::new((Tournament::new(nz(3)), Tournament::new(nz(3)))),
         SinglePoint::new(),
         RandomReset::new(),
     )));
@@ -229,10 +223,7 @@ fn full_pipeline_runs_to_completion() {
         MaxGenerations::new(50),
         fitness_fn,
         Fill::from_population_size(Pipeline::new((
-            Combine::new((
-                Tournament::new(nz(3)),
-                Tournament::new(nz(3)),
-            )),
+            Combine::new((Tournament::new(nz(3)), Tournament::new(nz(3)))),
             SinglePoint::new(),
             RandomReset::new(),
         ))),
@@ -288,10 +279,7 @@ fn weighted_pipeline_with_selection_and_mutation() {
         Fill::from_population_size(Weighted::new((
             (
                 Pipeline::new((
-                    Combine::new((
-                        Tournament::new(nz(3)),
-                        Tournament::new(nz(3)),
-                    )),
+                    Combine::new((Tournament::new(nz(3)), Tournament::new(nz(3)))),
                     SinglePoint::new(),
                     RandomReset::new(),
                 )),
@@ -396,7 +384,7 @@ fn builder_with_all_fields() {
         .build();
 
     let result = ga.run();
-    assert!(result.population().len() > 0);
+    assert!(!result.population().is_empty());
 }
 
 #[test]
@@ -411,7 +399,7 @@ fn builder_with_minimize() {
         .build();
 
     let result = ga.run();
-    assert!(result.population().len() > 0);
+    assert!(!result.population().is_empty());
 }
 
 #[test]
@@ -421,10 +409,7 @@ fn builder_with_pipeline() {
         .termination(MaxGenerations::new(10))
         .fitness(|g: &[u8; 4]| g.iter().map(|x| *x as u32).sum::<u32>())
         .operators(Fill::from_population_size(Pipeline::new((
-            Combine::new((
-                Tournament::new(nz(3)),
-                Tournament::new(nz(3)),
-            )),
+            Combine::new((Tournament::new(nz(3)), Tournament::new(nz(3)))),
             SinglePoint::new(),
             RandomReset::new(),
         ))))
@@ -433,7 +418,7 @@ fn builder_with_pipeline() {
         .build();
 
     let result = ga.run();
-    assert!(result.population().len() > 0);
+    assert!(!result.population().is_empty());
 }
 
 #[test]
@@ -448,7 +433,7 @@ fn builder_fields_in_any_order() {
         .build();
 
     let result = ga.run();
-    assert!(result.population().len() > 0);
+    assert!(!result.population().is_empty());
 }
 
 #[test]
@@ -462,10 +447,7 @@ fn ga_with_variable_length_genome() {
         MaxGenerations::new(50),
         fitness_fn,
         Fill::from_population_size(Pipeline::new((
-            Combine::new((
-                Tournament::new(nz(3)),
-                Tournament::new(nz(3)),
-            )),
+            Combine::new((Tournament::new(nz(3)), Tournament::new(nz(3)))),
             SinglePoint::<u8>::new(),
             RandomReset::<u8>::new(),
         ))),
@@ -502,7 +484,7 @@ fn experiment_runs_multiple_trials() {
             )
         },
         3,
-        || Standard::default(),
+        Standard::default,
     );
 
     let results = experiment.run();
@@ -530,7 +512,7 @@ fn experiment_with_custom_collector() {
             )
         },
         3,
-        || Basic::new(),
+        Basic::new,
     );
 
     let results: Vec<basic::RunResult<[u8; 2], u16>> = experiment.run();
@@ -561,7 +543,7 @@ fn factory_trait_on_struct() {
             )
         },
         3,
-        || Standard::default(),
+        Standard::default,
     );
 
     let results = experiment.run();

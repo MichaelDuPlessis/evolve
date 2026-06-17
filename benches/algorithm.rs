@@ -144,10 +144,12 @@ fn bench_experiment(c: &mut Criterion) {
 fn bench_ge_run(c: &mut Criterion) {
     c.bench_function("ge_run_100pop_50gen", |b| {
         b.iter(|| {
-            let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(arithmetic_grammar(),
-            3,
-            |p: &TerminalCount| p.run(&()) as f64,
-            -1.0,);
+            let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(
+                arithmetic_grammar(),
+                3,
+                |p: &TerminalCount| p.run(&()) as f64,
+                -1.0,
+            );
             let mut ga = EvolutionaryAlgorithm::new(
                 RangedRandom::<u8>::new(5..20),
                 MaxGenerations::new(50),
@@ -186,10 +188,12 @@ fn bench_ge_experiment(c: &mut Criterion) {
             Experiment::new(
                 move || {
                     seed += 1;
-                    let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(arithmetic_grammar(),
-                    3,
-                    |p: &TerminalCount| p.run(&()) as f64,
-                    -1.0,);
+                    let fitness = GeFitness::<_, u8, f64, _, CountBuilder, _>::new(
+                        arithmetic_grammar(),
+                        3,
+                        |p: &TerminalCount| p.run(&()) as f64,
+                        -1.0,
+                    );
                     EvolutionaryAlgorithm::new(
                         RangedRandom::<u8>::new(5..20),
                         MaxGenerations::new(50),
@@ -230,10 +234,12 @@ fn bench_ge_experiment(c: &mut Criterion) {
 fn bench_ge_macro_run(c: &mut Criterion) {
     c.bench_function("ge_macro_run_100pop_50gen", |b| {
         b.iter(|| {
-            let fitness = GeFitness::<MacroGrammar, u8, f64, _, MacroCountBuilder, _>::new(MacroGrammar,
-            3,
-            |p: &TerminalCount| p.run(&()) as f64,
-            -1.0,);
+            let fitness = GeFitness::<MacroGrammar, u8, f64, _, MacroCountBuilder, _>::new(
+                MacroGrammar,
+                3,
+                |p: &TerminalCount| p.run(&()) as f64,
+                -1.0,
+            );
             let mut ga = EvolutionaryAlgorithm::new(
                 RangedRandom::<u8>::new(5..20),
                 MaxGenerations::new(50),
@@ -272,11 +278,12 @@ fn bench_ge_macro_experiment(c: &mut Criterion) {
             Experiment::new(
                 move || {
                     seed += 1;
-                    let fitness =
-                        GeFitness::<MacroGrammar, u8, f64, _, MacroCountBuilder, _>::new(MacroGrammar,
+                    let fitness = GeFitness::<MacroGrammar, u8, f64, _, MacroCountBuilder, _>::new(
+                        MacroGrammar,
                         3,
                         |p: &TerminalCount| p.run(&()) as f64,
-                        -1.0,);
+                        -1.0,
+                    );
                     EvolutionaryAlgorithm::new(
                         RangedRandom::<u8>::new(5..20),
                         MaxGenerations::new(50),

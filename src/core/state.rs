@@ -60,5 +60,3 @@ impl<G, F> State<G, F> {
         self.population
     }
 }
-
-

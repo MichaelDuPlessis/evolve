@@ -40,7 +40,11 @@ pub struct Gaussian {
 impl Gaussian {
     /// Creates a new `Gaussian` with the given standard deviation.
     pub fn new(std_dev: f64) -> Self {
-        Self { std_dev, min: None, max: None }
+        Self {
+            std_dev,
+            min: None,
+            max: None,
+        }
     }
 
     /// Sets the lower bound. Genes are clamped to this minimum after mutation.
@@ -78,8 +82,12 @@ where
             let mut genome = *individual.genome();
             let idx = ctx.rng().random_range(0..N);
             genome[idx] += box_muller(ctx.rng()) * self.std_dev;
-            if let Some(min) = self.min { genome[idx] = genome[idx].max(min); }
-            if let Some(max) = self.max { genome[idx] = genome[idx].min(max); }
+            if let Some(min) = self.min {
+                genome[idx] = genome[idx].max(min);
+            }
+            if let Some(max) = self.max {
+                genome[idx] = genome[idx].min(max);
+            }
             population.add(Individual::new(genome));
         }
         Offspring::Multiple(population)
@@ -100,8 +108,12 @@ where
                 ind.mutate_genome(|genome| {
                     let idx = ctx.rng().random_range(0..N);
                     genome[idx] += box_muller(ctx.rng()) * std_dev;
-                    if let Some(lo) = min { genome[idx] = genome[idx].max(lo); }
-                    if let Some(hi) = max { genome[idx] = genome[idx].min(hi); }
+                    if let Some(lo) = min {
+                        genome[idx] = genome[idx].max(lo);
+                    }
+                    if let Some(hi) = max {
+                        genome[idx] = genome[idx].min(hi);
+                    }
                 })
             })
             .collect();
@@ -124,8 +136,12 @@ where
             let mut genome = individual.genome().clone();
             let idx = ctx.rng().random_range(0..genome.len());
             genome[idx] += box_muller(ctx.rng()) * self.std_dev;
-            if let Some(min) = self.min { genome[idx] = genome[idx].max(min); }
-            if let Some(max) = self.max { genome[idx] = genome[idx].min(max); }
+            if let Some(min) = self.min {
+                genome[idx] = genome[idx].max(min);
+            }
+            if let Some(max) = self.max {
+                genome[idx] = genome[idx].min(max);
+            }
             population.add(Individual::new(genome));
         }
         Offspring::Multiple(population)
@@ -146,8 +162,12 @@ where
                 ind.mutate_genome(|genome| {
                     let idx = ctx.rng().random_range(0..genome.len());
                     genome[idx] += box_muller(ctx.rng()) * std_dev;
-                    if let Some(lo) = min { genome[idx] = genome[idx].max(lo); }
-                    if let Some(hi) = max { genome[idx] = genome[idx].min(hi); }
+                    if let Some(lo) = min {
+                        genome[idx] = genome[idx].max(lo);
+                    }
+                    if let Some(hi) = max {
+                        genome[idx] = genome[idx].min(hi);
+                    }
                 })
             })
             .collect();
@@ -170,8 +190,12 @@ where
             let mut genome = *individual.genome();
             let idx = ctx.rng().random_range(0..N);
             genome[idx] += (box_muller(ctx.rng()) * self.std_dev) as f32;
-            if let Some(min) = self.min { genome[idx] = genome[idx].max(min as f32); }
-            if let Some(max) = self.max { genome[idx] = genome[idx].min(max as f32); }
+            if let Some(min) = self.min {
+                genome[idx] = genome[idx].max(min as f32);
+            }
+            if let Some(max) = self.max {
+                genome[idx] = genome[idx].min(max as f32);
+            }
             population.add(Individual::new(genome));
         }
         Offspring::Multiple(population)
@@ -192,8 +216,12 @@ where
                 ind.mutate_genome(|genome| {
                     let idx = ctx.rng().random_range(0..N);
                     genome[idx] += (box_muller(ctx.rng()) * std_dev) as f32;
-                    if let Some(lo) = min { genome[idx] = genome[idx].max(lo as f32); }
-                    if let Some(hi) = max { genome[idx] = genome[idx].min(hi as f32); }
+                    if let Some(lo) = min {
+                        genome[idx] = genome[idx].max(lo as f32);
+                    }
+                    if let Some(hi) = max {
+                        genome[idx] = genome[idx].min(hi as f32);
+                    }
                 })
             })
             .collect();
@@ -216,8 +244,12 @@ where
             let mut genome = individual.genome().clone();
             let idx = ctx.rng().random_range(0..genome.len());
             genome[idx] += (box_muller(ctx.rng()) * self.std_dev) as f32;
-            if let Some(min) = self.min { genome[idx] = genome[idx].max(min as f32); }
-            if let Some(max) = self.max { genome[idx] = genome[idx].min(max as f32); }
+            if let Some(min) = self.min {
+                genome[idx] = genome[idx].max(min as f32);
+            }
+            if let Some(max) = self.max {
+                genome[idx] = genome[idx].min(max as f32);
+            }
             population.add(Individual::new(genome));
         }
         Offspring::Multiple(population)
@@ -238,8 +270,12 @@ where
                 ind.mutate_genome(|genome| {
                     let idx = ctx.rng().random_range(0..genome.len());
                     genome[idx] += (box_muller(ctx.rng()) * std_dev) as f32;
-                    if let Some(lo) = min { genome[idx] = genome[idx].max(lo as f32); }
-                    if let Some(hi) = max { genome[idx] = genome[idx].min(hi as f32); }
+                    if let Some(lo) = min {
+                        genome[idx] = genome[idx].max(lo as f32);
+                    }
+                    if let Some(hi) = max {
+                        genome[idx] = genome[idx].min(hi as f32);
+                    }
                 })
             })
             .collect();

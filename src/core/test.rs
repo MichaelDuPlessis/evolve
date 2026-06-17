@@ -103,14 +103,14 @@ fn population_merge() {
 
 #[test]
 fn population_cull() {
-    let mut pop: Population<i32, i32> = (0..10).map(|i| Individual::new(i)).collect();
+    let mut pop: Population<i32, i32> = (0..10).map(Individual::new).collect();
     pop.cull(3);
     assert_eq!(pop.len(), 3);
 }
 
 #[test]
 fn population_from_iterator() {
-    let pop: Population<i32, i32> = (0..5).map(|i| Individual::new(i)).collect();
+    let pop: Population<i32, i32> = (0..5).map(Individual::new).collect();
     assert_eq!(pop.len(), 5);
 }
 

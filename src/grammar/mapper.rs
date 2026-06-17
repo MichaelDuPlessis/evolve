@@ -1,5 +1,7 @@
 //! Codon-to-phenotype mapping.
 
+use std::sync::Arc;
+
 use crate::grammar::grammar_def::GrammarDef;
 use crate::phenotype::{Event, PhenotypeBuilder};
 use vecpool::PoolVec;
@@ -47,6 +49,28 @@ pub trait Mapper {
         codons: &[C],
         builder: B,
     ) -> Option<B::Output>;
+}
+
+impl<M: Mapper> Mapper for Box<M> {
+    fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
+        &self,
+        grammar: &G,
+        codons: &[C],
+        builder: B,
+    ) -> Option<B::Output> {
+        (**self).map(grammar, codons, builder)
+    }
+}
+
+impl<M: Mapper> Mapper for Arc<M> {
+    fn map<G: GrammarDef, C: Codon, B: PhenotypeBuilder<G::Terminal>>(
+        &self,
+        grammar: &G,
+        codons: &[C],
+        builder: B,
+    ) -> Option<B::Output> {
+        (**self).map(grammar, codons, builder)
+    }
 }
 
 /// The standard GE mapping algorithm: stack-based derivation with codon

@@ -48,5 +48,3 @@ impl<G, F> Offspring<G, F> {
         }
     }
 }
-
-

@@ -79,8 +79,6 @@ impl<G, F, Fe, C> Collector<G, F, Fe, C> for Basic {
     }
 }
 
-
-
 #[cfg(test)]
 mod test {
     use crate::{

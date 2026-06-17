@@ -45,3 +45,15 @@ pub trait PhenotypeBuilder<T> {
     /// Consume the builder and produce the final phenotype.
     fn finish(self) -> Self::Output;
 }
+
+impl<T, B: PhenotypeBuilder<T>> PhenotypeBuilder<T> for Box<B> {
+    type Output = B::Output;
+
+    fn push(&mut self, event: Event<T>) {
+        (**self).push(event)
+    }
+
+    fn finish(self) -> Self::Output {
+        (*self).finish()
+    }
+}

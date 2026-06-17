@@ -121,11 +121,15 @@ pub(crate) fn two_point_crossover_vec<T: Clone>(
 
     let mut a1 = rng.random_range(0..p1.len());
     let mut b1 = rng.random_range(0..p1.len());
-    if a1 > b1 { std::mem::swap(&mut a1, &mut b1); }
+    if a1 > b1 {
+        std::mem::swap(&mut a1, &mut b1);
+    }
 
     let mut a2 = rng.random_range(0..p2.len());
     let mut b2 = rng.random_range(0..p2.len());
-    if a2 > b2 { std::mem::swap(&mut a2, &mut b2); }
+    if a2 > b2 {
+        std::mem::swap(&mut a2, &mut b2);
+    }
 
     // child1 = p1[..a1] + p2[a2..b2] + p1[b1..]
     let mut child1 = Vec::with_capacity(a1 + (b2 - a2) + (p1.len() - b1));

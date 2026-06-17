@@ -43,6 +43,29 @@ pub trait Collector<G, F, Fe, C> {
     fn finalize(self, state: State<G, F>) -> Self::Result;
 }
 
+impl<G, F, Fe, C, T> Collector<G, F, Fe, C> for Box<T>
+where
+    T: Collector<G, F, Fe, C>,
+{
+    type Result = T::Result;
+
+    fn on_start(&mut self, state: &State<G, F>, fe: &Fe, cmp: &C) {
+        (**self).on_start(state, fe, cmp)
+    }
+
+    fn on_generation(&mut self, state: &State<G, F>, fe: &Fe, cmp: &C) {
+        (**self).on_generation(state, fe, cmp)
+    }
+
+    fn on_end(&mut self, state: &State<G, F>, fe: &Fe, cmp: &C) {
+        (**self).on_end(state, fe, cmp)
+    }
+
+    fn finalize(self, state: State<G, F>) -> Self::Result {
+        (*self).finalize(state)
+    }
+}
+
 /// A no-op collector that discards the final state and returns `()`.
 #[derive(Debug, Default, Clone, Copy)]
 pub struct NoOp;
@@ -75,7 +98,7 @@ mod test {
             rand::rng(),
             Maximize,
         );
-        let result = ga.run_with(NoOp);
-        assert_eq!(result, ());
+        ga.run_with(NoOp);
+        assert_eq!((), ());
     }
 }
